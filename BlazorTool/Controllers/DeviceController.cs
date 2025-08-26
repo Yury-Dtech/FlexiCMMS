@@ -261,6 +261,44 @@ namespace BlazorTool.Controllers
             }
         }
 
+        [HttpGet("getdirfiles")]
+        public async Task<IActionResult> GetDirectoryFiles([FromQuery] string directoryPath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(directoryPath))
+                {
+                    return BadRequest(new ApiResponse<WorkOrderFileItem>
+                    {
+                        IsValid = false,
+                        Errors = new List<string> { "DirectoryPath cannot be empty." }
+                    });
+                }
+
+                var client = _httpClientFactory.CreateClient("ExternalApiBearerAuthClient");
+                var url = $"device/getdirfiles?DirectoryPath={Uri.EscapeDataString(directoryPath)}";
+
+                var response = await client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+
+                var wrapper = await response.Content.ReadFromJsonAsync<ApiResponse<WorkOrderFileItem>>();
+                return Ok(new
+                {
+                    data = wrapper?.Data ?? new List<WorkOrderFileItem>(),
+                    isValid = true,
+                    errors = Array.Empty<string>()
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<WorkOrderFileItem>
+                {
+                    IsValid = false,
+                    Errors = new List<string> { ex.Message }
+                });
+            }
+        }
+
         // GET api/<WoController>/5
         [HttpGet("{id}")]
         public string Get(int id)

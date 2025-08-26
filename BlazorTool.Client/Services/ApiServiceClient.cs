@@ -1356,6 +1356,42 @@ namespace BlazorTool.Client.Services
 
             return fullDeviceInfo;
         }
+
+        public async Task<ApiResponse<WorkOrderFileItem>> GetWorkOrderDirectoryFiles(string directoryPath)
+        {
+            if (string.IsNullOrWhiteSpace(directoryPath))
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderDirectoryFiles: DirectoryPath cannot be empty.");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderDirectoryFiles: DirectoryPath cannot be empty.");
+                return new ApiResponse<WorkOrderFileItem> { IsValid = false, Errors = new List<string> { "DirectoryPath cannot be empty." } };
+            }
+
+            var url = $"device/getdirfiles?DirectoryPath={Uri.EscapeDataString(directoryPath)}";
+
+            try
+            {
+                var response = await _http.GetFromJsonAsync<ApiResponse<WorkOrderFileItem>>(url);
+                if (response == null)
+                {
+                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderDirectoryFiles: Empty response from API for {url}");
+                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderDirectoryFiles: Empty response from API for {url}");
+                    return new ApiResponse<WorkOrderFileItem> { IsValid = false, Errors = new List<string> { "Empty response from API." } };
+                }
+                return response;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                return new ApiResponse<WorkOrderFileItem> { IsValid = false, Errors = new List<string> { $"Network error: {ex.Message}" } };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                return new ApiResponse<WorkOrderFileItem> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
+            }
+        }
         #endregion
 
         #region Other functions
