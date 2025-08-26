@@ -23,7 +23,7 @@ else
                  FilterMode="@GridFilterMode.FilterMenu"
                  Resizable="true"
                  Height="calc(100vh - 200px)"
-                 OnRowClick="@OnRowClickHandler"
+                 OnRowDoubleClick="@OnRowClickHandler"
                  OnStateChanged="@(async (GridStateEventArgs<Device> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
                  @ref=@devicesGrid>
         <GridColumns>

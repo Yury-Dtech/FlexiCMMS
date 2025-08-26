@@ -1,3 +1,15 @@
+## 2025-08-26
+### Fixed / Improvements
+*   **Devices Page**: Implemented saving and loading of Telerik Grid state on `DevicesPage` to persist user preferences across sessions.
+*   **Device Display Component**:
+    *   Added localization for various texts and duration formatting.
+    *   Improved image loading with loading indicators and optimized full-size image loading in the modal.
+    *   Enhanced the device details window with improved styling, `MaxHeight`, `ThemeColor`, and `CloseOnOverlayClick` functionality.
+*   **Work Order Component**: Adjusted description field editability to allow editing for new work orders regardless of specific permissions.
+*   **API Client**: Refactored `GetDeviceImageAsync` and `GetFullDeviceInfoAsync` to use `SingleResponse<DeviceImage>` for better consistency and added a `skipImageLoad` option for `GetFullDeviceInfoAsync`.
+*   **Localization**: Added numerous new localization keys for device-related UI elements.
+*   **Bug Fix**: Corrected filtering logic for work order categories by device category in `ApiServiceClient`.
+
 ## 2025-08-25
 ### Features
 * Implemented comprehensive device management features, including new API client methods (`GetDeviceDetailAsync`, `GetDeviceStateAsync`, `GetDeviceStatusAsync`, `GetSingleDeviceAsync`, `GetDeviceImageAsync`, `GetDeviceDictionariesAsync`, `GetFullDeviceInfoAsync`), new server-side controllers (`GetDetail`, `GetState`, `GetStatus`, `Get`, `GetImage`, `GetDict`), and new data models (`DeviceDetailProperty.cs`, `DeviceDict.cs`, `DeviceImage.cs`, `DeviceState.cs`, `DeviceStatus.cs`, `FullDeviceInfo.cs`).

@@ -1,3 +1,15 @@
+## 2025-08-26
+### Naprawiono / Ulepszenia
+*   **Strona Urządzeń**: Zaimplementowano zapisywanie i ładowanie stanu Telerik Grid na `DevicesPage` w celu zachowania preferencji użytkownika między sesjami.
+*   **Komponent Wyświetlania Urządzeń**:
+    *   Dodano lokalizację dla różnych tekstów i formatowania czasu trwania.
+    *   Ulepszono ładowanie obrazów za pomocą wskaźników ładowania i zoptymalizowano ładowanie obrazów w pełnym rozmiarze w oknie modalnym.
+    *   Ulepszono okno szczegółów urządzenia dzięki ulepszonemu stylowi, `MaxHeight`, `ThemeColor` i funkcjonalności `CloseOnOverlayClick`.
+*   **Komponent Zlecenia Pracy**: Dostosowano edytowalność pola opisu, aby umożliwić edycję nowych zleceń pracy niezależnie od konkretnych uprawnień.
+*   **Klient API**: Zrefaktoryzowano `GetDeviceImageAsync` i `GetFullDeviceInfoAsync` w celu użycia `SingleResponse<DeviceImage>` dla lepszej spójności i dodano opcję `skipImageLoad` dla `GetFullDeviceInfoAsync`.
+*   **Lokalizacja**: Dodano liczne nowe klucze lokalizacyjne dla elementów interfejsu użytkownika związanych z urządzeniami.
+*   **Poprawka Błędu**: Poprawiono logikę filtrowania kategorii zleceń pracy według kategorii urządzenia w `ApiServiceClient`.
+
 ## 2025-08-25
 ### Nowe Funkcje
 * Zaimplementowano kompleksowe funkcje zarządzania urządzeniami, w tym nowe metody klienta API (`GetDeviceDetailAsync`, `GetDeviceStateAsync`, `GetDeviceStatusAsync`, `GetSingleDeviceAsync`, `GetDeviceImageAsync`, `GetDeviceDictionariesAsync`, `GetFullDeviceInfoAsync`), nowe kontrolery po stronie serwera (`GetDetail`, `GetState`, `GetStatus`, `Get`, `GetImage`, `GetDict`) oraz nowe modele danych (`DeviceDetailProperty.cs`, `DeviceDict.cs`, `DeviceImage.cs`, `DeviceState.cs`, `DeviceStatus.cs`, `FullDeviceInfo.cs`).
