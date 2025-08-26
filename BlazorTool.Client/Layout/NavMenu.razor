@@ -14,32 +14,33 @@
     <nav class="navbar-nav flex-column">
         <div class="nav-item">
             <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="/" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill me-2" aria-hidden="true"></span>
-                <span>@Localizer["NavMenu_Main"]</span>
+                <TelerikSvgIcon Icon="@SvgIcon.Home" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Main"]</span>
             </NavLink>
         </div>
         <div class="nav-item">
             <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="orders">
-                <span class="bi bi-clipboard-check me-2" aria-hidden="true"></span>
-                <span>@Localizer["NavMenu_Orders"]</span>
+                <TelerikSvgIcon Icon="@SvgIcon.TrackChangesEnable" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Orders"]</span>
             </NavLink>
         </div>
         <div class="nav-item">
             <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="scheduler">
-                <span class="bi bi-calendar-week me-2" aria-hidden="true"></span>
-                <span>@Localizer["NavMenu_Scheduler"]</span>
+                <TelerikSvgIcon Icon="@SvgIcon.Calendar" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Scheduler"]</span>
             </NavLink>
         </div>
         <div class="nav-item">
             <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="devices">
-                <span class="bi bi-tablet-landscape me-2" aria-hidden="true"></span>
-                <span>@Localizer["NavMenu_Devices"]</span>
+                <TelerikSvgIcon Icon="@SvgIcon.Gears" Size="lg"></TelerikSvgIcon>
+                <span class="p-2" >@Localizer["NavMenu_Devices"]</span>
             </NavLink>
         </div>
             <div class="nav-item">
-                <NavLink class="nav-link" href="settings">
-                    <span class="bi bi-gear-fill" aria-hidden="true"></span> @Localizer["NavMenu_Settings"]
-                </NavLink>
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="settings">
+                <TelerikSvgIcon Icon="@SvgIcon.Sliders" Size="lg"></TelerikSvgIcon>
+                <span class="p-2" aria-hidden="true">@Localizer["NavMenu_Settings"]</span>
+            </NavLink>
             </div>
     </nav>
     <div class="nav-footer">
