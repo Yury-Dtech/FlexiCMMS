@@ -1,4 +1,9 @@
 ## 2025-08-26
+### Features
+*   **Work Order Files**: Implemented listing and viewing of work order documentation files. This includes new API client methods (`GetWorkOrderDirectoryFiles`, `GetWorkOrderFile`), an enhanced `FullDeviceInfo` model to include file lists, and an updated `DeviceDisplay` component to show these files with appropriate icons and opening functionality.
+*   **API Client**: Refactored `GetAllDevicesCachedAsync` to `GetAllDevicesAsync` and updated its usages across `OrdersGrid`, `WorkOrderComponent`, and `DevicesPage`.
+*   **Orders Page**: Added a "Reload All Data" button and a `HardLoadData` method for explicit data refresh.
+
 ### Fixed / Improvements
 *   **Devices Page**: Implemented saving and loading of Telerik Grid state on `DevicesPage` to persist user preferences across sessions.
 *   **Device Display Component**:

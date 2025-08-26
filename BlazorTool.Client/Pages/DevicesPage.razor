@@ -9,7 +9,7 @@
 @inject ViewSettingsService ViewSettingsService
 
 <h3>@Localizer["DevicesPage_Title"]</h3>
-
+(@_devices?.Count())
 @if (_devices == null)
 {
     <TelerikLoaderContainer Visible="true" Text="@Localizer["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
@@ -30,10 +30,10 @@ else
             <GridColumn Field="@nameof(Device.MachineID)" Title="@Localizer["WorkOrder_ID"]" Width="100px" />
             <GridColumn Field="@nameof(Device.AssetNo)" Title="@Localizer["AssetNo"]" />
             <GridColumn Field="@nameof(Device.DeviceCategory)" Title="@Localizer["DeviceCategory"]" />
-            <GridColumn Field="@nameof(Device.Type)" Title="@Localizer["Device_Type"]" />
-            <GridColumn Field="@nameof(Device.SerialNo)" Title="@Localizer["Device_SerialNo"]" />
+            <GridColumn Field="@nameof(Device.StateID)" Title="StateID" />
+            <GridColumn Field="@nameof(Device.Location)" Title="Location" />
             <GridColumn Field="@nameof(Device.LocationName)" Title="@Localizer["Device_LocationName"]" />
-            <GridColumn Field="@nameof(Device.Owner)" Title="@Localizer["Device_Owner"]" />
+            <GridColumn Field="@nameof(Device.Place)" Title="Place" />
         </GridColumns>
     </TelerikGrid>
 }
@@ -41,6 +41,7 @@ else
 <TelerikWindow @bind-Visible="@_showDeviceWindow"
                Modal="true"
                MaxHeight="95vh"
+               MinWidth="1200px"
                Centered="true"
                Draggable="true"
                Resizable="true"

@@ -1555,8 +1555,21 @@ namespace BlazorTool.Client.Services
 
         public List<WODict> GetWOCategoriesByDeviceCategory(int devCategoryId)
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Category 
-            && (d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null))
+            
+            //var dics = GetWODictionariesCached();
+            //Console.WriteLine($"=== GetWODictionariesCached = {dics.Count()}");
+            //var dicCat = dics.Where(d => d.ListType == (int)WOListTypeEnum.Category);
+            //Console.WriteLine($"=== Where(d => d.ListType == (int)WOListTypeEnum.Category = {dicCat.Count()}");
+            //var dicFiltered = dicCat.Where(d => d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null);
+            //Console.WriteLine($"=== Where(d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null == {dicFiltered.Count()}");
+            //Console.WriteLine("===.....devCategoryId = " + devCategoryId);
+            //foreach(var item in dicFiltered)
+            //{
+            //    Console.WriteLine("===............."+item.Name);
+            //}
+            //Console.WriteLine();
+            return GetWODictionariesCached().Where(d => d.ListType == (int)WOListTypeEnum.Category 
+                                                    && (d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null))
                 .Distinct()
                 .ToList();
         }
@@ -1597,26 +1610,26 @@ namespace BlazorTool.Client.Services
                 .ToList();
         }
 
-        public async Task<bool> AddNewWODict(string name, int listType, bool isDefault = false, int? machineCategoryId = null)
-        {//TODO: remove this method, dict is only read from API
-            if (string.IsNullOrEmpty(name) || listType < 1 || listType > 5) return false;
-            WODict newDict = new WODict
-            {
-                Name = name,
-                ListType = listType,
-                IsDefault = false,
-                MachineCategoryID = null, // or set to a specific value if needed
-                Id = 0 // API will assign the ID
-            };
-            if (_dictCache.Any(d=>d.Name == name && d.ListType == listType && d.MachineCategoryID == machineCategoryId))
-            {
-                return false;
-            }
-            _dictCache.Add(newDict); 
-            Console.WriteLine($"[{_userState.UserName}] = = = = = = Dictionary with name '{name}' and ListType {listType} added to cache.");
-            return true;
-           //TODO SAVE return await PostSingleAsync<Dict, Dict>("wo/adddict", newDict) is { IsValid: true, Data: { } };
-        }
+        //public async Task<bool> AddNewWODict(string name, int listType, bool isDefault = false, int? machineCategoryId = null)
+        //{//TODO: remove this method, dict is only read from API
+        //    if (string.IsNullOrEmpty(name) || listType < 1 || listType > 5) return false;
+        //    WODict newDict = new WODict
+        //    {
+        //        Name = name,
+        //        ListType = listType,
+        //        IsDefault = false,
+        //        MachineCategoryID = null, // or set to a specific value if needed
+        //        Id = 0 // API will assign the ID
+        //    };
+        //    if (_dictCache.Any(d=>d.Name == name && d.ListType == listType && d.MachineCategoryID == machineCategoryId))
+        //    {
+        //        return false;
+        //    }
+        //    _dictCache.Add(newDict); 
+        //    Console.WriteLine($"[{_userState.UserName}] = = = = = = Dictionary with name '{name}' and ListType {listType} added to cache.");
+        //    return true;
+        //   //TODO SAVE return await PostSingleAsync<Dict, Dict>("wo/adddict", newDict) is { IsValid: true, Data: { } };
+        //}
 
         public async Task<ApiResponse<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data)
         {

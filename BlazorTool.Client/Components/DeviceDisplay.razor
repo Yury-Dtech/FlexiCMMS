@@ -104,7 +104,6 @@
                         </CardBody>
                     </TelerikCard>
 
-
                     <!-- State Information Card -->
                     @if (_deviceInfo.State != null)
                     {
@@ -133,6 +132,7 @@
                             </CardBody>
                         </TelerikCard>
                     }
+               
                 </div>
 
                 <!-- middle Column -->
@@ -172,8 +172,6 @@
                 @if (!_isImageLoading)
                 {                   
                 
-                @if (_deviceInfo.Images != null && _deviceInfo.Images.Any(i => !string.IsNullOrEmpty(i.Image)))
-                    {
                         <TelerikCard Class="images-card">
                             <CardHeader>
                                 <div class="card-header-with-icon">
@@ -181,6 +179,8 @@
                                     <h3>@Loc["DeviceDisplay_DeviceImages"]</h3>
                                 </div>
                             </CardHeader>
+                @if (_deviceInfo.Images != null && _deviceInfo.Images.Any(i => !string.IsNullOrEmpty(i.Image)))
+                    {
                             <CardBody>
                                 <div class="images-gallery">
                                     @foreach (var image in _deviceInfo.Images.Where(i => !string.IsNullOrEmpty(i.Image)))
@@ -194,11 +194,11 @@
                                     }
                                 </div>
                             </CardBody>
-                    </TelerikCard>
                 }else
                 {
                         <div>No images</div>
                     }
+                    </TelerikCard>
 
                 }else
                 {
@@ -213,88 +213,46 @@
                 <!-- Device Details -->
                 @if (_deviceInfo.Details != null && _deviceInfo.Details.Any())
                 {
-                    <TelerikCard Class="details-card">
-                        <CardHeader>
-                            <div class="card-header-with-icon">
-                                <TelerikSvgIcon Icon="@SvgIcon.ListUnordered" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
-                                <h3>@Loc["DeviceDisplay_DeviceDetails"]</h3>
-                            </div>
-                        </CardHeader>
-                        <CardBody>
-                            <TelerikGrid Data="@_deviceInfo.Details.OrderBy(d => d.DisplayIndex)" 
-                                       Height="400px" 
-                                       Pageable="true" 
-                                       PageSize="10" 
-                                       Sortable="true" 
-                                       FilterMode="GridFilterMode.FilterRow">
-                                <GridColumns>
-                                    <GridColumn Field="@nameof(DeviceDetailProperty.PropertyName)" Title="@Loc["DeviceDisplay_Property"]" Width="300px">
-                                        <Template>
-                                            @{var item = context as DeviceDetailProperty;}
-                                            <strong>@item.PropertyName</strong>
-                                        </Template>
-                                    </GridColumn>
-                                    <GridColumn Field="@nameof(DeviceDetailProperty.PropertyValue)" Title="@Loc["DeviceDisplay_Value"]">
-                                        <Template>
-                                            @{
-                                                var item = context as DeviceDetailProperty;
-                                            }
-                                            <span class="property-value">@item.PropertyValue</span>
-                                        </Template>
-                                    </GridColumn>
-                                    <GridColumn Field="@nameof(DeviceDetailProperty.PropertyType)" Title="@Loc["DeviceDisplay_Type"]" Width="150px">
-                                        <Template>
-                                            @{
-                                                var item = context as DeviceDetailProperty;
-                                            }
-                                            <span class="property-type-badge">@item.PropertyType</span>
-                                        </Template>
-                                    </GridColumn>
-                                </GridColumns>
-                            </TelerikGrid>
-                        </CardBody>
-                    </TelerikCard>
+                    <div class="details-table-container">
+                    <h3>@Loc["DeviceDisplay_DeviceDetails"]</h3>
+                        <table class="device-details-table">
+                            <thead>
+                                <tr>
+                                    <th>@Loc["DeviceDisplay_Property"]</th>
+                                    <th>@Loc["DeviceDisplay_Value"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detail in _deviceInfo.Details.OrderBy(d => d.DisplayIndex))
+                                {
+                                    <tr>
+                                        <td><strong>@detail.PropertyName</strong></td>
+                                        <td>
+                                        @if (detail.PropertyType == "Boolean")
+                                        {
+                                                @if (detail.PropertyValue == "0")
+                                                    {@Loc["Yes"]}
+                                                else if (detail.PropertyValue == "1")
+                                                    { @Loc["No"]}
+                                                else if (bool.TryParse(detail.PropertyValue, out bool val))
+                                                { @(val ? Loc["Yes"] : Loc["No"])}
+                                                else
+                                                {
+                                                    @detail?.PropertyValue?.ToString()
+                                                }
+                                        }
+                                        else
+                                        {
+                                            @(detail?.PropertyValue?.ToString() ?? "-")
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
 
-                <!-- Device Statuses -->
-                 @if (_deviceInfo.Statuses != null && _deviceInfo.Statuses.Any())
-                {
-                    @* <TelerikCard Class="statuses-card">
-                        <CardHeader>
-                            <div class="card-header-with-icon">
-                                <TelerikSvgIcon Icon="@SvgIcon.Gear" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
-                                <h3>@Loc["DeviceDisplay_DeviceStatuses"]</h3>
-                            </div>
-                        </CardHeader>
-                        <CardBody>
-                            <TelerikGrid Data="@_deviceInfo.Statuses" 
-                                       Height="400px" 
-                                       Pageable="true" 
-                                       PageSize="10" 
-                                       Sortable="true">
-                                <GridColumns>
-                                    <GridColumn Field="@nameof(DeviceStatus.DeviceName)" Title="@Loc["DeviceDisplay_Device"]" Width="200px"></GridColumn>
-                                    <GridColumn Field="@nameof(DeviceStatus.Detail)" Title="@Loc["DeviceDisplay_Detail"]"></GridColumn>
-                                    <GridColumn Field="@nameof(DeviceStatus.Color)" Title="@Loc["DeviceDisplay_Status"]" Width="120px">
-                                        <Template>
-                                        @{
-                                            var item = context as DeviceStatus;
-                                        }
-                                        <div class="status-indicator" style="background-color: @item.Color;">
-                                            @if (!string.IsNullOrEmpty(item.Icon))
-                                                {
-                                                <img src="data:image/png;base64,@item.Icon" alt="Icon" class="status-icon" />
-                                                }
-                                            </div>
-                                        </Template>
-                                    </GridColumn>
-                                    <GridColumn Field="@nameof(DeviceStatus.Type)" Title="Тип" Width="100px"></GridColumn>
-                                </GridColumns>
-                            </TelerikGrid>
-                        </CardBody>
-                    </TelerikCard> *@
-                
-                } 
             </div>
         }
    
@@ -477,5 +435,4 @@
             _ => SvgIcon.File
         };
     }
-}
 }

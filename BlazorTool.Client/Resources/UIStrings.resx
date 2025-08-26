@@ -1030,4 +1030,12 @@
   <data name="DeviceDisplay_DocumentationFiles" xml:space="preserve">
     <value>Documentation Files</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+    <comment>Yes</comment>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+    <comment>No</comment>
+  </data>
 </root>

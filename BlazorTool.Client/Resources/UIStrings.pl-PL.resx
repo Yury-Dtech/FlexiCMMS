@@ -1025,4 +1025,10 @@
   <data name="DeviceDisplay_DocumentationFiles" xml:space="preserve">
     <value>Pliki dokumentacji</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Tak</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>Nie</value>
+  </data>
 </root>

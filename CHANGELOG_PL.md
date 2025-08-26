@@ -1,4 +1,9 @@
 ## 2025-08-26
+### Nowe Funkcje
+*   **Pliki Zleceń Pracy**: Zaimplementowano listowanie i przeglądanie plików dokumentacji zleceń pracy. Obejmuje to nowe metody klienta API (`GetWorkOrderDirectoryFiles`, `GetWorkOrderFile`), rozszerzony model `FullDeviceInfo` o listy plików oraz zaktualizowany komponent `DeviceDisplay` do wyświetlania tych plików z odpowiednimi ikonami i funkcjonalnością otwierania.
+*   **Klient API**: Zrefaktoryzowano `GetAllDevicesCachedAsync` na `GetAllDevicesAsync` i zaktualizowano jego użycie w `OrdersGrid`, `WorkOrderComponent` i `DevicesPage`.
+*   **Strona Zleceń**: Dodano przycisk "Przeładuj wszystkie dane" i metodę `HardLoadData` do jawnego odświeżania danych.
+
 ### Naprawiono / Ulepszenia
 *   **Strona Urządzeń**: Zaimplementowano zapisywanie i ładowanie stanu Telerik Grid na `DevicesPage` w celu zachowania preferencji użytkownika między sesjami.
 *   **Komponent Wyświetlania Urządzeń**:
