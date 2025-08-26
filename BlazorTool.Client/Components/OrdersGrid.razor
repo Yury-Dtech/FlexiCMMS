@@ -230,7 +230,7 @@
     protected override async Task OnInitializedAsync()
     {
         allPersons = await apiService.GetAllPersons();
-        await apiService.GetAllDevicesCachedAsync();
+        await apiService.GetAllDevicesAsync();
         personNames = allPersons.Select(p => p.Name).ToList();
         currentUser = new Person { PersonId = UserState.PersonID ?? 0, Name = UserState.UserName ?? string.Empty };
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);

@@ -1027,4 +1027,7 @@
   <data name="DeviceDisplay_LoadingInfo" xml:space="preserve">
     <value>Loading device information...</value>
   </data>
+  <data name="DeviceDisplay_DocumentationFiles" xml:space="preserve">
+    <value>Documentation Files</value>
+  </data>
 </root>

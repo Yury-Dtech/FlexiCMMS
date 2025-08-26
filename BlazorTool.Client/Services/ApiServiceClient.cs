@@ -989,7 +989,7 @@ namespace BlazorTool.Client.Services
         #endregion
 
         #region Devices
-        public async Task<List<Device>> GetAllDevicesCachedAsync()
+        public async Task<List<Device>> GetAllDevicesAsync()
         {
             if (!_devicesCache.Any())
             {
@@ -1354,6 +1354,16 @@ namespace BlazorTool.Client.Services
                 }
             }
 
+            // Get directory files if DocumentationPath is available
+            if (!string.IsNullOrWhiteSpace(fullDeviceInfo.DocumentationPath))
+            {
+                var directoryFilesResponse = await GetWorkOrderDirectoryFiles(fullDeviceInfo.DocumentationPath);
+                if (directoryFilesResponse.IsValid && directoryFilesResponse.Data != null)
+                {
+                    fullDeviceInfo.DirectoryFiles = directoryFilesResponse.Data;
+                }
+            }
+
             return fullDeviceInfo;
         }
 
@@ -1390,6 +1400,58 @@ namespace BlazorTool.Client.Services
                 Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
                 Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
                 return new ApiResponse<WorkOrderFileItem> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
+            }
+        }
+
+        public async Task<SingleResponse<WorkOrderFileData>> GetWorkOrderFile(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderFile: FileName cannot be empty.");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderFile: FileName cannot be empty.");
+                return new SingleResponse<WorkOrderFileData> { IsValid = false, Errors = new List<string> { "FileName cannot be empty." } };
+            }
+
+            // Normalize the file path: replace double backslashes with single ones
+            string normalizedFileName = fileName.Replace("\\", "\\");
+
+            // Use the normalized file name as the cache key
+            var cacheKey = normalizedFileName;
+
+            // Check cache first
+            if (_workOrderFileCache.TryGetValue(cacheKey, out var cachedResponse))
+            {
+                Console.WriteLine($"[{_userState.UserName}] Work order file for {cacheKey} found in cache.");
+                Debug.WriteLine($"[{_userState.UserName}] Work order file for {cacheKey} found in cache.");
+                return cachedResponse;
+            }
+
+            var url = $"device/getfile?FileName={Uri.EscapeDataString(normalizedFileName)}";
+
+            try
+            {
+                var response = await _http.GetFromJsonAsync<SingleResponse<WorkOrderFileData>>(url);
+                if (response == null)
+                {
+                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderFile: Empty response from API for {url}");
+                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrderFile: Empty response from API for {url}");
+                    return new SingleResponse<WorkOrderFileData> { IsValid = false, Errors = new List<string> { "Empty response from API." } };
+                }
+                // Cache the result
+                _workOrderFileCache[cacheKey] = response;
+                return response;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                return new SingleResponse<WorkOrderFileData> { IsValid = false, Errors = new List<string> { $"Network error: {ex.Message}" } };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                return new SingleResponse<WorkOrderFileData> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
         #endregion
@@ -1494,7 +1556,7 @@ namespace BlazorTool.Client.Services
         public List<WODict> GetWOCategoriesByDeviceCategory(int devCategoryId)
         {
             return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Category 
-            && (d.MachineCategoryID == devCategoryId) || d.MachineCategoryID == null)
+            && (d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null))
                 .Distinct()
                 .ToList();
         }

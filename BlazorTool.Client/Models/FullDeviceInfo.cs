@@ -10,5 +10,6 @@ namespace BlazorTool.Client.Models
         public DeviceState? State { get; set; }
         public List<DeviceStatus>? Statuses { get; set; }
         public List<DeviceImage>? Images { get; set; } = new List<DeviceImage>();
+        public List<WorkOrderFileItem> DirectoryFiles { get; set; } = new List<WorkOrderFileItem>();
     }
 }

@@ -1022,4 +1022,7 @@
   <data name="DeviceDisplay_LoadingInfo" xml:space="preserve">
     <value>Ładowanie informacji o urządzeniu...</value>
   </data>
+  <data name="DeviceDisplay_DocumentationFiles" xml:space="preserve">
+    <value>Pliki dokumentacji</value>
+  </data>
 </root>

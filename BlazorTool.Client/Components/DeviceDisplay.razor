@@ -1,6 +1,7 @@
 @using BlazorTool.Client.Models
 @using BlazorTool.Client.Resources
 @using BlazorTool.Client.Services
+@using Telerik.SvgIcons
 @inject ApiServiceClient ApiService
 @inject UserState UserState
 @inject IStringLocalizer<UIStrings> Loc
@@ -103,6 +104,7 @@
                         </CardBody>
                     </TelerikCard>
 
+
                     <!-- State Information Card -->
                     @if (_deviceInfo.State != null)
                     {
@@ -133,8 +135,39 @@
                     }
                 </div>
 
-                <!-- Right Column -->
-                <div class="right-column">
+                <!-- middle Column -->
+                <div class="middle-column">
+                 <!-- Documentation Files Card -->
+                <TelerikCard Class="images-card">
+                            <CardHeader>
+                                <div class="card-header-with-icon">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Paperclip" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
+                                    <h3>@Loc["DeviceDisplay_DocumentationFiles"]</h3>
+                                </div>
+                            </CardHeader>
+                            <CardBody>
+                    @if (_deviceInfo.DirectoryFiles != null && _deviceInfo.DirectoryFiles.Any())
+                    {
+                                <TelerikListView Data="@_deviceInfo.DirectoryFiles" 
+                                               Pageable="true" 
+                                               PageSize="5">
+                                    <Template>
+                                        @{ var file = context as WorkOrderFileItem; }
+                                        <div class="file-item" @onclick="@(() => OpenFile(file.FullName))">
+                                            <TelerikSvgIcon Icon="@GetFileIcon(file.Name)" Size="@ThemeConstants.SvgIcon.Size.Small"></TelerikSvgIcon>
+                                            <span>@file.Name</span>
+                                        </div>
+                                    </Template>
+                            </TelerikListView>
+                        }else
+                        {
+                            <div>No files</div>
+                        }
+                            </CardBody>
+                        </TelerikCard>
+
+                </div>
+            <div class="right-column">
                     <!-- Device Images -->
                 @if (!_isImageLoading)
                 {                   
@@ -171,6 +204,7 @@
                 {
                     <div>@Loc["WorkOrderFiles_LoadingImage"]</div>
                 }
+            
             </div>
             </div>
 
@@ -223,9 +257,9 @@
                 }
 
                 <!-- Device Statuses -->
-                @if (_deviceInfo.Statuses != null && _deviceInfo.Statuses.Any())
+                 @if (_deviceInfo.Statuses != null && _deviceInfo.Statuses.Any())
                 {
-                    <TelerikCard Class="statuses-card">
+                    @* <TelerikCard Class="statuses-card">
                         <CardHeader>
                             <div class="card-header-with-icon">
                                 <TelerikSvgIcon Icon="@SvgIcon.Gear" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
@@ -258,8 +292,9 @@
                                 </GridColumns>
                             </TelerikGrid>
                         </CardBody>
-                    </TelerikCard>
-                }
+                    </TelerikCard> *@
+                
+                } 
             </div>
         }
    
@@ -390,4 +425,57 @@
         _isFullImageLoading = false;
         isFullImgLoaded = true;
     }
+
+    private async Task OpenFile(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return;
+
+        var fileDataResponse = await ApiService.GetWorkOrderFile(filePath);
+        if (fileDataResponse.IsValid && fileDataResponse.Data != null && !string.IsNullOrEmpty(fileDataResponse.Data.Data))
+        {
+            // Determine file type and open accordingly
+            var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+            switch (fileExtension)
+            {
+                case ".pdf":
+                    // For PDF, you might want to open in a new tab or use a PDF viewer component
+                    // For now, let's just log or show a message
+                    Console.WriteLine($"Opening PDF: {filePath}");
+                    // Example: _jsRuntime.InvokeVoidAsync("open", $"data:application/pdf;base64,{fileDataResponse.Data.Data}", "_blank");
+                    break;
+                case ".jpg":
+                case ".jpeg":
+                case ".png":
+                case ".gif":
+                    // For images, open in the existing image modal
+                    await OpenImageModal($"data:image/{fileExtension.TrimStart('.')};base64,{fileDataResponse.Data.Data}");
+                    break;
+                default:
+                    Console.WriteLine($"Unsupported file type: {fileExtension}");
+                    // Optionally, provide a download link or error message
+                    break;
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Failed to load file data for {filePath}");
+        }
+    }
+
+    private ISvgIcon GetFileIcon(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".pdf" => SvgIcon.FilePdf,
+            ".doc" or ".docx" => SvgIcon.FileWord,
+            ".xls" or ".xlsx" => SvgIcon.FileExcel,
+            ".ppt" or ".pptx" => SvgIcon.FileReport,
+            ".jpg" or ".jpeg" or ".png" or ".gif" => SvgIcon.FileImage,
+            ".zip" or ".rar" => SvgIcon.FileZip,
+            ".txt" => SvgIcon.FileTxt,
+            _ => SvgIcon.File
+        };
+    }
+}
 }

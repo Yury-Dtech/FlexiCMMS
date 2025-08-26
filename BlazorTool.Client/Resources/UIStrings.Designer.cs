@@ -799,6 +799,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Documentation Files.
+        /// </summary>
+        public static string DeviceDisplay_DocumentationFiles {
+            get {
+                return ResourceManager.GetString("DeviceDisplay_DocumentationFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Duration:.
         /// </summary>
         public static string DeviceDisplay_Duration {

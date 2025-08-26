@@ -385,7 +385,7 @@
     private async Task LoadData()
     {
         isNewWorkOrder = WorkOrder?.WorkOrderID == 0;
-        ListDevices = await apiService.GetAllDevicesCachedAsync();
+        ListDevices = await apiService.GetAllDevicesAsync();
         ListLevels =  apiService.GetWOLevels();
         ListDepartments =  apiService.GetWODepartments();
         StateColor = await apiService.GetStateColor(WorkOrder?.WorkOrderID);

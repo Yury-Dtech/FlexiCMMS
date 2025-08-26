@@ -299,6 +299,47 @@ namespace BlazorTool.Controllers
             }
         }
 
+        [HttpGet("getfile")]
+        public async Task<IActionResult> GetFile([FromQuery] string fileName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(fileName))
+                {
+                    return BadRequest(new SingleResponse<WorkOrderFileData>
+                    {
+                        IsValid = false,
+                        Errors = new List<string> { "FileName cannot be empty." }
+                    });
+                }
+
+                // Normalize the file path: replace double backslashes with single ones
+                string normalizedFileName = fileName.Replace("\\", "\\");
+
+                var client = _httpClientFactory.CreateClient("ExternalApiBearerAuthClient");
+                var url = $"device/getfile?FileName={Uri.EscapeDataString(normalizedFileName)}";
+
+                var response = await client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+
+                var wrapper = await response.Content.ReadFromJsonAsync<SingleResponse<WorkOrderFileData>>();
+                return Ok(new
+                {
+                    data = wrapper?.Data ?? new WorkOrderFileData(),
+                    isValid = true,
+                    errors = Array.Empty<string>()
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new SingleResponse<WorkOrderFileData>
+                {
+                    IsValid = false,
+                    Errors = new List<string> { ex.Message }
+                });
+            }
+        }
+
         // GET api/<WoController>/5
         [HttpGet("{id}")]
         public string Get(int id)

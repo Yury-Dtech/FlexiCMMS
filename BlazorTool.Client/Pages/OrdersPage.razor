@@ -64,6 +64,8 @@ else
             </TelerikComboBox>
             </div>
         </div>
+        <div><TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+
     </div>
 }
 
@@ -174,49 +176,18 @@ else
             if (!UserState.IsAuthenticated)
             {
                 Navigation.NavigateTo("/login");
-            }
-
-            isDevicesLoading = true;
-            StateHasChanged();
-            dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
-            allPersons = await apiService.GetAllPersons();
-            allDepartments = apiService.GetWODepartments().Select(x=>x.Name).ToList();
-            personNames = allPersons.Select(p => p.Name).ToList();
-            currentUser.PersonId = UserState.PersonID ?? -1;
-            currentUser.Name = UserState.UserName ?? string.Empty;
-            OrdersForGrid = await apiService.GetWorkOrdersAsync(lang: UserState.LangCode);
-            workOrderStates = OrdersForGrid.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
-            devices = await apiService.GetAllDevicesCachedAsync();
-            deviceCategories = devices.Select(d => d.DeviceCategory).Distinct().ToList();
-            deviceCategories?.Insert(0, "All");
-            deviceTypes = devices.Select(d => d.Type).Distinct().ToList();
-            deviceTypes?.Insert(0, "All");
-            isDevicesLoading = false;
-            StateHasChanged();
+            }            
+            await HardLoadData();
+            
             await LoadData();
+
             MakeContextMenu();
+
             await InvokeAsync(StateHasChanged);
             // Apply the state after the data is loaded and the grids are rendered
             if (ordersGrid != null) await ordersGrid.ApplyStateAsync(_viewSettings.GridState);
         }
     }
-
-    private async Task SaveStateAsync()
-    {
-        _viewSettings.SetCustomFilter("selectedDeviceIds", selectedDeviceIds);
-        _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedDeviceCategory);
-        _viewSettings.SetCustomFilter("TagMode", TagMode);
-        await ViewSettingsService.SaveSettingsAsync(ViewSettingsKey, _viewSettings);
-    }
-
-    private void RestoreCustomFilterState()
-    {
-        selectedDeviceIds = _viewSettings.GetCustomFilter("selectedDeviceIds", new List<int>());
-        selectedDeviceCategory = _viewSettings.GetCustomFilter("selectedDeviceCategory", "All");
-        TagMode = _viewSettings.GetCustomFilter("TagMode", MultiSelectTagMode.Single);
-
-    }
-
 
     private async Task LoadData()
     {
@@ -245,7 +216,42 @@ else
         StateHasChanged();
     }
 
+    private async Task HardLoadData()
+    {
+        isDevicesLoading = true;
+            StateHasChanged();
+        dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
+        allPersons = await apiService.GetAllPersons();
+        OrdersForGrid = await apiService.GetWorkOrdersAsync(lang: UserState.LangCode);
+        devices = await apiService.GetAllDevicesAsync();
+        allDepartments = apiService.GetWODepartments().Select(x=>x.Name).ToList();
+        personNames = allPersons.Select(p => p.Name).ToList();
+        currentUser.PersonId = UserState.PersonID ?? -1;
+        currentUser.Name = UserState.UserName ?? string.Empty;            
+        workOrderStates = OrdersForGrid.Select(o => o.WOState ?? string.Empty).Distinct().ToList();            
+        deviceCategories = devices.Select(d => d.DeviceCategory).Distinct().ToList();
+        deviceCategories?.Insert(0, "All");
+        deviceTypes = devices.Select(d => d.Type).Distinct().ToList();
+        deviceTypes?.Insert(0, "All");
+        isDevicesLoading = false;
+        StateHasChanged();
+    }
 
+    private async Task SaveStateAsync()
+    {
+        _viewSettings.SetCustomFilter("selectedDeviceIds", selectedDeviceIds);
+        _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedDeviceCategory);
+        _viewSettings.SetCustomFilter("TagMode", TagMode);
+        await ViewSettingsService.SaveSettingsAsync(ViewSettingsKey, _viewSettings);
+    }
+
+    private void RestoreCustomFilterState()
+    {
+        selectedDeviceIds = _viewSettings.GetCustomFilter("selectedDeviceIds", new List<int>());
+        selectedDeviceCategory = _viewSettings.GetCustomFilter("selectedDeviceCategory", "All");
+        TagMode = _viewSettings.GetCustomFilter("TagMode", MultiSelectTagMode.Single);
+
+    }
 
     private IEnumerable<Device> GetFilteredDevices()
     {
