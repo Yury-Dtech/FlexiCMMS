@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using System.Drawing;
 using System;
 
 namespace BlazorTool.Client.Helpers
@@ -23,4 +24,30 @@ namespace BlazorTool.Client.Helpers
         public static MarkupString AddAction(int size = 20) => GetIcon("action.png", size);
         public static MarkupString AssignToMyself(int size = 20) => GetIcon("assign.png", size);
     }
+
+
+    public static class ColorHelper
+    {
+        /// <summary>
+        /// Возвращает CSS-строку rgba(...) с пониженной прозрачностью или яркостью.
+        /// </summary>
+        /// <param name="colorName">Имя цвета (например, "red", "green")</param>
+        /// <param name="alpha">Прозрачность от 0.0 до 1.0 (по умолчанию 0.3)</param>
+        /// <param name="brightnessFactor">Фактор яркости от 0.0 до 1.0 (по умолчанию 1.0 — без изменения)</param>
+        /// <returns>CSS-строка вида rgba(r, g, b, a)</returns>
+        public static string GetSoftenedColor(string colorName, float alpha = 0.3f, float brightnessFactor = 1.0f)
+        {
+            var color = Color.FromName(colorName);
+
+            if (!color.IsKnownColor)
+                return "rgba(0, 0, 0, 0.1)"; // fallback на случай неизвестного цвета
+
+            int r = Math.Min(255, (int)(color.R * brightnessFactor));
+            int g = Math.Min(255, (int)(color.G * brightnessFactor));
+            int b = Math.Min(255, (int)(color.B * brightnessFactor));
+
+            return $"rgba({r}, {g}, {b}, {alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
+        }
+    }
+
 }

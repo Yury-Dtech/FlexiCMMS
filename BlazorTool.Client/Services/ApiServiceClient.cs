@@ -1285,69 +1285,61 @@ namespace BlazorTool.Client.Services
             }
         }
 
-        public async Task<FullDeviceInfo?> GetFullDeviceInfoAsync(int deviceID, string? lang = null, bool skipImageLoad = true)
+        /// <summary>
+        /// Full device info except List Details
+        /// </summary>
+        /// <param name="device"></param>
+        /// <param name="lang"></param>
+        /// <param name="skipImageLoad"></param>
+        /// <returns></returns>
+        public async Task<FullDeviceInfo> GetDeviceInfoForGridAsync(Device device, string? lang = null, bool skipImageLoad = true)
         {
             if (string.IsNullOrWhiteSpace(lang))
             {
                 lang = _userState.LangCode;
             }
 
-            var deviceResponse = await GetSingleDeviceAsync(deviceID, lang);
-            if (!deviceResponse.IsValid || deviceResponse.Data == null)
-            {
-                Console.WriteLine($"[{_userState.UserName}] Failed to get basic device info for DeviceID: {deviceID}");
-                Debug.WriteLine($"[{_userState.UserName}] Failed to get basic device info for DeviceID: {deviceID}");
-                return null;
-            }
-
             var fullDeviceInfo = new FullDeviceInfo
             {
-                MachineID = deviceResponse.Data.MachineID,
-                AssetNo = deviceResponse.Data.AssetNo,
-                AssetNoShort = deviceResponse.Data.AssetNoShort,
-                DeviceCategory = deviceResponse.Data.DeviceCategory,
-                Type = deviceResponse.Data.Type,
-                SerialNo = deviceResponse.Data.SerialNo,
-                StateID = deviceResponse.Data.StateID,
-                CategoryID = deviceResponse.Data.CategoryID,
-                DocumentationPath = deviceResponse.Data.DocumentationPath,
-                Location = deviceResponse.Data.Location,
-                LocationRequired = deviceResponse.Data.LocationRequired,
-                LocationName = deviceResponse.Data.LocationName,
-                Place = deviceResponse.Data.Place,
-                IsCritical = deviceResponse.Data.IsCritical,
-                SetName = deviceResponse.Data.SetName,
-                SetID = deviceResponse.Data.SetID,
-                Active = deviceResponse.Data.Active,
-                Cycle = deviceResponse.Data.Cycle,
-                Owner = deviceResponse.Data.Owner
+                MachineID = device.MachineID,
+                AssetNo = device.AssetNo,
+                AssetNoShort = device.AssetNoShort,
+                DeviceCategory = device.DeviceCategory,
+                Type = device.Type,
+                SerialNo = device.SerialNo,
+                StateID = device.StateID,
+                CategoryID = device.CategoryID,
+                DocumentationPath = device.DocumentationPath,
+                Location = device.Location,
+                LocationRequired = device.LocationRequired,
+                LocationName = device.LocationName,
+                Place = device.Place,
+                IsCritical = device.IsCritical,
+                SetName = device.SetName,
+                SetID = device.SetID,
+                Active = device.Active,
+                Cycle = device.Cycle,
+                Owner = device.Owner
             };
 
-            // Get details
-            var detailsResponse = await GetDeviceDetailAsync(deviceID, lang);
-            if (detailsResponse.IsValid && detailsResponse.Data != null)
-            {
-                fullDeviceInfo.Details = detailsResponse.Data;
-            }
-
             // Get state
-            var stateResponse = await GetDeviceStateAsync(deviceID, lang);
+            var stateResponse = await GetDeviceStateAsync(device.MachineID, lang);
             if (stateResponse.IsValid && stateResponse.Data != null && stateResponse.Data.Any())
             {
-                fullDeviceInfo.State = stateResponse.Data.First();
+                fullDeviceInfo.StateHistory = stateResponse.Data;
             }
 
             // Get status
             var statusResponse = await GetDeviceStatusAsync(lang);
             if (statusResponse.IsValid && statusResponse.Data != null)
             {
-                fullDeviceInfo.Statuses = statusResponse.Data.Where(s => s.DeviceID == deviceID).ToList();
+                fullDeviceInfo.Statuses = statusResponse.Data.Where(s => s.DeviceID == device.MachineID).ToList();
             }
 
             // Get image
             if (!skipImageLoad)
             {
-                var imageResponse = await GetDeviceImageAsync(deviceID);
+                var imageResponse = await GetDeviceImageAsync(device.MachineID);
                 if (imageResponse.IsValid && imageResponse.Data != null)
                 {
                     fullDeviceInfo.Images.Add(imageResponse.Data);
@@ -1363,9 +1355,45 @@ namespace BlazorTool.Client.Services
                     fullDeviceInfo.DirectoryFiles = directoryFilesResponse.Data;
                 }
             }
+            return fullDeviceInfo;
+        }
+        public async Task<List<FullDeviceInfo>> GetListDeviceInfoForGrid(IEnumerable<Device> devices, string? lang = null, bool skipImageLoad = true)
+        {
+            var listDeviceInfo = new List<FullDeviceInfo>();
+            foreach (var device in devices)
+            {
+                listDeviceInfo.Add(await GetDeviceInfoForGridAsync(device, lang, skipImageLoad));
+            }
+
+            return listDeviceInfo;
+        }
+        public async Task<FullDeviceInfo?> GetFullDeviceInfoAsync(int deviceID, string? lang = null, bool skipImageLoad = true)
+        {
+            if (string.IsNullOrWhiteSpace(lang))
+            {
+                lang = _userState.LangCode;
+            }
+
+            var deviceResponse = await GetSingleDeviceAsync(deviceID, lang);
+            if (!deviceResponse.IsValid || deviceResponse.Data == null)
+            {
+                Console.WriteLine($"[{_userState.UserName}] Failed to get basic device info for DeviceID: {deviceID}");
+                Debug.WriteLine($"[{_userState.UserName}] Failed to get basic device info for DeviceID: {deviceID}");
+                return null;
+            }
+
+            var fullDeviceInfo = await GetDeviceInfoForGridAsync(deviceResponse.Data, lang, skipImageLoad);
+
+            // Get details
+            var detailsResponse = await GetDeviceDetailAsync(deviceID, lang);
+            if (detailsResponse.IsValid && detailsResponse.Data != null)
+            {
+                fullDeviceInfo.Details = detailsResponse.Data;
+            }           
 
             return fullDeviceInfo;
         }
+
 
         public async Task<ApiResponse<WorkOrderFileItem>> GetWorkOrderDirectoryFiles(string directoryPath)
         {

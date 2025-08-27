@@ -135,7 +135,7 @@
 /* Layout Grid */
 .device-content-grid {
     display: grid;
-    grid-template-columns: 60% 20% 20%;
+    grid-template-columns: 50% 30% 20%;
     gap: 14px;
     margin-bottom: 24px;
 }

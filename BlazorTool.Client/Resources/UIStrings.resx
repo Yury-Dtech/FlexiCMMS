@@ -619,6 +619,9 @@
   <data name="AssetNo" xml:space="preserve">
     <value>Device</value>
   </data>
+  <data name="AssetNoShort" xml:space="preserve">
+    <value>Short name</value>
+  </data>
   <data name="DeviceCategory" xml:space="preserve">
     <value>Device Category</value>
   </data>

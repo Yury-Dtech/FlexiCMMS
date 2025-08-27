@@ -1,6 +1,8 @@
 ## 2025-08-26
 ### Nowe Funkcje
 *   **Pliki Zleceń Pracy**: Zaimplementowano listowanie i przeglądanie plików dokumentacji zleceń pracy. Obejmuje to nowe metody klienta API (`GetWorkOrderDirectoryFiles`, `GetWorkOrderFile`), rozszerzony model `FullDeviceInfo` o listy plików oraz zaktualizowany komponent `DeviceDisplay` do wyświetlania tych plików z odpowiednimi ikonami i funkcjonalnością otwierania.
+*   **Model plików**: Dodano model `WorkOrderFileItem` do reprezentacji plików dokumentacji po stronie klienta.
+*   **Serwer**: Dodano endpoint `DeviceController.GetFile` do serwowania pojedynczych plików zleceń pracy z normalizacją ścieżek.
 *   **Klient API**: Zrefaktoryzowano `GetAllDevicesCachedAsync` na `GetAllDevicesAsync` i zaktualizowano jego użycie w `OrdersGrid`, `WorkOrderComponent` i `DevicesPage`.
 *   **Strona Zleceń**: Dodano przycisk "Przeładuj wszystkie dane" i metodę `HardLoadData` do jawnego odświeżania danych.
 

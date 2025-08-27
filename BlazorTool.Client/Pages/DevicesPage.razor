@@ -1,22 +1,24 @@
 @page "/devices"
 
+@using BlazorTool.Client.Components
 @using BlazorTool.Client.Models
 @using BlazorTool.Client.Services
 @using Telerik.Blazor.Components
 @using Telerik.Blazor
 @inject ApiServiceClient ApiService
-@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject IStringLocalizer<Resources.UIStrings> Loc
 @inject ViewSettingsService ViewSettingsService
 
-<h3>@Localizer["DevicesPage_Title"]</h3>
-(@_devices?.Count())
+@_dynamicStyles
+<h3>@Loc["DevicesPage_Title"] (@_devices?.Count())</h3>
+
 @if (_devices == null)
 {
-    <TelerikLoaderContainer Visible="true" Text="@Localizer["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
+    <TelerikLoaderContainer Visible="true" Text="@Loc["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
 }
 else
 {
-    <TelerikGrid Data="@_devices"
+    <TelerikGrid Data="@fullDeviceInfos"
                  Pageable="true"
                  PageSize="30"
                  Sortable="true"
@@ -24,16 +26,83 @@ else
                  Resizable="true"
                  Height="calc(100vh - 200px)"
                  OnRowDoubleClick="@OnRowClickHandler"
-                 OnStateChanged="@(async (GridStateEventArgs<Device> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
+                 OnStateChanged="@(async (GridStateEventArgs<FullDeviceInfo> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
+                 OnRowRender="@OnRowRenderHandler"
                  @ref=@devicesGrid>
         <GridColumns>
-            <GridColumn Field="@nameof(Device.MachineID)" Title="@Localizer["WorkOrder_ID"]" Width="100px" />
-            <GridColumn Field="@nameof(Device.AssetNo)" Title="@Localizer["AssetNo"]" />
-            <GridColumn Field="@nameof(Device.DeviceCategory)" Title="@Localizer["DeviceCategory"]" />
-            <GridColumn Field="@nameof(Device.StateID)" Title="StateID" />
-            <GridColumn Field="@nameof(Device.Location)" Title="Location" />
-            <GridColumn Field="@nameof(Device.LocationName)" Title="@Localizer["Device_LocationName"]" />
-            <GridColumn Field="@nameof(Device.Place)" Title="Place" />
+            <GridColumn Field="@nameof(FullDeviceInfo.MachineID)" Title="@Loc["WorkOrder_ID"]" Width="80px" />
+            <GridColumn Field="@nameof(FullDeviceInfo.AssetNo)" Title="@Loc["AssetNo"]" Width="300px"/>
+            <GridColumn Field="@nameof(FullDeviceInfo.AssetNoShort)" Title="@Loc["AssetNoShort"]" />
+            <GridColumn Field="@nameof(FullDeviceInfo.DeviceCategory)" Title="@Loc["WOCategory"]">              
+                <FilterMenuTemplate>
+                    <MultiSelectFilterMenuTemplate Values="@_allCategories"
+                                                   context="@context"
+                                                   NameOfField="@nameof(FullDeviceInfo.DeviceCategory)">
+                    </MultiSelectFilterMenuTemplate>
+                </FilterMenuTemplate>
+                </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.HaveFiles)" Title="@Loc["WorkOrder_Files"]"/>         
+            <GridColumn Field="@nameof(FullDeviceInfo.StateName)" Title="@Loc["WOState"]">
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@_allStates"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.StateName)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.Type)" Title="@nameof(FullDeviceInfo.Type)">
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@_allTypes"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.Type)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.SerialNo)" Title="@nameof(FullDeviceInfo.SerialNo)" />
+            <GridColumn Field="@nameof(FullDeviceInfo.Location)" Title="@nameof(FullDeviceInfo.Location)">
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@fullDeviceInfos?.Select(d=>d.Location).Distinct().ToList()"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.Location)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.LocationRequired)" Title="@nameof(FullDeviceInfo.LocationRequired)" />
+            <GridColumn Field="@nameof(FullDeviceInfo.LocationName)" Title="@nameof(FullDeviceInfo.LocationName)" >
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@fullDeviceInfos?.Select(d => d.LocationName).Distinct().ToList()"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.LocationName)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.Place)" Title="@nameof(FullDeviceInfo.Place)">
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@fullDeviceInfos?.Select(d => d.Place).Distinct().ToList()"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.Place)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.IsCritical)" Title="@nameof(FullDeviceInfo.IsCritical)" />
+            <GridColumn Field="@nameof(FullDeviceInfo.SetName)" Title="@nameof(FullDeviceInfo.SetName)" >
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@fullDeviceInfos?.Select(d => d.SetName).Distinct().ToList()"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.SetName)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
+            <GridColumn Field="@nameof(FullDeviceInfo.Active)" Title="@nameof(FullDeviceInfo.Active)" />
+            <GridColumn Field="@nameof(FullDeviceInfo.Cycle)" Title="@nameof(FullDeviceInfo.Cycle)" />
+            <GridColumn Field="@nameof(FullDeviceInfo.Owner)" Title="@nameof(FullDeviceInfo.Owner)">
+                <FilterMenuTemplate>
+                    <CheckBoxFilterMenuTemplate Values="@fullDeviceInfos?.Select(d => d.Owner).Distinct().ToList()"
+                                                context="@context"
+                                                NameOfField="@nameof(FullDeviceInfo.Owner)">
+                    </CheckBoxFilterMenuTemplate>
+                </FilterMenuTemplate>
+            </GridColumn>
         </GridColumns>
     </TelerikGrid>
 }
@@ -48,7 +117,7 @@ else
                ThemeColor="@ThemeConstants.Window.ThemeColor.Dark"
                CloseOnOverlayClick="true">
     <WindowTitle>
-        @Localizer["DeviceDetails_Title"]
+        @Loc["DeviceDetails_Title"]
     </WindowTitle>
     <WindowContent>
         @if (_selectedDeviceId.HasValue)
@@ -57,7 +126,7 @@ else
         }
         else
         {
-            <p>@Localizer["DeviceDetails_NoDeviceSelected"]</p>
+            <p>@Loc["DeviceDetails_NoDeviceSelected"]</p>
         }
     </WindowContent>
     <WindowActions>
@@ -67,16 +136,50 @@ else
 
 @code {
     private List<Device>? _devices;
+    private List<FullDeviceInfo>? fullDeviceInfos;
     private int? _selectedDeviceId;
     private bool _showDeviceWindow = false;
     private string ViewSettingsKey = ViewSettingsService.SettingsKeys["DevicesPage"];
-    private ViewSettings<Device> _viewSettings;
-    private TelerikGrid<Device> devicesGrid;
+    private ViewSettings<FullDeviceInfo> _viewSettings;
+    private TelerikGrid<FullDeviceInfo> devicesGrid;
     private bool hasInitialized = false;
+    private MarkupString? _dynamicStyles;
+    private List<string?> _allStates = new List<string>();
+    private List<string?> _allCategories;
+    private List<string?> _allTypes;
 
     protected override async Task OnInitializedAsync()
     {
-            _devices = await ApiService.GetAllDevicesAsync();        
+        _devices = await ApiService.GetAllDevicesAsync();
+        fullDeviceInfos = await ApiService.GetListDeviceInfoForGrid(_devices);
+        _allStates = fullDeviceInfos?.Select(x=>x?.StateName).Distinct().ToList() ?? new List<string?>();
+        _allCategories = _devices.Select(x=>x.DeviceCategory).Distinct().ToList();
+        _allTypes = _devices.Select(x => x.Type).Distinct().ToList();
+        GenerateDynamicStyles();
+    }
+
+    private void GenerateDynamicStyles()
+    {
+        if (fullDeviceInfos == null) return;
+
+        var styleBuilder = new System.Text.StringBuilder();
+        styleBuilder.AppendLine("<style>");
+
+        var uniqueColors = fullDeviceInfos
+            .Where(d => d.LastStatus != null && !string.IsNullOrEmpty(d.LastStatus.Color))
+            .Select(d => d.LastStatus.Color)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var color in uniqueColors)
+        {
+            if (string.IsNullOrEmpty(color)) continue;
+            var softColor = ColorHelper.GetSoftenedColor(color, 0.1f, 1.0f); //TODO make parameters for user setiings
+            var className = $"grid-row-color-{color.Replace("#", "")}";
+            styleBuilder.AppendLine($".{className} {{ background-color: {softColor} !important; }}");
+        }
+
+        styleBuilder.AppendLine("</style>");
+        _dynamicStyles = new MarkupString(styleBuilder.ToString());
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -84,7 +187,7 @@ else
         if (firstRender && !hasInitialized)
         {
             hasInitialized = true;
-            _viewSettings = await ViewSettingsService.LoadSettingsAsync<Device>(ViewSettingsKey);
+            _viewSettings = await ViewSettingsService.LoadSettingsAsync<FullDeviceInfo>(ViewSettingsKey);
             if (devicesGrid != null)
             {
                 await devicesGrid.SetStateAsync(_viewSettings.GridState);
@@ -99,11 +202,25 @@ else
 
     private void OnRowClickHandler(GridRowClickEventArgs args)
     {
-        var clickedDevice = args.Item as Device;
+        var clickedDevice = args.Item as FullDeviceInfo;
         if (clickedDevice != null)
         {
             _selectedDeviceId = clickedDevice.MachineID;
             _showDeviceWindow = true;
         }
     }
+
+    private void OnRowRenderHandler(GridRowRenderEventArgs args)
+    {
+        var item = args.Item as FullDeviceInfo;
+        if (item != null && item.LastStatus != null && !string.IsNullOrEmpty(item.LastStatus.Color))
+        {
+            args.Class = $"grid-row-color-{item.LastStatus.Color.Replace("#", "")}";
+        }
+    }
+
+    #region filters
+   
+    
+    #endregion
 }

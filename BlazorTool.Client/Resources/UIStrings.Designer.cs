@@ -430,6 +430,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Short name.
+        /// </summary>
+        public static string AssetNoShort {
+            get {
+                return ResourceManager.GetString("AssetNoShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assigned Person.
         /// </summary>
         public static string AssignedPerson {

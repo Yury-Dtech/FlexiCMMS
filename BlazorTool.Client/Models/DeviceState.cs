@@ -16,5 +16,10 @@ namespace BlazorTool.Client.Models
 
         [JsonPropertyName("stateID")]
         public int StateID { get; set; }
+
+        public override string ToString()
+        {
+            return StateName ?? string.Empty;
+        }
     }
 }

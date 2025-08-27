@@ -35,9 +35,9 @@
                 </div>
                 <div class="device-status-indicator @GetStatusClass()">
                     <span class="status-dot"></span>
-                    @if (_deviceInfo.State != null)
+                    @if (_deviceInfo.LastState != null)
                     {
-                        <span>@_deviceInfo.State.StateName</span>
+                        <span>@_deviceInfo.LastState.StateName</span>
                     }
                 </div>
             </div>
@@ -105,7 +105,7 @@
                     </TelerikCard>
 
                     <!-- State Information Card -->
-                    @if (_deviceInfo.State != null)
+                    @if (_deviceInfo.LastState != null)
                     {
                         <TelerikCard Class="state-card">
                             <CardHeader>
@@ -117,15 +117,15 @@
                             <CardBody>
                                 <div class="state-info">
                                     <div class="state-main">
-                                        <div class="state-name">@_deviceInfo.State.StateName</div>
+                                        <div class="state-name">@_deviceInfo.LastState.StateName</div>
                                         <div class="state-duration">
-                                            @Loc["DeviceDisplay_Duration"] @FormatDuration(_deviceInfo.State.StateTime)
+                                            @Loc["DeviceDisplay_Duration"] @FormatDuration(_deviceInfo.LastState.StateTime)
                                         </div>
                                     </div>
-                                    @if (_deviceInfo.State.ChangeTime.HasValue)
+                                    @if (_deviceInfo.LastState.ChangeTime.HasValue)
                                     {
                                         <div class="state-change-time">
-                                            @Loc["DeviceDisplay_Changed"] @_deviceInfo.State.ChangeTime.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
+                                            @Loc["DeviceDisplay_Changed"] @_deviceInfo.LastState.ChangeTime.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
                                         </div>
                                     }
                                 </div>
@@ -339,9 +339,9 @@
     }
     private string GetStatusClass()
     {
-        if (_deviceInfo?.State == null) return "status-unknown";
+        if (_deviceInfo?.LastState == null) return "status-unknown";
 
-        return _deviceInfo.State.StateID switch
+        return _deviceInfo.LastState.StateID switch
         {
             1 => "status-running",
             2 => "status-stopped",

@@ -1,6 +1,8 @@
 ## 2025-08-26
 ### Features
 *   **Work Order Files**: Implemented listing and viewing of work order documentation files. This includes new API client methods (`GetWorkOrderDirectoryFiles`, `GetWorkOrderFile`), an enhanced `FullDeviceInfo` model to include file lists, and an updated `DeviceDisplay` component to show these files with appropriate icons and opening functionality.
+*   **File model**: Added `WorkOrderFileItem` model to represent documentation files in the client.
+*   **Server**: Added `DeviceController.GetFile` endpoint to serve individual work order files (with path normalization).
 *   **API Client**: Refactored `GetAllDevicesCachedAsync` to `GetAllDevicesAsync` and updated its usages across `OrdersGrid`, `WorkOrderComponent`, and `DevicesPage`.
 *   **Orders Page**: Added a "Reload All Data" button and a `HardLoadData` method for explicit data refresh.
 
