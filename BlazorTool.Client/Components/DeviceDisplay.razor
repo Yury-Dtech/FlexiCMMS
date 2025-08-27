@@ -1,10 +1,11 @@
-@using BlazorTool.Client.Models
+﻿@using BlazorTool.Client.Models
 @using BlazorTool.Client.Resources
 @using BlazorTool.Client.Services
 @using Telerik.SvgIcons
 @inject ApiServiceClient ApiService
 @inject UserState UserState
 @inject IStringLocalizer<UIStrings> Loc
+@inject IJSRuntime JSRuntime
 
 <div class="device-display-container">
     <TelerikLoaderContainer Visible="@_isLoading" Template="@LoaderTemplate">
@@ -58,39 +59,28 @@
                             <div class="info-grid">
                                 <div class="info-item">
                                     <label>@Loc["DeviceDisplay_Category"]</label>
-                                    <span>@_deviceInfo.DeviceCategory</span>
+                                    <TelerikTextBox Id="DeviceCategory" Value="@(_deviceInfo.DeviceCategory ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
                                 </div>
                                 <div class="info-item">
                                     <label>@Loc["DeviceDisplay_SerialNo"]</label>
-                                    <span>@_deviceInfo.SerialNo</span>
+                                    <TelerikTextBox Id="SerialNo" Value="@(_deviceInfo.SerialNo ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
                                 </div>
                                 <div class="info-item">
                                     <label>@Loc["DeviceDisplay_Location"]</label>
-                                    <span>@(_deviceInfo.LocationName ?? Loc["DeviceDisplay_NotSpecified"])</span>
+                                <TelerikTextBox Id="LocationName" Value="@(_deviceInfo.LocationName ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
                                 </div>
-                                @if (!string.IsNullOrEmpty(_deviceInfo.Place))
-                                {
                                     <div class="info-item">
                                         <label>@Loc["DeviceDisplay_Place"]</label>
-                                        <span>@_deviceInfo.Place</span>
+                                <TelerikTextBox Id="Place" Value="@(_deviceInfo.Place ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
                                     </div>
-                                }
-                                @if (!string.IsNullOrEmpty(_deviceInfo.Owner))
-                                {
                                     <div class="info-item">
                                         <label>@Loc["DeviceDisplay_Owner"]</label>
-                                        <span>@_deviceInfo.Owner</span>
+                                        <TelerikTextBox Id="Owner" Value="@(_deviceInfo.Owner ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
                                     </div>
-                                }
-                                @if (!string.IsNullOrEmpty(_deviceInfo.SetName))
-                                {
                                     <div class="info-item">
                                         <label>@Loc["DeviceDisplay_Set"]</label>
-                                        <span>@_deviceInfo.SetName</span>
+                                <TelerikTextBox Id="SetName" Value="@(_deviceInfo.SetName ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
                                     </div>
-                                }
-                                @if (!string.IsNullOrEmpty(_deviceInfo.DocumentationPath))
-                                {
                                     <div class="info-item full-width">
                                         <label>@Loc["DeviceDisplay_Documentation"]</label>
                                         <TelerikButton OnClick="@(() => OpenDocumentation(_deviceInfo.DocumentationPath))" 
@@ -99,7 +89,6 @@
                                             @Loc["DeviceDisplay_OpenDocumentation"]
                                         </TelerikButton>
                                     </div>
-                                }
                             </div>
                         </CardBody>
                     </TelerikCard>
@@ -136,7 +125,7 @@
                 </div>
 
                 <!-- middle Column -->
-                <div class="middle-column">
+                @* <div class="middle-column">
                  <!-- Documentation Files Card -->
                 <TelerikCard Class="images-card">
                             <CardHeader>
@@ -166,7 +155,7 @@
                             </CardBody>
                         </TelerikCard>
 
-                </div>
+                </div> *@
             <div class="right-column">
                     <!-- Device Images -->
                 @if (!_isImageLoading)
@@ -196,8 +185,14 @@
                             </CardBody>
                 }else
                 {
-                        <div>No images</div>
-                    }
+
+                            <div >
+                                @IconHtmlHelper.Picture(150)
+                                <br />
+                                No photo
+                            </div>
+
+                }
                     </TelerikCard>
 
                 }else
@@ -278,6 +273,34 @@
     </WindowActions>
 </TelerikWindow>
 
+<!-- Documentation Files Modal -->
+<TelerikWindow @bind-Visible="@_showDocumentationModal" Modal="true" Class="documentation-modal" CloseOnOverlayClick="true">
+    <WindowTitle>@Loc["DeviceDisplay_DocumentationFiles"]</WindowTitle>
+    <WindowContent>
+        @if (_deviceInfo?.DirectoryFiles != null && _deviceInfo.DirectoryFiles.Any())
+        {
+            <TelerikListView Data="@_deviceInfo.DirectoryFiles"
+                             Pageable="true"
+                             PageSize="10">
+                <Template>
+                    @{ var file = context as WorkOrderFileItem; }
+                    <div class="file-item" @ondblclick="@(() => OpenFile(file.FullName))">
+                        <TelerikSvgIcon Icon="@GetFileIcon(file.Name)" Size="@ThemeConstants.SvgIcon.Size.Small"></TelerikSvgIcon>
+                        <span>@file.Name</span>
+                    </div>
+                </Template>
+            </TelerikListView>
+        }
+        else
+        {
+            <div>@Loc["DeviceDisplay_NoDocumentationFiles"]</div>
+        }
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
 @code {
     [Parameter]
     public int DeviceID { get; set; }
@@ -291,6 +314,7 @@
     private int ImgHeight = 300;
     private int ImgWidth = 300;
     private bool isFullImgLoaded = false;
+    private bool _showDocumentationModal = false;
     private RenderFragment LoaderTemplate => __builder => {
         <div class="loader-wrapper">
             <TelerikLoader Type="@LoaderType.ConvergingSpinner" Size="large"></TelerikLoader>
@@ -370,7 +394,7 @@
 
     private void OpenDocumentation(string? path)
     {
-
+        _showDocumentationModal = true;
     }
 
     private async Task OpenImageModal(string? image)

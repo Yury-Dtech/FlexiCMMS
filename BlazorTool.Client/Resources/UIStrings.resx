@@ -1037,8 +1037,11 @@
     <value>Yes</value>
     <comment>Yes</comment>
   </data>
-  <data name="No" xml:space="preserve">
+    <data name="No" xml:space="preserve">
     <value>No</value>
     <comment>No</comment>
+  </data>
+  <data name="DeviceDisplay_NoDocumentationFiles" xml:space="preserve">
+    <value>No documentation files found.</value>
   </data>
 </root>

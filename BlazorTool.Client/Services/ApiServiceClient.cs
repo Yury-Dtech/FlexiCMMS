@@ -1441,7 +1441,7 @@ namespace BlazorTool.Client.Services
             }
 
             // Normalize the file path: replace double backslashes with single ones
-            string normalizedFileName = fileName.Replace("\\", "\\");
+            string normalizedFileName = fileName.Replace("\\\\", "\\");
 
             // Use the normalized file name as the cache key
             var cacheKey = normalizedFileName;

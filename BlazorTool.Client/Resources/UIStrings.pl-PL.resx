@@ -1034,4 +1034,7 @@
   <data name="No" xml:space="preserve">
     <value>Nie</value>
   </data>
+  <data name="DeviceDisplay_NoDocumentationFiles" xml:space="preserve">
+    <value>Nie znaleziono plików dokumentacji.</value>
+  </data>
 </root>

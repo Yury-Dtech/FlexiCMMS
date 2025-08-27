@@ -889,6 +889,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No documentation files found..
+        /// </summary>
+        public static string DeviceDisplay_NoDocumentationFiles {
+            get {
+                return ResourceManager.GetString("DeviceDisplay_NoDocumentationFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not specified.
         /// </summary>
         public static string DeviceDisplay_NotSpecified {
