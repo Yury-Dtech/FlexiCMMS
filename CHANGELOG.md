@@ -1,3 +1,38 @@
+## 2025-08-28
+### Fixed / Improvements
+*   **Device Display Component**:
+    *   Updated general information fields to use `TelerikTextBox` for consistent display.
+    *   Improved image placeholder when no device images are available.
+    *   Refactored documentation file list to use custom HTML/CSS for better styling within the Telerik Window.
+    *   Enhanced image loading with loading indicators and optimized full-size image loading in the modal.
+    *   Added functionality to open  file  from documentation list.
+*   **Devices Page**:
+    *   Adjusted the minimum width of the device details window for better responsiveness.
+    *   Implemented saving and loading of Telerik Grid state to persist user preferences across sessions.
+    *   Enhanced device list display with dynamic row coloring based on device status.
+    *   Added new filter options for Device Category, State Name, Type, Location, Location Name, Set Name, and Owner.
+    *   Introduced `AssetNoShort` column.
+*   **API Client**:
+    *   Refactored `GetDeviceImageAsync` to use `SingleResponse<DeviceImage>`.
+    *   Added `GetDeviceInfoForGridAsync` and `GetListDeviceInfoForGrid` for optimized device information retrieval for grid display.
+    *   Added `GetWorkOrderDirectoryFiles` and `GetWorkOrderFile` methods for documentation file handling.
+    *   Added `GetFileDownloadUrl` for direct file downloads.
+    *   Removed `AddNewWODict` (deprecated).
+*   **Server**:
+    *   Added `DeviceController` endpoints for `GetDirectoryFiles`, `GetFile`, and `DownloadFile` to serve documentation files.
+*   **Localization**:
+    *   Added numerous new localization keys for device-related UI elements, including `AssetNoShort`, and various `DeviceDisplay_` prefixes.
+*   **Navigation Menu**:
+    *   Updated navigation links to use `TelerikSvgIcon` for improved visual consistency.
+*   **Work Order Component**:
+    *   Adjusted description field editability to allow editing for new work orders regardless of specific permissions.
+*   **Internal**:
+    *   Added fallback for `Authorization` header in `ServerAuthTokenService.cs` for local development.
+    *   Introduced `ColorHelper` utility class for softened color generation.
+    *   Updated `FullDeviceInfo` model with `LastState`, `StateHistory`, `LastStatus`, `HaveFiles`, `StateName` properties and initialized `Images` and `DirectoryFiles`.
+    *   Added `WorkOrderFileItem` model.
+    *   Updated `ViewSettingsService` with `DevicesPage` key.
+
 ## 2025-08-26
 ### Features
 *   **Work Order Files**: Implemented listing and viewing of work order documentation files. This includes new API client methods (`GetWorkOrderDirectoryFiles`, `GetWorkOrderFile`), an enhanced `FullDeviceInfo` model to include file lists, and an updated `DeviceDisplay` component to show these files with appropriate icons and opening functionality.
@@ -29,14 +64,11 @@
 ### Features
 * Added caching for work order files (`ApiServiceClient.GetWorkOrderFilesAsync`, `ApiServiceClient.GetWorkOrderFileAsync`) and a public method to invalidate these caches (`ApiServiceClient.InvalidateWorkOrderFilesCache`).
 
-## 2025-08-22
-### Features
+### Fixed / Improvements
 * Added method to retrieve a single work order file (`WorkOrderFileData` model, `ApiServiceClient.GetWorkOrderFileAsync`, `WoController.GetFile`).
 * Added method to retrieve work order files (`WorkOrderFile` model, `ApiServiceClient.GetWorkOrderFilesAsync`, `WoController.GetFiles`).
 * Added user information display on the Settings page.
 * Enhanced activity display and user interface features.
-
-### Fixed / Improvements
 * Updated `ApiServiceClient` and `WoController` to use `ApiResponse<WorkOrderFile>`.
 * Changed activity list sorting to descending.
 * Fixed auto-saving of pane sizes on the Home page.
@@ -215,7 +247,7 @@
     - Components now subscribe to `AppStateService.OnChange` to dynamically update their appearance when the color scheme is changed.
 - **API Address Change**: Implemented a mechanism to restart the application after changing the external API address on the Settings page. This ensures that the new address is correctly applied.
 - **Confirmation for API Change**: Added a Telerik confirmation dialog on the Settings page, which appears when a user attempts to change the API address. The dialog displays both the old and new addresses and warns that the application will restart.
-- **Refactoring**:
+- **Refactoring**: 
     - Replaced the obsolete `ListTypeEnum` with the correct `WOListTypeEnum` across the client-side application.
     - Improved data loading and filtering logic on the `SchedulerPage` for departments and device categories.
     - Refactored `ApiServiceClient` to correctly handle nullable `personID` in dictionary-related methods.
@@ -362,6 +394,7 @@
     - Developed `ActivityList` and `ActivityDisplay` Blazor components to show the activities.
     - Modified `WorkOrderComponent` to display the activity list on user interaction.
     - Beautify ChangelogPage
+
 ## 2025-07-01
 - **UI and Functionality:**
     - On `SchedulerPage`, added a `Device` filter by `AssetNo` after the `Department` filter.

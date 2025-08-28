@@ -1499,7 +1499,6 @@ namespace BlazorTool.Client.Services
             string encodedFilePath = Uri.EscapeDataString(normalizedFilePath);
 
             // Construct the full URL for the download endpoint
-            
             return $"{_http.BaseAddress}device/downloadfile?filePath={encodedFilePath}";
         }
         #endregion

@@ -4,6 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>25b15d1b-b1cb-4d38-9e0a-4fea4698cdd6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="SharpCifs.Std" Version="0.2.13" />
         <PackageReference Include="Telerik.UI.for.Blazor" Version="6.2.0" />
   </ItemGroup>
 

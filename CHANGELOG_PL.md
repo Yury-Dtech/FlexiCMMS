@@ -1,3 +1,38 @@
+## 2025-08-28
+### Naprawiono / Ulepszenia
+*   **Komponent Wyświetlania Urządzeń (Device Display Component)**:
+    *   Zaktualizowano pola ogólnych informacji, aby używały `TelerikTextBox` dla spójnego wyświetlania.
+    *   Ulepszono placeholder obrazu, gdy brak dostępnych obrazów urządzenia.
+    *   Zrefaktoryzowano listę plików dokumentacji, aby używała niestandardowego HTML/CSS dla lepszego stylu w oknie Telerik.
+    *   Ulepszono ładowanie obrazów za pomocą wskaźników ładowania i zoptymalizowano ładowanie obrazów w pełnym rozmiarze w oknie modalnym.
+    *   Dodano funkcjonalność otwierania plików z listy dokumentacji.
+*   **Strona Urządzeń (Devices Page)**:
+    *   Dostosowano minimalną szerokość okna szczegółów urządzenia dla lepszej responsywności.
+    *   Zaimplementowano zapisywanie i ładowanie stanu Telerik Grid w celu zachowania preferencji użytkownika między sesjami.
+    *   Ulepszono wyświetlanie listy urządzeń z dynamicznym kolorowaniem wierszy na podstawie statusu urządzenia.
+    *   Dodano nowe opcje filtrowania dla Kategorii Urządzenia, Nazwy Stanu, Typu, Lokalizacji, Nazwy Lokalizacji, Nazwy Zestawu i Właściciela.
+    *   Wprowadzono kolumnę `AssetNoShort`.
+*   **Klient API (API Client)**:
+    *   Zrefaktoryzowano `GetDeviceImageAsync` do używania `SingleResponse<DeviceImage>`.
+    *   Dodano `GetDeviceInfoForGridAsync` i `GetListDeviceInfoForGrid` dla zoptymalizowanego pobierania informacji o urządzeniach do wyświetlania w siatce.
+    *   Dodano metody `GetWorkOrderDirectoryFiles` i `GetWorkOrderFile` do obsługi plików dokumentacji.
+    *   Dodano `GetFileDownloadUrl` do bezpośredniego pobierania plików.
+    *   Usunięto `AddNewWODict` (przestarzałe).
+*   **Serwer (Server)**:
+    *   Dodano punkty końcowe `DeviceController` dla `GetDirectoryFiles`, `GetFile` i `DownloadFile` do serwowania plików dokumentacji.
+*   **Lokalizacja (Localization)**:
+    *   Dodano liczne nowe klucze lokalizacyjne dla elementów interfejsu użytkownika związanych z urządzeniami, w tym `AssetNoShort` i różne prefiksy `DeviceDisplay_`.
+*   **Menu Nawigacyjne (Navigation Menu)**:
+    *   Zaktualizowano linki nawigacyjne, aby używały `TelerikSvgIcon` dla lepszej spójności wizualnej.
+*   **Komponent Zlecenia Pracy (Work Order Component)**:
+    *   Dostosowano edytowalność pola opisu, aby umożliwić edycję nowych zleceń pracy niezależnie od konkretnych uprawnień.
+*   **Wewnętrzne (Internal)**:
+    *   Dodano fallback dla nagłówka `Authorization` w `ServerAuthTokenService.cs` dla lokalnego środowiska deweloperskiego.
+    *   Wprowadzono klasę narzędziową `ColorHelper` do generowania stonowanych kolorów.
+    *   Zaktualizowano model `FullDeviceInfo` o właściwości `LastState`, `StateHistory`, `LastStatus`, `HaveFiles`, `StateName` i zainicjalizowano `Images` oraz `DirectoryFiles`.
+    *   Dodano model `WorkOrderFileItem`.
+    *   Zaktualizowano `ViewSettingsService` o klucz `DevicesPage`.
+
 ## 2025-08-26
 ### Nowe Funkcje
 *   **Pliki Zleceń Pracy**: Zaimplementowano listowanie i przeglądanie plików dokumentacji zleceń pracy. Obejmuje to nowe metody klienta API (`GetWorkOrderDirectoryFiles`, `GetWorkOrderFile`), rozszerzony model `FullDeviceInfo` o listy plików oraz zaktualizowany komponent `DeviceDisplay` do wyświetlania tych plików z odpowiednimi ikonami i funkcjonalnością otwierania.
@@ -218,7 +253,7 @@
     - Komponenty subskrybują teraz `AppStateService.OnChange`, aby dynamicznie aktualizować swój wygląd po zmianie schematu kolorów.
 - **Zmiana Adresu API**: Wprowadzono mechanizm restartu aplikacji po zmianie adresu zewnętrznego API na stronie Ustawień. Zapewnia to poprawne zastosowanie nowego adresu.
 - **Potwierdzenie Zmiany API**: Dodano okno dialogowe Telerik na stronie Ustawień, które pojawia się, gdy użytkownik próbuje zmienić adres API. Dialog wyświetla stary i nowy adres oraz ostrzega, że aplikacja zostanie ponownie uruchomiona.
-- **Refaktoryzacja**: 
+- **Refaktoryzacja**:
     - Zastąpiono przestarzały `ListTypeEnum` poprawnym `WOListTypeEnum` w całej aplikacji klienckiej.
     - Ulepszono logikę ładowania danych i filtrowania na stronie `SchedulerPage` dla działów i kategorii urządzeń.
     - Zrefaktoryzowano `ApiServiceClient`, aby poprawnie obsługiwał `personID` (który może być null) w metodach związanych ze słownikami.

@@ -6,9 +6,11 @@
 @using Telerik.Blazor.Components
 @using Telerik.Blazor
 @inject ApiServiceClient ApiService
+@inject UserState UserState
 @inject IStringLocalizer<Resources.UIStrings> Loc
 @inject ViewSettingsService ViewSettingsService
 
+<BlazorTool.Client.Components.CheckSession ApiService="@ApiService" UserState="@UserState" />
 @_dynamicStyles
 <h3>@Loc["DevicesPage_Title"] (@_devices?.Count())</h3>
 

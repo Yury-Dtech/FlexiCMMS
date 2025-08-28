@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.InteropServices;
+using SharpCifs.Smb;
 
 namespace BlazorTool.Controllers
 {
@@ -350,14 +352,53 @@ namespace BlazorTool.Controllers
                     return BadRequest("File path cannot be empty.");
                 }
 
-                // Further sanitize to prevent directory traversal (e.g., "..")
-                string normalizedFilePath = Path.GetFullPath(filePath);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Console.WriteLine("Running on Windows. Using direct FileStream access." + filePath);
 
-                var fileStream = new FileStream(normalizedFilePath, FileMode.Open, FileAccess.Read);
-                var contentType = GetContentType(normalizedFilePath);
-                var fileName = Path.GetFileName(normalizedFilePath);
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        return NotFound("File not found at path: " + filePath);
+                    }
 
-                return File(fileStream, contentType, fileName);
+                    var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                    var contentType = GetContentType(filePath);
+                    var fileName = Path.GetFileName(filePath);
+
+                    return File(fileStream, contentType, fileName);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Console.WriteLine("Running on Linux. Using SharpCifs.Std for SMB access." + filePath);
+
+                    //// Учетные данные (лучше брать из IConfiguration)
+                    //var username = "ВАШ_ЛОГИН";
+                    //var password = "ВАШ_ПАРОЛЬ";
+                    //var domain = "ВАШ_ДОМЕН";
+                    //var auth = new NtlmPasswordAuthentication(domain, username, password);
+
+                    // Преобразование пути в smb://
+                    var smbPath = "smb:" + filePath.Replace('\\', '/');
+                    Console.WriteLine($"smbPath={smbPath}");
+                    //var smbFile = new SmbFile(smbPath, auth);
+                    var smbFile = new SmbFile(smbPath);
+
+                    if (!smbFile.Exists())
+                    {
+                        return NotFound("File not found on the network share.");
+                    }
+
+                    var fileStream = smbFile.GetInputStream();
+                    var contentType = GetContentType(filePath);
+                    var fileName = smbFile.GetName();
+
+                    return File(fileStream, contentType, fileName);
+                }
+                else
+                {
+                    // Обработка других ОС, например macOS, или выброс исключения
+                    return StatusCode(501, $"Operating system {RuntimeInformation.OSDescription} is not supported.");
+                }
             }
             catch (Exception ex)
             {
