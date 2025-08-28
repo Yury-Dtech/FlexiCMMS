@@ -279,21 +279,19 @@
     <WindowContent>
         @if (_deviceInfo?.DirectoryFiles != null && _deviceInfo.DirectoryFiles.Any())
         {
-            <TelerikListView Data="@_deviceInfo.DirectoryFiles"
-                             Pageable="true"
-                             PageSize="10">
-                <Template>
-                    @{ var file = context as WorkOrderFileItem; }
-                    <div class="file-item" @ondblclick="@(() => OpenFile(file.FullName))">
-                        <TelerikSvgIcon Icon="@GetFileIcon(file.Name)" Size="@ThemeConstants.SvgIcon.Size.Small"></TelerikSvgIcon>
-                        <span>@file.Name</span>
+            <div class="documentation-file-list">
+                @foreach (var file in _deviceInfo.DirectoryFiles)
+                {
+                    <div class="documentation-file-item">
+                        <i class="file-icon @GetFileIconClass(file.Name)"></i>
+                        <a href="@ApiService.GetFileDownloadUrl(file.FullName)" target="_blank">@file.Name</a>
                     </div>
-                </Template>
-            </TelerikListView>
+                }
+            </div>
         }
         else
         {
-            <div>@Loc["DeviceDisplay_NoDocumentationFiles"]</div>
+            <div class="no-documentation-files-message">@Loc["DeviceDisplay_NoDocumentationFiles"]</div>
         }
     </WindowContent>
     <WindowActions>
@@ -444,19 +442,19 @@
         }
     }
 
-    private ISvgIcon GetFileIcon(string fileName)
+    private string GetFileIconClass(string fileName)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
         return extension switch
         {
-            ".pdf" => SvgIcon.FilePdf,
-            ".doc" or ".docx" => SvgIcon.FileWord,
-            ".xls" or ".xlsx" => SvgIcon.FileExcel,
-            ".ppt" or ".pptx" => SvgIcon.FileReport,
-            ".jpg" or ".jpeg" or ".png" or ".gif" => SvgIcon.FileImage,
-            ".zip" or ".rar" => SvgIcon.FileZip,
-            ".txt" => SvgIcon.FileTxt,
-            _ => SvgIcon.File
+            ".pdf" => "icon-pdf",
+            ".doc" or ".docx" => "icon-word",
+            ".xls" or ".xlsx" => "icon-excel",
+            ".ppt" or ".pptx" => "icon-ppt",
+            ".jpg" or ".jpeg" or ".png" or ".gif" => "icon-image",
+            ".zip" or ".rar" => "icon-zip",
+            ".txt" => "icon-txt",
+            _ => "icon-file"
         };
     }
 }

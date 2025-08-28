@@ -40,6 +40,20 @@ namespace BlazorTool.Services
             }
 
             Console.WriteLine($"ServerAuthTokenService: Token not found in cache for PersonID: {personID}.");
+            // Fallback: forward token from incoming Authorization header (useful for local dev)
+            if (httpContext.Request.Headers.TryGetValue("Authorization", out var authHeaderValues))
+            {
+                var authHeader = authHeaderValues.ToString();
+                const string bearerPrefix = "Bearer ";
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    var token = authHeader.Substring(bearerPrefix.Length).Trim();
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        return token;
+                    }
+                }
+            }
             return null; 
         }
     }

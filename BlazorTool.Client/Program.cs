@@ -75,6 +75,30 @@ var host = builder.Build();
 var userState = host.Services.GetRequiredService<UserState>();
 await userState.InitializationTask;
 
+// In Development, preload identity from wwwroot if not present
+if (builder.HostEnvironment.IsDevelopment() && (!userState.PersonID.HasValue || string.IsNullOrEmpty(userState.Token)))
+{
+    try
+    {
+        var httpFactory = host.Services.GetRequiredService<IHttpClientFactory>();
+        var http = httpFactory.CreateClient("ServerHost");
+        var identity = await http.GetFromJsonAsync<IdentityData>("identityData.json");
+        if (identity != null)
+        {
+            await userState.SaveIdentityDataAsync(identity);
+            Console.WriteLine($"Loaded dev identity for {identity.Name} (PersonID={identity.PersonID}).");
+        }
+        else
+        {
+            Console.WriteLine("Dev identity file not found or invalid.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to load dev identity: {ex.Message}");
+    }
+}
+
 await host.RunAsync();
 
 public static class AppInfo

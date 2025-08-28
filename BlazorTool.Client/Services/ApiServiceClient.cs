@@ -1482,6 +1482,26 @@ namespace BlazorTool.Client.Services
                 return new SingleResponse<WorkOrderFileData> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
+
+        public string GetFileDownloadUrl(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                Console.WriteLine($"[{_userState.UserName}] DeviceFileService.GetFileDownloadUrl: FilePath cannot be empty.");
+                Debug.WriteLine($"[{_userState.UserName}] DeviceFileService.GetFileDownloadUrl: FilePath cannot be empty.");
+                return string.Empty;
+            }
+
+            // Normalize the file path: replace double backslashes with single ones
+            string normalizedFilePath = filePath.Replace("\\", "\\");
+
+            // Encode the file path to be safe for URL
+            string encodedFilePath = Uri.EscapeDataString(normalizedFilePath);
+
+            // Construct the full URL for the download endpoint
+            
+            return $"{_http.BaseAddress}device/downloadfile?filePath={encodedFilePath}";
+        }
         #endregion
 
         #region Other functions

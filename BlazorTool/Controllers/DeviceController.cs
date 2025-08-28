@@ -340,6 +340,57 @@ namespace BlazorTool.Controllers
             }
         }
 
+        [HttpGet("downloadfile")]
+        public IActionResult DownloadFile([FromQuery] string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath))
+                {
+                    return BadRequest("File path cannot be empty.");
+                }
+
+                // Further sanitize to prevent directory traversal (e.g., "..")
+                string normalizedFilePath = Path.GetFullPath(filePath);
+
+                var fileStream = new FileStream(normalizedFilePath, FileMode.Open, FileAccess.Read);
+                var contentType = GetContentType(normalizedFilePath);
+                var fileName = Path.GetFileName(normalizedFilePath);
+
+                return File(fileStream, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while trying to download the file: {ex.Message}");
+            }
+        }
+
+        private string GetContentType(string path)
+        {
+            var types = GetMimeTypes();
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            return types.ContainsKey(ext) ? types[ext] : "application/octet-stream";
+        }
+
+        private Dictionary<string, string> GetMimeTypes()
+        {
+            return new Dictionary<string, string>
+            {
+                {".txt", "text/plain"},
+                {".pdf", "application/pdf"},
+                {".doc", "application/vnd.ms-word"},
+                {".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+                {".xls", "application/vnd.ms-excel"},
+                {".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+                {".png", "image/png"},
+                {".jpg", "image/jpeg"},
+                {".jpeg", "image/jpeg"},
+                {".gif", "image/gif"},
+                {".csv", "text/csv"}
+                // Add more as needed
+            };
+        }
+
         // GET api/<WoController>/5
         [HttpGet("{id}")]
         public string Get(int id)

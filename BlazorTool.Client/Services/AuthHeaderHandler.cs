@@ -39,6 +39,15 @@ namespace BlazorTool.Client.Services
                 Console.WriteLine("AuthHeaderHandler: UserState.PersonID is null after initialization. Request sent without X-Person-ID header.");
             }
 
+            if (!string.IsNullOrEmpty(_userState.Token))
+            {
+                request.Headers.Add("Authorization", $"Bearer {_userState.Token}");
+            }
+            else
+            {
+                Console.WriteLine("AuthHeaderHandler: UserState.Token is null or empty. Request sent without Authorization header.");
+            }
+
             return await base.SendAsync(request, cancellationToken);
         }
     }

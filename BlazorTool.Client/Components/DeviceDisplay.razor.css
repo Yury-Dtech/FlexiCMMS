@@ -400,3 +400,148 @@
         padding: 16px;
     }
 }
+
+/* Telerik overrides */
+::deep .k-textbox {
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    padding: 0;
+    font-size: 14px;
+    color: #333;
+}
+
+::deep .k-textbox:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+::deep .k-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+::deep .k-button {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 10px 18px;
+    transition: all 0.2s ease;
+}
+
+    ::deep .k-button-solid-primary {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+
+    ::deep .k-button-solid-primary:hover {
+        background-color: #5a6ad8;
+        border-color: #5a6ad8;
+    }
+
+::deep .k-loader-container {
+    background-color: rgba(255,255,255,0.7);
+}
+
+::deep .k-window {
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+::deep .k-window-titlebar {
+    background-color: #667eea;
+    color: white;
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: none;
+}
+
+::deep .k-window-content {
+    padding: 20px;
+    background-color: #fdfdfd;
+}
+
+::deep .k-window-actions {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #eee;
+    justify-content: flex-end;
+}
+
+::deep .k-window-action {
+    color: #667eea;
+    font-weight: 600;
+}
+
+    ::deep .k-window-action:hover {
+        color: #5a6ad8;
+    }
+
+/* Documentation File List Styles */
+.documentation-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px; /* Adjust as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* For scrollbar */
+}
+
+.documentation-file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+    .documentation-file-item:hover {
+        background-color: #f0f4f8;
+        transform: translateY(-2px);
+    }
+
+    .documentation-file-item a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 500;
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+        .documentation-file-item a:hover {
+            text-decoration: underline;
+        }
+
+.file-icon {
+    font-size: 20px; /* Adjust icon size */
+    color: #6c757d; /* Default icon color */
+    flex-shrink: 0;
+}
+
+/* Specific icon styles (using simple colors for now) */
+.icon-pdf { color: #dc3545; } /* Red for PDF */
+.icon-word { color: #007bff; } /* Blue for Word */
+.icon-excel { color: #28a745; } /* Green for Excel */
+.icon-ppt { color: #ffc107; } /* Yellow for PowerPoint */
+.icon-image { color: #6f42c1; } /* Purple for Image */
+.icon-zip { color: #fd7e14; } /* Orange for Zip */
+.icon-txt { color: #6c757d; } /* Gray for Text */
+.icon-file { color: #343a40; } /* Dark gray for generic file */
+
+.no-documentation-files-message {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.documentation-modal .k-window-content {
+    max-height: 400px; /* Adjust as needed */
+    overflow-y: auto;
+}
