@@ -280,14 +280,21 @@
         @if (_deviceInfo?.DirectoryFiles != null && _deviceInfo.DirectoryFiles.Any())
         {
             <div class="documentation-file-list">
+                @copied
                 @foreach (var file in _deviceInfo.DirectoryFiles)
                 {
                     <div class="documentation-file-item">
                         <i class="file-icon @GetFileIconClass(file.Name)"></i>
-                        <a href="@ApiService.GetFileDownloadUrl(file.FullName)" target="_blank">@file.Name</a>
+                        <a href="@ApiService.GetFileDownloadUrl(file.FullName)" target="_top">@file.Name</a>    
+                        <div class="file-path-container">
+                            <span class="file-path"></span>
+                            <TelerikButton Icon="@SvgIcon.Copy" OnClick="@(() => CopyPathToClipboard(file.FullName))" Class="copy-path-button">Copy path</TelerikButton>
+                        </div>
                     </div>
                 }
             </div>
+            <small>only demo, add files - in future</small>
+            <TelerikFileSelect @ref="@FileSelectRef" />
         }
         else
         {
@@ -313,11 +320,14 @@
     private int ImgWidth = 300;
     private bool isFullImgLoaded = false;
     private bool _showDocumentationModal = false;
+    private string copied = "";
+    private TelerikFileSelect FileSelectRef { get; set; }
     private RenderFragment LoaderTemplate => __builder => {
         <div class="loader-wrapper">
             <TelerikLoader Type="@LoaderType.ConvergingSpinner" Size="large"></TelerikLoader>
             <p class="loading-text">@Loc["DeviceDisplay_LoadingInfo"]</p>
         </div>
+
     };
 
     protected override async Task OnParametersSetAsync()
@@ -344,6 +354,10 @@
         }
     }
 
+    private void OnFileClick()
+    {
+        FileSelectRef.OpenSelectFilesDialog();
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
 
@@ -393,6 +407,8 @@
     private void OpenDocumentation(string? path)
     {
         _showDocumentationModal = true;
+
+        copied = "";
     }
 
     private async Task OpenImageModal(string? image)
@@ -440,6 +456,13 @@
         {
             Console.WriteLine($"Failed to load file data for {filePath}");
         }
+    }
+   
+    private async Task CopyPathToClipboard(string fullPath)
+    {
+        var uncPath = fullPath;
+        var res = await JSRuntime.InvokeAsync<bool>("BlazorTool.copyToClipboard", uncPath);
+        copied = res ? "Copied" : "Error";
     }
 
     private string GetFileIconClass(string fileName)
