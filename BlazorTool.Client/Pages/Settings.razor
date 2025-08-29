@@ -25,55 +25,76 @@
 </TelerikDialog>
 
 <h3>@Localizer["Settings_Title"]</h3>
-<div class="container">
+<div class="container form-grid">
     @if (isAdmin)
     {
         <div class="row mb-3">
-            <div class="col-md-6 d-flex align-items-center">
-                <label for="apiUrl" class="form-label me-3" style="min-width: 150px;">@Localizer["Settings_ApiAddress"]</label>
-                <div class="input-group" style="width: 200px;">
-                    <input type="text" id="apiUrl" class="form-control" @bind="ApiAddress" style="width: 200px;" />
-                    <button class="btn btn-outline-secondary" type="button" @onclick="TestApiAddress">@Localizer["Settings_TestApiAddress"]</button>
+            <label for="apiUrl" class="col-sm-4 col-form-label">@Localizer["Settings_ApiAddress"]</label>
+            <div class="col-sm-8">
+                <div class="input-group control-max">
+                    <input type="text"
+                           id="apiUrl"
+                           class="form-control"
+                           @bind="ApiAddress" />
+                    <button class="btn btn-outline-secondary" type="button" @onclick="TestApiAddress">
+                        @Localizer["Settings_TestApiAddress"]
+                    </button>
                 </div>
             </div>
         </div>
     }
 
     <div class="row mb-3">
-        <div class="col-md-6 d-flex align-items-center">
-            <label for="language" class="form-label me-3" style="min-width: 150px;">Language</label>
-            <select id="language" class="form-select" @bind="@SelectedLanguage" style="width: 200px;">
+        <label for="language" class="col-sm-4 col-form-label">Language</label>
+        <div class="col-sm-8">
+            <select id="language" class="form-select control-max" @bind="@SelectedLanguage">
                 <option value="pl-PL">Polski</option>
                 <option value="en-US">English</option>
-                {!-- Add more languages as needed --}
+                @* Add more languages as needed *@
             </select>
         </div>
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-6 d-flex align-items-center">
-            <label for="networkShareUsername" class="form-label me-3" style="min-width: 150px;">@Localizer["Settings_NetworkShareUsername"]</label>
-            <TelerikTextBox Id="networkShareUsername" @bind-Value="@NetworkShareUsername" Width="200px" />
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6 d-flex align-items-center">
-            <label for="networkSharePassword" class="form-label me-3" style="min-width: 150px;">@Localizer["Settings_NetworkSharePassword"]</label>
-            <TelerikTextBox Id="networkSharePassword" @bind-Value="@NetworkSharePassword" Width="200px" />
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="form-check">
-                <TelerikCheckBox Id="color-switcher" @bind-Value="@UseOriginalColors" />
-                <label class="form-check-label" for="color-switcher">@Localizer["Settings_UseOriginalColors"]</label>
+        <label for="networkShareUsername" class="col-sm-4 col-form-label">
+            @Localizer["Settings_NetworkShareUsername"]
+        </label>
+        <div class="col-sm-8">
+            <div class="control-max">
+                <TelerikTextBox Id="networkShareUsername"
+                                @bind-Value="@NetworkShareUsername"
+                                Width="100%" />
             </div>
         </div>
     </div>
 
-    <button class="btn btn-primary" @onclick="SaveSettingsAsync">@Localizer["Settings_SaveSettings"]</button>
+    <div class="row mb-3">
+        <label for="networkSharePassword" class="col-sm-4 col-form-label">
+            @Localizer["Settings_NetworkSharePassword"]
+        </label>
+        <div class="col-sm-8">
+            <div class="control-max">
+                <TelerikTextBox Id="networkSharePassword"
+                                @bind-Value="@NetworkSharePassword"
+                                Width="100%" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-8 offset-sm-4">
+            <div class="form-check">
+                <TelerikCheckBox Id="color-switcher" @bind-Value="@UseOriginalColors" />
+                <label class="form-check-label" for="color-switcher">
+                    @Localizer["Settings_UseOriginalColors"]
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary align-center" @onclick="SaveSettingsAsync">
+        @Localizer["Settings_SaveSettings"]
+    </button>
 
     @if (!string.IsNullOrEmpty(StatusMessage))
     {
@@ -94,7 +115,7 @@
     private bool isAdmin = false;
     protected string? StatusMessage { get; set; }
     protected string? StatusMessageClass { get; set; } // e.g., "text-success" or "text-danger"
-    string currentUser = "test User"; // Placeholder for current user, replace with actual user logic"
+    string currentUser = "test User";
     private bool UseOriginalColors { get; set; }
     protected string? NetworkShareUsername { get; set; }
     protected string? NetworkSharePassword { get; set; }
@@ -245,10 +266,14 @@
         {
             var s1 = await SaveSettingAsync("selectedLanguage", SelectedLanguage, currentUser);
             var s2 = await SaveSettingAsync("useOriginalColors", UseOriginalColors.ToString(), currentUser);
-            if (s1 && s2)
+            var s3 = await SaveSettingAsync("NetworkShareUsername", NetworkShareUsername, currentUser);
+            var s4 = await SaveSettingAsync("NetworkSharePassword", NetworkSharePassword, currentUser);
+            if (s1 && s2 && s3 && s4)
             {
                 UserState.UseOriginalColors = UseOriginalColors;
                 UserState.LangCode = SelectedLanguage;
+                UserState.NetworkSharePassword = NetworkSharePassword;
+                UserState.NetworkShareUsername = NetworkShareUsername;
                 needReload = await UserState.SwitchLanguage(SelectedLanguage);
                 StatusMessage = Localizer["Settings_SettingsSaved"];
                 StatusMessageClass = "text-success";
