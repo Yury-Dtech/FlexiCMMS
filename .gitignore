@@ -380,3 +380,4 @@ commit_message.txt
 /displayDevice.txt
 /BlazorTool/wwwroot/identityData.json
 /DoneToday.txt
+/BlazorTool.Client/wwwroot/buildinfo.txt
