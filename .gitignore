@@ -381,3 +381,6 @@ commit_message.txt
 /BlazorTool/wwwroot/identityData.json
 /DoneToday.txt
 /BlazorTool.Client/wwwroot/buildinfo.txt
+
+.gemini/
+gha-creds-*.json

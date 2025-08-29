@@ -297,6 +297,12 @@
   <data name="Settings_AnErrorOccurred" xml:space="preserve">
     <value>Wystąpił błąd:</value>
   </data>
+  <data name="Settings_NetworkShareUsername" xml:space="preserve">
+    <value>Nazwa użytkownika udziału sieciowego</value>
+  </data>
+  <data name="Settings_NetworkSharePassword" xml:space="preserve">
+    <value>Hasło udziału sieciowego</value>
+  </data>
   <data name="MainLayout_ApplicationLoading" xml:space="preserve">
     <value>Aplikacja się ładuje...</value>
   </data>

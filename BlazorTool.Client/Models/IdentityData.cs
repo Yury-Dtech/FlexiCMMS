@@ -33,5 +33,11 @@ namespace BlazorTool.Client.Models
 
         [JsonPropertyName("departmentID")]
         public int? DepartmentID { get; set; }
+
+        [JsonPropertyName("networkShareUsername")]
+        public string? NetworkShareUsername { get; set; }
+
+        [JsonPropertyName("networkSharePassword")]
+        public string? NetworkSharePassword { get; set; }
     }
 }

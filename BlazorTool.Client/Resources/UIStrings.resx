@@ -225,8 +225,14 @@
   <data name="Login_LoginFailed" xml:space="preserve">
     <value>Login failed. Please check your credentials.</value>
   </data>
-  <data name="Login_AnErrorOccurred" xml:space="preserve">
+    <data name="Settings_AnErrorOccurred" xml:space="preserve">
     <value>An error occurred:</value>
+  </data>
+  <data name="Settings_NetworkShareUsername" xml:space="preserve">
+    <value>Network Share Username</value>
+  </data>
+  <data name="Settings_NetworkSharePassword" xml:space="preserve">
+    <value>Network Share Password</value>
   </data>
   <data name="Home_Orders" xml:space="preserve">
     <value>ORDERS</value>
