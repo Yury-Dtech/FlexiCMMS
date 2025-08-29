@@ -64,18 +64,41 @@
                         <ValidationMessage For="@(() => ActivityModel.WorkLoad)" />
                     </Template>
                 </FormItem>
+                    <FormItem Field="@nameof(ActivityModel.Cost)">
+                        <Template>
+                            <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["Cost"]:</label>
+                                <TelerikNumericTextBox @bind-Value="ActivityModel.Cost" Placeholder="@Localizer["ActivityList_Cost_Placeholder"]" />
+                            </div>
+                            <ValidationMessage For="@(() => ActivityModel.Cost)" />
+                        </Template>
+                    </FormItem>
             </div>
 
             <div class="form-right">
                 <FormItem Field="@nameof(ActivityModel.Description)">
                     <Template>
                         <div style="display: flex; align-items: center;">
-                            <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_Description"]:</label>
+                            <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_Description"]:</label>
                                 <TelerikTextArea @bind-Value="ActivityModel.Description" Rows="5" Placeholder="@Localizer["ActivityList_Description_Placeholder"]" />
                         </div>
                         <ValidationMessage For="@(() => ActivityModel.Description)" />
                     </Template>
                 </FormItem>
+                    <FormItem Field="@nameof(ActivityModel.ActDate)">
+                        <Template>
+                            <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_ActDate"]:</label>
+                                <TelerikDateTimePicker @bind-Value="ActivityModel.ActDate"
+                                                       Placeholder="@Localizer["ActivityList_ActDate_Placeholder"]" 
+                                Format="dd MMMM yyyy hh:mm"
+                                Min="@MinActDate"
+                                Max="@MaxActDate"
+                                />
+                            </div>
+                            <p style="text-align:end; font-size:smaller;"> Min=@MinActDate.ToString("G") / Max=@MaxActDate.ToString("G")</p>
+                        </Template>
+                    </FormItem>
             </div>
         </div>
     </FormItems>
@@ -87,7 +110,7 @@
     </FormButtons>
 </TelerikForm>
     <div class="form-footer">
-        <p class="note">* @Localizer["All_Fields_Required"].</p>
+        @* <p class="note">* @Localizer["All_Fields_Required"].</p> *@
         <p>  </p>
         <p>@ErrorMessage</p>
     </div>
@@ -106,12 +129,18 @@
     private List<WODict> Categories { get; set; } = new List<WODict>();
     private string ErrorMessage { get; set; } = string.Empty;
     private string minWidthLabel = "110px";
+    private DateTime MaxActDate;
+    private DateTime MinActDate;
 
     protected override async Task OnInitializedAsync()
     {
         ActivityModel.WorkOrderID = WorkOrderID;
         ActivityModel.PersonID = UserState.PersonID ?? 0;
+        ActivityModel.Cost = 0;
         var WO = await ApiClient.GetWorkOrderByIdAsync(WorkOrderID);
+        MinActDate = WO?.StartDate ?? DateTime.MinValue;
+        MaxActDate = WO?.EndDate ?? DateTime.MaxValue;
+        ActivityModel.ActDate = ((MinActDate < DateTime.Now) && (MaxActDate > DateTime.Now)) ? DateTime.Now : MinActDate;
         var takePersonsIDs = WO.TakePersons?.Split('#');
         bool isMyOrder = takePersonsIDs?.Any(x => x == UserState.PersonID.ToString()) ?? false;
         ActivityModel.WorkLoad = isMyOrder ? CalculateDecimalHours(WO?.PersonTakeDate ?? WO?.TakeDate) : 0.25m;

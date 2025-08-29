@@ -25,7 +25,14 @@ namespace BlazorTool.Client.Models
 
             [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Description_Required")]
             [JsonProperty("description")]
-            public string Description { get; set; }
+            public string Description { get; set; } = string.Empty;
+
+            [Range(0, double.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Cost_Positive")]
+            [JsonProperty("cost")]
+            public decimal? Cost { get; set; }
+
+            [JsonProperty("actDate")]
+            public DateTime? ActDate { get; set; }
 
     }
 
