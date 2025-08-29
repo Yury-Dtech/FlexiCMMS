@@ -31,7 +31,7 @@
         <div class="row mb-3">
             <label for="apiUrl" class="col-sm-4 col-form-label">@Localizer["Settings_ApiAddress"]</label>
             <div class="col-sm-8">
-                <div class="input-group control-max">
+                <div class="input-group settings-input-width">
                     <input type="text"
                            id="apiUrl"
                            class="form-control"
@@ -47,7 +47,7 @@
     <div class="row mb-3">
         <label for="language" class="col-sm-4 col-form-label">Language</label>
         <div class="col-sm-8">
-            <select id="language" class="form-select control-max" @bind="@SelectedLanguage">
+            <select id="language" class="form-select settings-input-width" @bind="@SelectedLanguage">
                 <option value="pl-PL">Polski</option>
                 <option value="en-US">English</option>
                 @* Add more languages as needed *@
@@ -60,11 +60,9 @@
             @Localizer["Settings_NetworkShareUsername"]
         </label>
         <div class="col-sm-8">
-            <div class="control-max">
-                <TelerikTextBox Id="networkShareUsername"
-                                @bind-Value="@NetworkShareUsername"
-                                Width="100%" />
-            </div>
+            <TelerikTextBox Id="networkShareUsername"
+                            @bind-Value="@NetworkShareUsername"
+                            class="settings-input-width" />
         </div>
     </div>
 
@@ -73,11 +71,10 @@
             @Localizer["Settings_NetworkSharePassword"]
         </label>
         <div class="col-sm-8">
-            <div class="control-max">
-                <TelerikTextBox Id="networkSharePassword"
-                                @bind-Value="@NetworkSharePassword"
-                                Width="100%" />
-            </div>
+            <TelerikTextBox Id="networkSharePassword"
+                            @bind-Value="@NetworkSharePassword"
+                            Password="true"
+                            class="settings-input-width" />
         </div>
     </div>
 
@@ -92,9 +89,11 @@
         </div>
     </div>
 
-    <button class="btn btn-primary align-center" @onclick="SaveSettingsAsync">
-        @Localizer["Settings_SaveSettings"]
-    </button>
+    <div class="settings-button-center mb-3">
+        <button class="btn btn-primary" @onclick="SaveSettingsAsync">
+            @Localizer["Settings_SaveSettings"]
+        </button>
+    </div>
 
     @if (!string.IsNullOrEmpty(StatusMessage))
     {
