@@ -75,20 +75,9 @@
                 Username = Username,
                 Password = Password
             };
-
-            var response = await ApiServiceClient.PostSingleAsync<LoginRequest, IdentityData>("identity/loginpassword", loginRequest);
-            await UserState.InitializationTask;
-            if (response != null && response.IsValid && response.Data != null)
-            {
-                var identityData = response.Data;
-                UserState.UserName = identityData.Name;
-                UserState.Token = identityData.Token;
-                UserState.Password = Password;
-                UserState.LangCode = identityData.LangCode;
-                UserState.UseOriginalColors = bool.TryParse(await ApiServiceClient.LoadSettingAsync("useOriginalColors", identityData.Name), out var useColors) && useColors;
-                identityData.UseOriginalColors = UserState.UseOriginalColors;
-                bool isForceReload = await UserState.SaveIdentityDataAsync(identityData); // Save identityData to local storage
-                foreach (var val in ViewSettingsService.SettingsKeys.Values)
+            bool isForceReload = await ApiServiceClient.LoadlUserStateSettingsAsync(loginRequest);
+            
+            foreach (var val in ViewSettingsService.SettingsKeys.Values)
                 {
                     //read all view settings for the user
                     var settings = await ApiServiceClient.GetViewSettingsAsync(UserState.UserName, val);
@@ -97,12 +86,7 @@
                         await viewSettingsService.SaveSettingsAsync<WorkOrder>(val, settings);
                     }
                 }
-                Navigation.NavigateTo("/", isForceReload);
-            }
-            else
-            {
-                ErrorMessage = response?.Errors?.FirstOrDefault() ?? Localizer["Login_LoginFailed"];
-            }
+            Navigation.NavigateTo("/", isForceReload);
         }
         catch (Exception ex)
         {

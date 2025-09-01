@@ -1839,7 +1839,36 @@ namespace BlazorTool.Client.Services
                 return (false, $"An unexpected error occurred: {ex.Message}");
             }
         }
-        
+        public async Task<bool> LoadlUserStateSettingsAsync(LoginRequest loginRequest)
+        {
+            var response = await PostSingleAsync<LoginRequest, IdentityData>("identity/loginpassword", loginRequest);
+            await _userState.InitializationTask;
+            if (response != null && response.IsValid && response.Data != null)
+            {
+                var identityData = response.Data;
+                _userState.UserName = identityData.Name;
+                _userState.Token = identityData.Token;
+                _userState.Password = loginRequest.Password;
+                _userState.LangCode = identityData.LangCode;
+                _userState.UseOriginalColors = bool.TryParse(await LoadSettingAsync("useOriginalColors", loginRequest.Username), out var useColors) && useColors;
+                _userState.NetworkShareUsername = await LoadSettingAsync("NetworkShareUsername", loginRequest.Username);
+                _userState.NetworkSharePassword = await LoadSettingAsync("NetworkSharePassword", loginRequest.Username);
+                _userState.NetworkShareServer = await LoadSettingAsync("NetworkShareServer", loginRequest.Username);
+                identityData.NetworkShareServer = _userState.NetworkShareServer;
+                identityData.NetworkSharePassword = _userState.NetworkSharePassword;
+                identityData.NetworkShareUsername = _userState.NetworkShareUsername;
+                identityData.UseOriginalColors = _userState.UseOriginalColors;
+                bool isForceReload = await _userState.SaveIdentityDataToCacheAsync(identityData); // Save identityData to local storage
+                return isForceReload;
+            }
+            else
+            {
+                var errorMessage = response?.Errors?.FirstOrDefault();
+                Console.WriteLine($"ApiServiceClient: Failed to load user state settings: {errorMessage}");
+                Debug.WriteLine($"ApiServiceClient: Failed to load user state settings: {errorMessage}");
+                return false;
+            }
+        }
         public async Task<string> LoadSettingAsync(string key, string user)
         {
             var url = $"settings/get?key={Uri.EscapeDataString(key)}&user={Uri.EscapeDataString(user)}";

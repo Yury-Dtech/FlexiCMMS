@@ -19,7 +19,7 @@ namespace BlazorTool.Client.Services
         {
             _localStorageService = localStorageService;
             _logger = logger;
-            InitializationTask = LoadIdentityDataAsync();
+            InitializationTask = LoadIdentityDataFromCacheAsync();
         }
 
 
@@ -73,7 +73,7 @@ namespace BlazorTool.Client.Services
             };
         }
 
-        public async Task<bool> SaveIdentityDataAsync(IdentityData identityData)
+        public async Task<bool> SaveIdentityDataToCacheAsync(IdentityData identityData)
         {
             _logger.LogInformation("DEBUG: SaveIdentityDataAsync started. LangCode from data: {LangCode}", identityData.LangCode);
             UserName = identityData.Name;
@@ -140,11 +140,11 @@ namespace BlazorTool.Client.Services
                 var cultureInfo = new CultureInfo(identityData.LangCode);
                 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
                 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-                await SaveIdentityDataAsync(identityData);
+                await SaveIdentityDataToCacheAsync(identityData);
             }
         }
 
-        public async Task<bool> LoadIdentityDataAsync()
+        public async Task<bool> LoadIdentityDataFromCacheAsync()
         {
             _logger.LogInformation("DEBUG: LoadIdentityDataAsync started.");
             string? identityDataJson = await _localStorageService.GetItemAsStringAsync("identityData");

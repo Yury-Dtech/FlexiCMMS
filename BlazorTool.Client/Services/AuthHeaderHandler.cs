@@ -20,7 +20,7 @@ namespace BlazorTool.Client.Services
             if (_userState != null && !_userState.PersonID.HasValue)
             {
                 //try load identity data if UserState is not initialized
-                await _userState.LoadIdentityDataAsync();
+                await _userState.LoadIdentityDataFromCacheAsync();
             }
 
             if (request.RequestUri.ToString().Contains("identity/loginpass"))
