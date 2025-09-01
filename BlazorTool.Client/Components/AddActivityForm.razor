@@ -91,15 +91,14 @@
                                 <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_ActDate"]:</label>
                                 <TelerikDateTimePicker @bind-Value="ActivityModel.ActDate"
                                                        Placeholder="@Localizer["ActivityList_ActDate_Placeholder"]" 
-                                Format="dd MMMM yyyy hh:mm"
-                                Min="@MinActDate"
-                                Max="@MaxActDate"
+                                Format="dd MMMM yyyy HH:mm"
+                                
                                 />
                             </div>
-                    @if (MinActDate > DateTime.MinValue && MaxActDate < DateTime.MaxValue)
+                    @* @if (MinActDate > DateTime.MinValue && MaxActDate < DateTime.MaxValue)
                             {
                              <p style="text-align:end; font-size:smaller;"> Min=@MinActDate.ToString("G") / Max=@MaxActDate.ToString("G")</p>
-                            }
+                            } *@
                         </Template>
                     </FormItem>
             </div>
@@ -141,7 +140,7 @@
         ActivityModel.PersonID = UserState.PersonID ?? 0;
         ActivityModel.Cost = 0;
         var WO = await ApiClient.GetWorkOrderByIdAsync(WorkOrderID);
-        MinActDate = WO?.StartDate ?? WO?.TakeDate ?? WO?.AddDate ?? DateTime.MinValue;
+        MinActDate = WO?.StartDate ?? WO?.AddDate ?? DateTime.MinValue;
         MaxActDate = WO?.EndDate ?? WO?.CloseDate ?? DateTime.MaxValue;
         ActivityModel.ActDate = ((MinActDate < DateTime.Now) && (MaxActDate > DateTime.Now)) ? DateTime.Now : MinActDate;
         var takePersonsIDs = WO.TakePersons?.Split('#');
@@ -181,6 +180,7 @@
         var hours = (DateTime.Now - takeDate.Value).TotalHours;
 
         if (hours < 0.25) return 0.25m;
+        if (hours > 24) return 24m;
         return (decimal)hours;
     }
 

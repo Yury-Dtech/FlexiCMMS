@@ -1839,7 +1839,7 @@ namespace BlazorTool.Client.Services
                 return (false, $"An unexpected error occurred: {ex.Message}");
             }
         }
-        public async Task<bool> LoadlUserStateSettingsAsync(LoginRequest loginRequest)
+        public async Task<(bool, string?)> LoadUserStateSettingsAsync(LoginRequest loginRequest)
         {
             var response = await PostSingleAsync<LoginRequest, IdentityData>("identity/loginpassword", loginRequest);
             await _userState.InitializationTask;
@@ -1859,14 +1859,14 @@ namespace BlazorTool.Client.Services
                 identityData.NetworkShareUsername = _userState.NetworkShareUsername;
                 identityData.UseOriginalColors = _userState.UseOriginalColors;
                 bool isForceReload = await _userState.SaveIdentityDataToCacheAsync(identityData); // Save identityData to local storage
-                return isForceReload;
+                return (isForceReload, null);
             }
             else
             {
                 var errorMessage = response?.Errors?.FirstOrDefault();
                 Console.WriteLine($"ApiServiceClient: Failed to load user state settings: {errorMessage}");
                 Debug.WriteLine($"ApiServiceClient: Failed to load user state settings: {errorMessage}");
-                return false;
+                return (false, string.Join(',', response?.Errors ?? Enumerable.Empty<string>()));
             }
         }
         public async Task<string> LoadSettingAsync(string key, string user)

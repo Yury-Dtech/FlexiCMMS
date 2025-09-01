@@ -14,13 +14,12 @@
         <div class="form-group">
             <label for="username">@Localizer["Login_UserName"]</label>
             <TelerikComboBox Data="@Persons"
-                             TextField="Name"
+                             TextField="Name"                             
                              ValueField="Name"
                              @bind-Value="@Username"
                              Placeholder="@Localizer["Login_SelectUserName"]"
                              Filterable="true"
                              AllowCustom="false"
-                             
                              Width="100%">
             </TelerikComboBox>
         </div>
@@ -52,10 +51,14 @@
     private string ErrorMessage { get; set; } = string.Empty;
     private List<Person> Persons { get; set; } = new List<Person>();
     private bool isLoading = false;
+    private bool isLoadingPersons = false;
 
     protected override async Task OnInitializedAsync()
     {
+        Username = "Loading...";
+        StateHasChanged();
         Persons = await ApiServiceClient.GetAllPersons();
+        Username = Persons.FirstOrDefault()?.Name ?? string.Empty;
         // await UserState.InitializationTask;
         //TODO read from cache and fill to inputs Username and Pass
     }
@@ -77,8 +80,13 @@
                 Username = Username,
                 Password = Password
             };
-            bool isForceReload = await ApiServiceClient.LoadlUserStateSettingsAsync(loginRequest);
-            
+            var response = await ApiServiceClient.LoadUserStateSettingsAsync(loginRequest);
+            bool isForceReload = response.Item1;
+            if (response.Item2 != null)
+            {
+                ErrorMessage = $"{Localizer["Login_AnErrorOccurred"]} {response.Item2}";
+                return;
+            }
             foreach (var val in ViewSettingsService.SettingsKeys.Values)
                 {
                     //read all view settings for the user
