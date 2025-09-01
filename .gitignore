@@ -384,4 +384,5 @@ commit_message.txt
 
 .gemini/
 gha-creds-*.json
+
 /temp_CheckSmbCredentialsAsync.txt
