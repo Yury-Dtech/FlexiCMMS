@@ -19,7 +19,7 @@ namespace BlazorTool.Client.Models
             [JsonProperty("categoryID")]
             public int CategoryID { get; set; }
 
-            [Range(0, double.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Workload_Positive")]
+            [Range(0, 24, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Workload_Positive")]
             [JsonProperty("workLoad")]
             public decimal WorkLoad { get; set; } = 0;
 

@@ -1141,15 +1141,6 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred:.
-        /// </summary>
-        public static string Login_AnErrorOccurred {
-            get {
-                return ResourceManager.GetString("Login_AnErrorOccurred", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Checking....
         /// </summary>
         public static string Login_Checking {
@@ -2113,6 +2104,33 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Network Share Password.
+        /// </summary>
+        public static string Settings_NetworkSharePassword {
+            get {
+                return ResourceManager.GetString("Settings_NetworkSharePassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Network Share Server.
+        /// </summary>
+        public static string Settings_NetworkShareServer {
+            get {
+                return ResourceManager.GetString("Settings_NetworkShareServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Network Share Username.
+        /// </summary>
+        public static string Settings_NetworkShareUsername {
+            get {
+                return ResourceManager.GetString("Settings_NetworkShareUsername", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Address:.
         /// </summary>
         public static string Settings_NewAddress {
@@ -2397,6 +2415,15 @@ namespace BlazorTool.Client.Resources {
         public static string WOReason {
             get {
                 return ResourceManager.GetString("WOReason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value must be between 0 and 24.
+        /// </summary>
+        public static string Workload_0_24 {
+            get {
+                return ResourceManager.GetString("Workload_0_24", resourceCulture);
             }
         }
         

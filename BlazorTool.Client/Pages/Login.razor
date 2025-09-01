@@ -56,6 +56,8 @@
     protected override async Task OnInitializedAsync()
     {
         Persons = await ApiServiceClient.GetAllPersons();
+        // await UserState.InitializationTask;
+        //TODO read from cache and fill to inputs Username and Pass
     }
 
     private async Task HandleLogin()

@@ -225,7 +225,7 @@
   <data name="Login_LoginFailed" xml:space="preserve">
     <value>Login failed. Please check your credentials.</value>
   </data>
-    <data name="Settings_AnErrorOccurred" xml:space="preserve">
+  <data name="Settings_AnErrorOccurred" xml:space="preserve">
     <value>An error occurred:</value>
   </data>
   <data name="Settings_NetworkShareUsername" xml:space="preserve">
@@ -302,9 +302,6 @@
   </data>
   <data name="Settings_RestartApplyApi" xml:space="preserve">
     <value>The application will restart to apply the new API address.</value>
-  </data>
-  <data name="Settings_AnErrorOccurred" xml:space="preserve">
-    <value>An error occurred:</value>
   </data>
   <data name="MainLayout_ApplicationLoading" xml:space="preserve">
     <value>Application is loading ...</value>
@@ -788,6 +785,9 @@
   </data>
   <data name="Workload_Positive" xml:space="preserve">
     <value>Cost must be a positive number.</value>
+  </data>
+  <data name="Workload_0_24" xml:space="preserve">
+    <value>The value must be between 0 and 24</value>
   </data>
   <data name="Cost_Positive" xml:space="preserve">
     <value>Workload must be a positive number.</value>
