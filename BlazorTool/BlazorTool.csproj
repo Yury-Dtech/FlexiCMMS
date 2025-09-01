@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="appsettings.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>

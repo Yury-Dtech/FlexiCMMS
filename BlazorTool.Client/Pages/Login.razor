@@ -51,16 +51,15 @@
     private string ErrorMessage { get; set; } = string.Empty;
     private List<Person> Persons { get; set; } = new List<Person>();
     private bool isLoading = false;
-    private bool isLoadingPersons = false;
 
     protected override async Task OnInitializedAsync()
     {
         Username = "Loading...";
         StateHasChanged();
         Persons = await ApiServiceClient.GetAllPersons();
-        Username = Persons.FirstOrDefault()?.Name ?? string.Empty;
-        // await UserState.InitializationTask;
-        //TODO read from cache and fill to inputs Username and Pass
+        await UserState.InitializationTask;
+        Username = UserState?.UserName ?? Persons.FirstOrDefault()?.Name ?? string.Empty;
+        Password = UserState?.Password ?? string.Empty;
     }
 
     private async Task HandleLogin()

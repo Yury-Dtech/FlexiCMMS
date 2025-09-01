@@ -10,7 +10,9 @@
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 
 <BlazorTool.Client.Components.CheckSession ApiService="@apiService" UserState="@UserState" />
-
+<TelerikNotification @ref="@NotificationReference" Class="MyTelerikNotification"
+                     HorizontalPosition="@NotificationHorizontalPosition.Center"
+                     VerticalPosition="@NotificationVerticalPosition.Top">></TelerikNotification>
 <TelerikDialog @bind-Visible="isConfirmDialogVisible">
     <DialogTitle>@Localizer["Settings_Confirmation"]</DialogTitle>
     <DialogContent>
@@ -152,7 +154,7 @@
     protected string? NetworkShareServer { get; set; }
     protected string? SmbCheckStatusMessage { get; set; }
     protected string? SmbCheckStatusClass { get; set; }
-
+    public TelerikNotification NotificationReference { get; set; }
     private bool isConfirmDialogVisible = false;
     private string oldApiAddress = "";
     private bool needRestart = false;
@@ -227,7 +229,8 @@
         StatusMessage = string.Empty;
         if (string.IsNullOrWhiteSpace(ApiAddress))
         {
-            StatusMessage = Localizer["Settings_ApiAddressEmpty"];
+            ShowNotification(Localizer["Settings_ApiAddressEmpty"], NotificationTypeEnum.Warning);
+            // StatusMessage = Localizer["Settings_ApiAddressEmpty"];
             StatusMessageClass = "text-danger";
             return false;
         }
@@ -237,17 +240,20 @@
             var response = await apiService.CheckApiAddressAsync(ApiAddress);
             if (!response.Item1)
             {
-                StatusMessage = response.Item2;
+                ShowNotification(response.Item2, NotificationTypeEnum.Warning);
+                //StatusMessage = response.Item2;
                 StatusMessageClass = "text-danger";
                 return false;
             }
-            StatusMessage = $"{Localizer["Settings_ApiConnected"]} '{ApiAddress}'.";
+            // StatusMessage = $"{Localizer["Settings_ApiConnected"]} '{ApiAddress}'.";
+            ShowNotification($"{Localizer["Settings_ApiConnected"]} '{ApiAddress}'.", NotificationTypeEnum.Success);
             StatusMessageClass = "text-success";
             return true;
         }
         catch (Exception ex)
         {
-            StatusMessage = $"{Localizer["Settings_ApiTestError"]} {ex.Message}";
+            ShowNotification($"{Localizer["Settings_ApiTestError"]} {ex.Message}", NotificationTypeEnum.Error);
+            // StatusMessage = $"{Localizer["Settings_ApiTestError"]} {ex.Message}";
             StatusMessageClass = "text-danger";
             return false;
         }
@@ -262,7 +268,8 @@
             var testResult = await TestApiAddress();
             if (!testResult)
             {
-                StatusMessage = Localizer["Settings_WrongApiAddress"];
+                ShowNotification(Localizer["Settings_WrongApiAddress"], NotificationTypeEnum.Warning);
+                //StatusMessage = Localizer["Settings_WrongApiAddress"];
                 StatusMessageClass = "text-danger";
                 needRestart = false;
                 return;
@@ -289,8 +296,7 @@
     {
         isConfirmDialogVisible = false;
         ApiAddress = oldApiAddress; // Revert the change in the input
-        StatusMessage = Localizer["Settings_Canceled"];
-        StatusMessageClass = "text-info";
+        ShowNotification(Localizer["Settings_Canceled"], NotificationTypeEnum.Info);
     }
 
     private async Task ProceedWithSave(bool needRestart)
@@ -311,20 +317,18 @@
                 UserState.NetworkShareUsername = NetworkShareUsername;
                 UserState.NetworkShareServer = NetworkShareServer;
                 needReload = await UserState.SwitchLanguage(SelectedLanguage);
-                StatusMessage = Localizer["Settings_SettingsSaved"];
-                StatusMessageClass = "text-success";
+                ShowNotification(Localizer["Settings_SettingsSaved"], NotificationTypeEnum.Success);
             }
             else
             {
-                StatusMessage = Localizer["Settings_SaveFailed"];
-                StatusMessageClass = "text-danger";
+                ShowNotification(Localizer["Settings_SaveFailed"], NotificationTypeEnum.Error);
             }
 
             if (needRestart)
             {
                 await SaveSettingAsync("apiAddress", ApiAddress, currentUser);
                 AppState.Settings.ApiBaseUrl = ApiAddress;
-                StatusMessage += Localizer["Settings_RestartApplyApi"];
+                ShowNotification(Localizer["Settings_RestartApplyApi"], NotificationTypeEnum.Info);
                 // Clear client-side cache and force a full page reload
                 Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
             }
@@ -336,7 +340,7 @@
         }
         catch (Exception ex)
         {
-            StatusMessage = $"{Localizer["Settings_AnErrorOccurred"]} {ex.Message}";
+            ShowNotification($"{Localizer["Settings_AnErrorOccurred"]} {ex.Message}", NotificationTypeEnum.Error);
             StatusMessageClass = "text-danger";
         }
     }
@@ -384,5 +388,48 @@
 
         var result = await apiService.SaveSettingAsync(key, value, user);
         return result;
+    }
+
+    private void ShowNotification(string message, NotificationTypeEnum type)
+    {
+        switch(type)
+        {
+            case NotificationTypeEnum.Success:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
+                    CloseAfter = 2000,
+                    Icon = SvgIcon.CheckCircle
+                });
+                break;
+            case NotificationTypeEnum.Error:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Error,
+                    CloseAfter = 5000,
+                    Icon = SvgIcon.WarningCircle
+                });
+                break;
+            case NotificationTypeEnum.Info:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.InfoCircle
+                });
+                break;
+            case NotificationTypeEnum.Warning:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.ExclamationCircle
+                });
+                break;
+        }
     }
 }
