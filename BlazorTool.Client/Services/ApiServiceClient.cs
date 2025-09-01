@@ -1483,6 +1483,14 @@ namespace BlazorTool.Client.Services
             }
         }
 
+                /// <summary>
+        /// Constructs a URL for downloading a file, including SMB credentials in the query string.
+        /// WARNING: Passing credentials in the URL is not recommended for sensitive information.
+        /// Consider using a POST request with credentials in the body for better security.
+        /// </summary>
+        /// <param name="filePath">The path to the file to download.</param>
+        /// <param name="credentials">The SMB credentials for accessing the file.</param>
+        /// <returns>A URL for downloading the file.</returns>
         public string GetFileDownloadUrl(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -1499,7 +1507,18 @@ namespace BlazorTool.Client.Services
             string encodedFilePath = Uri.EscapeDataString(normalizedFilePath);
 
             // Construct the full URL for the download endpoint
-            return $"{_http.BaseAddress}device/downloadfile?filePath={encodedFilePath}";
+            // Include SMB credentials in the query string
+            var queryParams = new List<string>
+            {
+                $"filePath={encodedFilePath}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(_userState.NetworkShareUsername))
+                queryParams.Add($"smbUsername={Uri.EscapeDataString(_userState.NetworkShareUsername)}");
+            if (!string.IsNullOrWhiteSpace(_userState.NetworkSharePassword))
+                queryParams.Add($"smbPassword={Uri.EscapeDataString(_userState.NetworkSharePassword)}");
+
+            return $"{_http.BaseAddress}device/downloadfile?{string.Join("&", queryParams)}";
         }
         #endregion
 

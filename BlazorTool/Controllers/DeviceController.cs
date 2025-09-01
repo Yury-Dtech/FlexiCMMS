@@ -348,7 +348,11 @@ namespace BlazorTool.Controllers
         }
 
         [HttpGet("downloadfile")]
-        public IActionResult DownloadFile([FromQuery] string filePath)
+        public IActionResult DownloadFile(
+            [FromQuery] string filePath,
+            [FromQuery] string? smbUsername = null,
+            [FromQuery] string? smbPassword = null)
+
         {
             try
             {
@@ -376,8 +380,8 @@ namespace BlazorTool.Controllers
                 {
                     Console.WriteLine("Running on Linux. Using smblibrary for SMB access." + filePath);
 
-                    var username = "flexicmms";
-                    var password = "CMMS#flexi";
+                    var username = smbUsername ?? "flexicmms";
+                    var password = smbPassword ?? "CMMS#flexi";
                     //var serverName = filePath.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries)[0];
 
                     var normalized = filePath.Replace('\\', '/').Trim('/');      // server/share/dir/file
