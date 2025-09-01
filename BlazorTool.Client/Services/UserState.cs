@@ -36,6 +36,8 @@ namespace BlazorTool.Client.Services
         public int? PersonID { get; set; }
         public bool IsAuthenticated => !string.IsNullOrEmpty(UserName);
         public RightMatrix? RightMatrix { get; set; }
+        public int? RightMatrixID { get; set; } //1 - admin, 2 - power user. 3. user
+        public int? DepartmentID { get; set; }
         public bool UseOriginalColors { get; set; } = true;
         public bool CanHaveManyActiveTake { get; set; } = false;
         public string? NetworkShareUsername { get; set; }
@@ -81,6 +83,8 @@ namespace BlazorTool.Client.Services
             PersonID = identityData.PersonID;
             LangCode = identityData.LangCode;
             RightMatrix = identityData.RigthMatrix;
+            RightMatrixID = identityData.RigthMatrixID;
+            DepartmentID = identityData.DepartmentID;
             UseOriginalColors = identityData.UseOriginalColors;
             CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
             NetworkShareUsername = identityData.NetworkShareUsername;

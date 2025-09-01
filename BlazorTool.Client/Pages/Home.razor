@@ -13,7 +13,7 @@
 @inject ViewSettingsService ViewSettingsService
 
 <BlazorTool.Client.Components.CheckSession ApiService="@ApiClient" UserState="@UserState" />
-
+@if(UserState?.IsAuthenticated == true){
 <div class="main-page-root-container">
         
 <TelerikSplitter Class="home-splitter" Width="100%" Height="100%" Orientation="SplitterOrientation.Vertical">
@@ -183,7 +183,7 @@
 @if(false){<p>@loaderText</p>}
 </div>
 
-
+}
 
 <TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="500px">
         <WindowTitle>
@@ -447,10 +447,10 @@
                 allOrders = FilterWorkOrders(allOrders);
                 await ApiClient.GetWODictionaries(UserState.PersonID, UserState.LangCode);
                 allDepartments = ApiClient.GetWODepartments().Select(d => d.Name).ToList();
-                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", allDepartments.FirstOrDefault() ?? "");
+                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", ApiClient.GetWODepartments()?.Find(x=>x.Id == UserState?.DepartmentID)?.Name ?? "");
                 workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
                 MakeContextMenu();
-                TakeListsOrders();
+                await TakeListsOrders();
                 HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
             }
             await LoadGridSettings(); //Grid Settings and States

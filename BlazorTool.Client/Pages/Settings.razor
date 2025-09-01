@@ -12,7 +12,7 @@
 <BlazorTool.Client.Components.CheckSession ApiService="@apiService" UserState="@UserState" />
 <TelerikNotification @ref="@NotificationReference" Class="MyTelerikNotification"
                      HorizontalPosition="@NotificationHorizontalPosition.Center"
-                     VerticalPosition="@NotificationVerticalPosition.Top">></TelerikNotification>
+                     VerticalPosition="@NotificationVerticalPosition.Top"/>
 <TelerikDialog @bind-Visible="isConfirmDialogVisible">
     <DialogTitle>@Localizer["Settings_Confirmation"]</DialogTitle>
     <DialogContent>
@@ -154,7 +154,7 @@
     protected string? NetworkShareServer { get; set; }
     protected string? SmbCheckStatusMessage { get; set; }
     protected string? SmbCheckStatusClass { get; set; }
-    public TelerikNotification NotificationReference { get; set; }
+    public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
     private bool isConfirmDialogVisible = false;
     private string oldApiAddress = "";
     private bool needRestart = false;
@@ -172,10 +172,10 @@
 
         GetUserProfilenames();
         currentUser = UserState.UserName ?? "unknown user";
-        isAdmin = UserState.UserName == "MES" || UserState.UserName?.ToLower() == "admin";
+        isAdmin = UserState?.UserName == "MES" || UserState?.UserName?.ToLower() == "admin" || UserState?.RightMatrixID == 1; 
         Logger.LogInformation($"Current user: {currentUser}, Is Admin: {isAdmin}");
         await LoadSettingsAsync();
-        UseOriginalColors = UserState.UseOriginalColors;
+        UseOriginalColors = UserState?.UseOriginalColors ?? false;
         await InvokeAsync(StateHasChanged);
     }
 

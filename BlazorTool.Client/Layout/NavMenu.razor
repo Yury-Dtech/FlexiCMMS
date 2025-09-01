@@ -1,6 +1,7 @@
 ﻿@using BlazorTool.Client.Services
 @inject AppStateService AppState
 @inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject UserState UserState
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -9,7 +10,7 @@
 </div>
 
 <input type="checkbox" title="@Localizer["NavMenu_NavigationMenu"]" class="navbar-toggler" />
-
+@if(isUserStateReady && UserState.IsAuthenticated == true){
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="navbar-nav flex-column">
         <div class="nav-item">
@@ -47,3 +48,19 @@
         <span class="api-info">@AppState.Settings.ApiBaseUrl</span>
     </div>
 </div>
+}
+
+
+@code{
+    private bool isUserStateReady = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UserState.InitializationTask;
+            isUserStateReady = UserState != null;
+            StateHasChanged();
+        }
+    }
+}

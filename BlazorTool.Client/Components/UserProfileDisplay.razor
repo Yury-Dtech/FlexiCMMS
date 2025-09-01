@@ -30,9 +30,15 @@
                     </div>
                 </div>
                 <div class="k-form-field user-profile-field">
-                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.IsAuthenticated)):</label>
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.RightMatrixID)):</label>
                     <div class="k-form-field-wrap">
-                        <TelerikCheckBox Value="@UserState.IsAuthenticated" Enabled="false" />
+                        <TelerikTextBox Value="@(UserState.RightMatrixID.ToString() ?? "")" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.DepartmentID)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikTextBox Value="@(UserState.DepartmentID.ToString() ?? string.Empty)" ReadOnly="true" />
                     </div>
                 </div>
                 <div class="k-form-field user-profile-field">
@@ -95,8 +101,9 @@
     [Parameter]
     public Dictionary<string, string> DisplayNames { get; set; } = new Dictionary<string, string>();
 
-    private string GetDisplayName(string propertyName)
+    private string GetDisplayName(string? propertyName)
     {
+        if (string.IsNullOrEmpty(propertyName)) return string.Empty;
         if (DisplayNames.TryGetValue(propertyName, out var displayName))
         {
             return displayName;
