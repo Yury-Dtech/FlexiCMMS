@@ -27,5 +27,20 @@ namespace BlazorTool.Client.Models
 
         [JsonPropertyName("useOriginalColors")]
         public bool UseOriginalColors { get; set; } = true;
+
+        [JsonPropertyName("rightMatrixID")]
+        public int? RigthMatrixID { get; set; } = default!; //1 - admin, 2 - power user. 3. user
+
+        [JsonPropertyName("departmentID")]
+        public int? DepartmentID { get; set; }
+
+        [JsonPropertyName("networkShareUsername")]
+        public string? NetworkShareUsername { get; set; }
+
+        [JsonPropertyName("networkSharePassword")]
+        public string? NetworkSharePassword { get; set; }
+
+        [JsonPropertyName("networkShareServer")]
+        public string? NetworkShareServer { get; set; }
     }
 }

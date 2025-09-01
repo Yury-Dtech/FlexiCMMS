@@ -178,6 +178,24 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start date.
+        /// </summary>
+        public static string ActivityList_ActDate {
+            get {
+                return ResourceManager.GetString("ActivityList_ActDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter start date.
+        /// </summary>
+        public static string ActivityList_ActDate_Placeholder {
+            get {
+                return ResourceManager.GetString("ActivityList_ActDate_Placeholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activities for Work Order:.
         /// </summary>
         public static string ActivityList_ActivitiesForWorkOrder {
@@ -201,6 +219,15 @@ namespace BlazorTool.Client.Resources {
         public static string ActivityList_Category {
             get {
                 return ResourceManager.GetString("ActivityList_Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter cost.
+        /// </summary>
+        public static string ActivityList_Cost_Placeholder {
+            get {
+                return ResourceManager.GetString("ActivityList_Cost_Placeholder", resourceCulture);
             }
         }
         
@@ -588,6 +615,15 @@ namespace BlazorTool.Client.Resources {
         public static string Cost {
             get {
                 return ResourceManager.GetString("Cost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workload must be a positive number..
+        /// </summary>
+        public static string Cost_Positive {
+            get {
+                return ResourceManager.GetString("Cost_Positive", resourceCulture);
             }
         }
         
@@ -2239,6 +2275,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        public static string Total {
+            get {
+                return ResourceManager.GetString("Total", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to User information.
         /// </summary>
         public static string UserInfo {
@@ -2356,7 +2401,7 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Workload must be a positive number..
+        ///   Looks up a localized string similar to Cost must be a positive number..
         /// </summary>
         public static string Workload_Positive {
             get {

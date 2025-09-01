@@ -1,5 +1,6 @@
 @using BlazorTool.Client.Models
 @using BlazorTool.Client.Services
+@using System.Globalization
 @inject ApiServiceClient ApiClient
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 
@@ -8,7 +9,10 @@
     {
         <div style="display:flex; align-items: center; justify-content: space-between;">
             <div style="display:inline-flex">
-                <h5>@Localizer["ActivityList_ActivitiesForWorkOrder"] @WorkOrderId.    (@Localizer["ActivityList_TotalWorkload"] @activities?.Sum(x=>x.WorkLoad).ToString("F2") @Localizer["ActivityList_HoursAbbreviation"])</h5>
+                <h5>@Localizer["ActivityList_ActivitiesForWorkOrder"] @WorkOrderId.
+                    (@Localizer["Total"]: @activities?.Sum(x=>x.WorkLoad).ToString("F2") @Localizer["ActivityList_HoursAbbreviation"] / 
+                     @activities?.Sum(c=>c.Cost)?.ToString("C2", new CultureInfo("pl-PL")) )
+                    </h5>
             </div>
             <div style="display:inline-flex;">
                 <TelerikButton Icon="@SvgIcon.Fullscreen" Size="lg" Title=@Localizer["ShowActivities"] OnClick="ShowActivities"></TelerikButton>
@@ -32,25 +36,14 @@
             <span class="activity-workers">@Localizer["ActivityList_Workers"]</span>
             <span class="activity-persons">@Localizer["ActivityList_Assigned"]</span>
             <span class="activity-date">@Localizer["ActivityList_Date"]</span>
+            <span class="activity-workload">@Localizer["Cost"]</span>
         </div>
         <div class="@bodyListClass">
             @foreach (var activity in activities)
             {
-                var personIds = activity.ActPersons.Split('#').Where(x=>!string.IsNullOrWhiteSpace(x));
-                List<Person> persons = new List<Person>();
-                foreach(var personId in personIds)
-                {
-                    if (!int.TryParse(personId, out int id))
-                    {
-                        Console.WriteLine($"Invalid person ID: {personId}");
-                    }
-                    var person = ApiClient.GetPersonByIDCached(int.Parse(personId));
-                    if (person == null)
-                        persons.Add(new Person { Name = "userId="+  personId, PersonId = id});
-                    else
-                        persons.Add(person);
-                }
-
+                var personsName = activity.ActPersonsName.Split('#').Where(x=>!string.IsNullOrWhiteSpace(x));
+                var persons = ApiClient.GetAllPersonsCached().Where(p => personsName.Contains(p.Name)).ToList();
+                activity.Cost = activity.Cost == null ? 0 : activity.Cost;
                 <ActivityDisplay ActivityItem="activity" Persons="@persons" isEditable="@isEditable" OnClick="JoinActivityClickAsync" isExternalWindow="@isExternalWindow"/>
             }
         </div>

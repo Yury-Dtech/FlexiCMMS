@@ -285,7 +285,7 @@
                 {
                     <div class="documentation-file-item">
                         <i class="file-icon @GetFileIconClass(file.Name)"></i>
-                        <a href="@ApiService.GetFileDownloadUrl(file.FullName)" target="_top">@file.Name</a>    
+                        <a href="@ApiService.GetFileDownloadUrl(file.FullName)" target="_blank">@file.Name</a>    
                         <div class="file-path-container">
                             <span class="file-path"></span>
                             <TelerikButton Icon="@SvgIcon.Copy" OnClick="@(() => CopyPathToClipboard(file.FullName))" Class="copy-path-button">Copy path</TelerikButton>

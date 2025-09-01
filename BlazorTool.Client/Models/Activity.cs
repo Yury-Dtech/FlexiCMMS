@@ -17,15 +17,21 @@ namespace BlazorTool.Client.Models
         public int Workers { get; set; }
 
         [JsonProperty("act_Category")]
-        public string ActCategory { get; set; }
+        public string ActCategory { get; set; } = string.Empty;
 
         [JsonProperty("description")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [JsonProperty("act_Persons")]
-        public string ActPersons { get; set; }
+        public string ActPersons { get; set; } = string.Empty;
 
         [JsonProperty("add_Date")]
         public DateTime AddDate { get; set; }
+
+        [JsonProperty("act_PersonsName")]
+        public string ActPersonsName { get; set; } = string.Empty;
+
+        [JsonProperty("cost")]
+        public decimal? Cost { get; set; }
     }
 }

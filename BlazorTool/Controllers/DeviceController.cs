@@ -1,9 +1,14 @@
 ﻿using BlazorTool.Client.Models;
 using Microsoft.AspNetCore.Mvc;
+using SMBLibrary;
+using SMBLibrary.Client;
+using SMBLibrary.Services;
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
-using SharpCifs.Smb;
+using Telerik.SvgIcons;
 
 namespace BlazorTool.Controllers
 {
@@ -343,7 +348,11 @@ namespace BlazorTool.Controllers
         }
 
         [HttpGet("downloadfile")]
-        public IActionResult DownloadFile([FromQuery] string filePath)
+        public IActionResult DownloadFile(
+            [FromQuery] string filePath,
+            [FromQuery] string? smbUsername = null,
+            [FromQuery] string? smbPassword = null)
+
         {
             try
             {
@@ -369,34 +378,158 @@ namespace BlazorTool.Controllers
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    Console.WriteLine("Running on Linux. Using SharpCifs.Std for SMB access." + filePath);
+                    Console.WriteLine("Running on Linux. Using smblibrary for SMB access." + filePath);
 
-                    //// Учетные данные (лучше брать из IConfiguration)
-                    //var username = "ВАШ_ЛОГИН";
-                    //var password = "ВАШ_ПАРОЛЬ";
-                    //var domain = "ВАШ_ДОМЕН";
-                    //var auth = new NtlmPasswordAuthentication(domain, username, password);
+                    var username = smbUsername ?? "flexicmms";
+                    var password = smbPassword ?? "CMMS#flexi";
+                    //var serverName = filePath.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries)[0];
 
-                    // Преобразование пути в smb://
-                    var smbPath = "smb:" + filePath.Replace('\\', '/');
-                    Console.WriteLine($"smbPath={smbPath}");
-                    //var smbFile = new SmbFile(smbPath, auth);
-                    var smbFile = new SmbFile(smbPath);
+                    var normalized = filePath.Replace('\\', '/').Trim('/');      // server/share/dir/file
+                    var parts = normalized.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length < 3)
+                        return BadRequest("Wrong path. Expected: \\\\server\\share\\path\\to\\file");
 
-                    if (!smbFile.Exists())
+                    var server = parts[0];
+                    var share = parts[1];
+                    var relativePath = string.Join("\\", parts.Skip(2));
+
+                    var smbClient = new SMB2Client();
+
+                    bool isConnected = smbClient.Connect(server, SMBTransportType.DirectTCPTransport);
+                    if (!isConnected)
                     {
+                        Debug.WriteLine("Could not connect to the SMB server: " + server);
+                        return StatusCode(500, "Could not connect to the SMB server." + server);
+                    }
+
+                    var status = smbClient.Login(server, username, password);
+                    if (status != NTStatus.STATUS_SUCCESS)
+                    {
+                        Debug.WriteLine("SMB login failed with status: " + status);
+                        return StatusCode(500, "SMB login failed with status: " + status);
+                    }
+                    #region sample code
+
+                    //public class SmbExample
+                    //        {
+                    //            public void ReadFileFromShare()
+                    //            {
+                    //                var client = new SMB2Client(); // Можно использовать SMB1Client, если сервер поддерживает только SMB1
+                    //                bool isConnected = client.Connect(IPAddress.Parse("192.168.1.11"), SMBTransportType.DirectTCPTransport);
+
+                    //                if (isConnected)
+                    //                {
+                    //                    NTStatus status = client.Login("DOMAIN", "Username", "Password");
+                    //                    if (status == NTStatus.STATUS_SUCCESS)
+                    //                    {
+                    //                        ISMBFileStore fileStore = client.TreeConnect("SharedFolder", out status);
+                    //                        if (status == NTStatus.STATUS_SUCCESS)
+                    //                        {
+                    //                            string filePath = @"TestFolder\TestFile.txt";
+                    //                            object fileHandle;
+                    //                            FileStatus fileStatus;
+
+                    //                            status = fileStore.CreateFile(
+                    //                                out fileHandle,
+                    //                                out fileStatus,
+                    //                                filePath,
+                    //                                AccessMask.GENERIC_READ,
+                    //                                FileAttributes.Normal,
+                    //                                ShareAccess.Read,
+                    //                                CreateDisposition.FILE_OPEN,
+                    //                                CreateOptions.FILE_NON_DIRECTORY_FILE,
+                    //                                null);
+
+                    //                            if (status == NTStatus.STATUS_SUCCESS)
+                    //                            {
+                    //                                MemoryStream stream = new MemoryStream();
+                    //                                byte[] data;
+                    //                                long bytesRead = 0;
+
+                    //                                while (true)
+                    //                                {
+                    //                                    status = fileStore.ReadFile(out data, fileHandle, bytesRead, 4096);
+                    //                                    if (status != NTStatus.STATUS_SUCCESS || data.Length == 0)
+                    //                                        break;
+
+                    //                                    bytesRead += data.Length;
+                    //                                    stream.Write(data, 0, data.Length);
+                    //                                }
+
+                    //                                string fileContent = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+                    //                                Console.WriteLine("File content:");
+                    //                                Console.WriteLine(fileContent);
+
+                    //                                fileStore.CloseFile(fileHandle);
+                    //                            }
+
+                    //                            fileStore.Disconnect();
+                    //                        }
+
+                    //                        client.Logoff();
+                    //                    }
+
+                    //                    client.Disconnect();
+                    //                }
+                    //            }
+                    //        }
+
+                    #endregion sample code
+                    ISMBFileStore fileStore = smbClient.TreeConnect(share, out status);
+                    if (status != NTStatus.STATUS_SUCCESS)
+                    {
+                        smbClient.Logoff();
+                        smbClient.Disconnect();
+                        Debug.WriteLine($"Failed to connect to the shared folder ({share}) with status: " + status);
+                        return StatusCode(500, $"Failed to connect to the shared folder ({share}) with status: " + status);
+                    }
+
+                    string smbFilePath = filePath.Substring(filePath.IndexOf('/') + 1); // Убираем имя сервера из пути - remove server name from path
+                    object fileHandle;
+                    FileStatus fileStatus;
+
+                    status = fileStore.CreateFile(
+                        out fileHandle,
+                        out fileStatus,
+                        relativePath,
+                        AccessMask.GENERIC_READ,
+                        SMBLibrary.FileAttributes.Normal,
+                        ShareAccess.Read,
+                        CreateDisposition.FILE_OPEN,
+                        CreateOptions.FILE_NON_DIRECTORY_FILE,
+                        null);
+
+                    if (status != NTStatus.STATUS_SUCCESS)
+                    {
+                        Debug.WriteLine("Failed to open the file with status: " + status);
                         return NotFound("File not found on the network share.");
                     }
 
-                    var fileStream = smbFile.GetInputStream();
-                    var contentType = GetContentType(filePath);
-                    var fileName = smbFile.GetName();
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        byte[] data;
+                        long bytesRead = 0;
 
-                    return File(fileStream, contentType, fileName);
+                        while (true)
+                        {
+                            status = fileStore.ReadFile(out data, fileHandle, bytesRead, 4096);
+                            if (status != NTStatus.STATUS_SUCCESS || data.Length == 0)
+                                break;
+
+                            bytesRead += data.Length;
+                            memoryStream.Write(data, 0, data.Length);
+                        }
+
+                        fileStore.CloseFile(fileHandle);
+
+                        var contentType = GetContentType(filePath);
+                        var fileName = Path.GetFileName(filePath).Split('\\').Last();
+
+                        return File(memoryStream.ToArray(), contentType, fileName);
+                    }
                 }
                 else
                 {
-                    // Обработка других ОС, например macOS, или выброс исключения
                     return StatusCode(501, $"Operating system {RuntimeInformation.OSDescription} is not supported.");
                 }
             }
@@ -405,6 +538,51 @@ namespace BlazorTool.Controllers
                 return StatusCode(500, $"An error occurred while trying to download the file: {ex.Message}");
             }
         }
+
+        [HttpPost("checksmb")]
+        public IActionResult CheckCredentials([FromBody] SmbCredentials credentials)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(credentials.Server) ||
+                    string.IsNullOrWhiteSpace(credentials.Username) ||
+                    string.IsNullOrWhiteSpace(credentials.Password))
+                {
+                    return BadRequest("All fields must be filled.");
+                }
+
+                var smbPath = credentials.Server;
+                //var smbPath = $"smb://{credentials.Server}/";
+                var smbClient = new SMB2Client();
+                bool isConnected = smbClient.Connect(smbPath, SMBTransportType.DirectTCPTransport);
+                if (isConnected)
+                {
+                    Debug.WriteLine($"CheckCredentials ==> Connection to {smbPath} successful");
+                }
+                else
+                {
+                    Debug.WriteLine($"CheckCredentials ==> Wrong server path: {smbPath}");
+                    return Unauthorized($"Wrong server path. {smbPath}");
+                }
+
+                var status = smbClient.Login(string.Empty, credentials.Username, credentials.Password);
+                if (status != NTStatus.STATUS_SUCCESS)
+                {
+                    Debug.WriteLine($"CheckCredentials ==> SMB login failed with status: " + status);
+                    return StatusCode(500, "SMB login failed with status: " + status);
+                }
+                else
+                {
+                    Debug.WriteLine($"CheckCredentials ==> SMB login successful");
+                    return Ok("SMB login successful");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error checking credentials: {ex.Message}");
+            }
+        }
+
 
         private string GetContentType(string path)
         {

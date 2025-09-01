@@ -42,24 +42,47 @@ h3 {
         border-color: #f5c2c7;
     }
 
-/* Responsive adjustments:
-   Bootstrap's grid system (.row, .col-md-6) already handles much of the responsiveness.
-   Inputs and selects will stack on smaller screens by default.
-*/
+/* Общая сетка формы: используем колонки вместо d-flex */
+.form-grid .col-form-label {
+    /* Bootstrap сам задаёт нужные отступы и выравнивание по вертикали */
+}
 
-/* Example of a media query for very small screens if needed for specific adjustments */
-/* @media (max-width: 576px) { */
-/* .input-group { */
-/* display: flex; */
-/* flex-direction: column; */
-/* } */
-/* .input-group .form-control, */
-/* .input-group .btn { */
-/* width: 100%; */
-/* border-radius: 0.25rem !important; /* Reset radius for stacked items */
-/* margin-bottom: 0.5rem; */
-/* } */
-/* .input-group .btn { */
-/* margin-bottom: 0; */
-/* } */
-/* } */
+/* Ограничиваем максимальную ширину правой колонки с контролами,
+   чтобы все поля выглядели одинаково (можно поменять значение под задачу) */
+.form-grid .settings-input-width {
+    /* Make combined control (input+button or single textbox) match desired width of other controls */
+    width: 45rem; /* increased from 200px to provide room for the button */
+    max-width: 100%; /* responsive */
+
+    /* make input+button behave as a single control with button not overlapping */
+    display: flex;
+    align-items: stretch;
+}
+
+/* Ensure the input inside the input-group can shrink/grow properly */
+.form-grid .settings-input-width .form-control,
+.form-grid .settings-input-width input.form-control,
+.form-grid .settings-input-width input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0; /* allow flex item to shrink below its content width */
+}
+
+/* Keep the button its intrinsic size but allow it to scale down on small screens */
+.form-grid .settings-input-width .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50%; /* prevent button from taking too much of the combined width */
+}
+
+.form-grid .row{
+    max-width:45rem;
+}
+
+.settings-button-center {
+    text-align: center;
+}
+
+.form-grid {
+}

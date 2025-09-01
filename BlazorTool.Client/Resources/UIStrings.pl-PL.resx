@@ -297,6 +297,15 @@
   <data name="Settings_AnErrorOccurred" xml:space="preserve">
     <value>Wystąpił błąd:</value>
   </data>
+  <data name="Settings_NetworkShareUsername" xml:space="preserve">
+    <value>Nazwa użytkownika udziału sieciowego</value>
+  </data>
+  <data name="Settings_NetworkSharePassword" xml:space="preserve">
+    <value>Hasło udziału sieciowego</value>
+  </data>
+  <data name="Settings_NetworkShareServer" xml:space="preserve">
+    <value>Serwer udziału sieciowego</value>
+  </data>
   <data name="MainLayout_ApplicationLoading" xml:space="preserve">
     <value>Aplikacja się ładuje...</value>
   </data>
@@ -715,6 +724,15 @@
   <data name="ActivityList_Workload_Placeholder" xml:space="preserve">
     <value>Wprowadź obciążenie</value>
   </data>
+  <data name="ActivityList_Cost_Placeholder" xml:space="preserve">
+    <value>Wprowadź coszt</value>
+  </data>
+  <data name="ActivityList_ActDate" xml:space="preserve">
+    <value>Data rozpoczęcia</value>
+  </data>
+  <data name="ActivityList_ActDate_Placeholder" xml:space="preserve">
+    <value>Wprowadź datę początkową</value>
+  </data>
   <data name="ActivityList_Description_Placeholder" xml:space="preserve">
     <value>Wprowadź opis</value>
   </data>
@@ -764,6 +782,9 @@
     <value>Należy wybrać kategorię.</value>
   </data>
   <data name="Workload_Positive" xml:space="preserve">
+    <value>Coszt musi być liczbą dodatnią.</value>
+  </data>
+  <data name="Cost_Positive" xml:space="preserve">
     <value>Obciążenie musi być liczbą dodatnią.</value>
   </data>
   <data name="Description_Required" xml:space="preserve">
@@ -1036,5 +1057,8 @@
   </data>
   <data name="DeviceDisplay_NoDocumentationFiles" xml:space="preserve">
     <value>Nie znaleziono plików dokumentacji.</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Łącznie</value>
   </data>
 </root>
