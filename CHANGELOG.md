@@ -1,3 +1,15 @@
+## 2025-09-01
+### Features
+*   **Date Handling and Localization**:
+    *   Improved date handling in activity forms, allowing for more flexible minimum and maximum activity dates based on work order properties.
+    *   Workload input now has a validation range of 0 to 24 hours.
+    *   Added new localization strings for network share settings and workload validation.
+*   **User Settings Loading**: Enhanced the loading of user settings upon login, including network share credentials and color scheme preferences.
+
+### Fixed / Improvements
+*   **Activity Form**: Conditionally displays minimum and maximum activity dates for better user clarity.
+*   **Login Process**: Optimized the login process by centralizing user settings loading into a dedicated API client method, ensuring consistent state management.
+
 ## 2025-08-28
 ### Fixed / Improvements
 *   **Device Display Component**:

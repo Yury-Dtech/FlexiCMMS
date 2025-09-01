@@ -1,3 +1,14 @@
+## 2025-09-01
+### Nowe Funkcje
+*   **Obsługa Dat i Lokalizacja**:
+    *   Ulepszono obsługę dat w formularzach aktywności, umożliwiając bardziej elastyczne minimalne i maksymalne daty aktywności w oparciu o właściwości zlecenia pracy.
+    *   Wprowadzono walidację dla pola obciążenia (workload) w zakresie od 0 do 24 godzin.
+    *   Dodano nowe ciągi lokalizacyjne dla ustawień udziału sieciowego i walidacji obciążenia.
+*   **Ładowanie Ustawień Użytkownika**: Ulepszono ładowanie ustawień użytkownika po zalogowaniu, w tym danych uwierzytelniających udziału sieciowego i preferencji schematu kolorów.
+### Naprawiono / Ulepszenia
+*   **Formularz Aktywności**: Warunkowo wyświetla minimalne i maksymalne daty aktywności dla lepszej przejrzystości dla użytkownika.
+*   **Proces Logowania**: Zoptymalizowano proces logowania poprzez scentralizowanie ładowania ustawień użytkownika w dedykowanej metodzie klienta API, zapewniając spójne zarządzanie stanem.
+
 ## 2025-08-28
 ### Naprawiono / Ulepszenia
 *   **Komponent Wyświetlania Urządzeń (Device Display Component)**:
@@ -64,13 +75,10 @@
 ### Nowe Funkcje
 * Dodano buforowanie dla plików zleceń pracy (`ApiServiceClient.GetWorkOrderFilesAsync`, `ApiServiceClient.GetWorkOrderFileAsync`) oraz publiczną metodę do unieważniania tych buforów (`ApiServiceClient.InvalidateWorkOrderFilesCache`).
 
-## 2025-08-22
-### Nowe Funkcje
+### Naprawiono / Ulepszenia
 * Dodano metodę pobierania plików zlecenia pracy (model `WorkOrderFile`, `ApiServiceClient.GetWorkOrderFilesAsync`, `WoController.GetFiles`).
 * Dodano wyświetlanie informacji o użytkowniku na stronie Ustawień.
 * Ulepszono wyświetlanie aktywności i funkcje interfejsu użytkownika.
-
-### Naprawiono / Ulepszenia
 * Zaktualizowano `ApiServiceClient` i `WoController` do używania `ApiResponse<WorkOrderFile>`.
 * Zmieniono sortowanie listy aktywności na malejące.
 * Naprawiono automatyczne zapisywanie rozmiarów paneli na stronie głównej.
@@ -101,8 +109,8 @@
 ## 2025-08-18
 ### Ulepszenia UI/UX
 * Dodano możliwość zwijania sekcji siatek na stronie głównej (Assigned, Taken, Department)
-* Dodano przyciski "+"/ "-" w nagłówkach siatek
-* Dodano filtrowanie wielokrotnego wyboru na stronach Orders i Scheduler
+ * Dodano przyciski "+"/ "-" w nagłówkach siatek
+ * Dodano filtrowanie wielokrotnego wyboru na stronach Orders i Scheduler
 
 ### Lokalizacja
 * Poprawiono tłumaczenie komunikatów błędów w formularzu dodawania aktywności
@@ -231,9 +239,6 @@
     - Otwierać, usuwać lub duplikować istniejące spotkania, klikając na nie prawym przyciskiem myszy.
 ### Zmieniono
 - **Ustawienia**: Zmiana adresu API na stronie Ustawień teraz automatycznie przeładowuje aplikację, aby zapewnić poprawne zastosowanie nowych ustawień.
-- **Interfejs Użytkownika (UI/UX)**:
-    - Na stronie `OrdersPage` widok siatki został zwarty dzięki dostosowaniu wypełnienia i wyraźniejszym separatorom wierszy.
-    - Na stronie `Login` zaktualizowano wskaźnik ładowania, a rozwijana lista wyboru użytkownika nie pozwala już na wprowadzanie własnego tekstu.
 - **Schemat Kolorów**: Zrefaktoryzowano logikę kolorów statusu, aby opierała się na identyfikatorach stanu (State ID), zapewniając spójną reprezentację kolorów w całej aplikacji (z uwzględnieniem ustawienia "Użyj oryginalnych kolorów"). Wprowadzono nowe, jaśniejsze kolory tła dla lepszej czytelności.
 
 ### Naprawiono
@@ -253,10 +258,10 @@
     - Komponenty subskrybują teraz `AppStateService.OnChange`, aby dynamicznie aktualizować swój wygląd po zmianie schematu kolorów.
 - **Zmiana Adresu API**: Wprowadzono mechanizm restartu aplikacji po zmianie adresu zewnętrznego API na stronie Ustawień. Zapewnia to poprawne zastosowanie nowego adresu.
 - **Potwierdzenie Zmiany API**: Dodano okno dialogowe Telerik na stronie Ustawień, które pojawia się, gdy użytkownik próbuje zmienić adres API. Dialog wyświetla stary i nowy adres oraz ostrzega, że aplikacja zostanie ponownie uruchomiona.
-- **Refaktoryzacja**:
+- **Refaktoryzacja**: 
     - Zastąpiono przestarzały `ListTypeEnum` poprawnym `WOListTypeEnum` w całej aplikacji klienckiej.
     - Ulepszono logikę ładowania danych i filtrowania na stronie `SchedulerPage` dla działów i kategorii urządzeń.
-    - Zrefaktoryzowano `ApiServiceClient`, aby poprawnie obsługiwał `personID` (który może być null) w metodach związanych ze słownikami.
+    - Zrefaktoryzowano `ApiServiceClient` do poprawnego obsługiwania `personID` (który może być null) w metodach związanych ze słownikami.
 
 ### Naprawiono
 - **Obsługa Błędów**: Ulepszono obsługę wyjątków w `UserSettings.cs`, aby zapewnić, że błędy są prawidłowo zgłaszane i logowane.
@@ -296,13 +301,14 @@
 ## Naprawiono
 - `KeyNotFoundException`: Rozwiązano problem `KeyNotFoundException` występujący podczas przełączania na widok osi czasu Telerik Scheduler, w szczególności podczas grupowania według przypisanych osób.
 
+
 ## 2025-07-21
 - **Refaktoryzacja i Poprawki Błędów:**
     - Zrefaktoryzowano zarządzanie pamięcią podręczną dla obiektów `WorkOrder` w `ApiServiceClient`, aby zapewnić spójność danych. Wprowadzono scentralizowane metody do aktualizacji, unieważniania i odświeżania pamięci podręcznej (`UpdateWorkOrderInCache`, `InvalidateWorkOrdersCache`, `RefreshWorkOrderInCacheAsync`).
     - Wszystkie metody manipulacji `WorkOrder` (`Update`, `Save`, `Close`) korzystają teraz z nowej, scentralizowanej logiki pamięci podręcznej.
     - Poprawiono logikę aktualizacji interfejsu użytkownika w `SchedulerPage.razor`. Lokalna kolekcja spotkań (`_allAppointments`) jest teraz poprawnie modyfikowana po zmianie lub zamknięciu spotkania, co zapewnia, że interfejs użytkownika odzwierciedla aktualny stan.
-    - Ulepszono `AppointmentEditor.razor`, aby obsługiwał zamykanie zleceń pracy i poprawnie propagował aktualizacje interfejsu użytkownika.
-    - Dodano model `WorkOrderInfo.cs` i zaktualizowano `WoController`, aby obsługiwał pobieranie szczegółowych informacji o zleceniach pracy.
+    - Ulepszono `AppointmentEditor.razor` do obsługi zamykania zleceń pracy i poprawnego propagowania aktualizacji interfejsu użytkownika.
+    - Dodano model `WorkOrderInfo.cs` i zaktualizowano `WoController` do obsługi pobierania szczegółowych informacji o zleceniach pracy.
 
 ## 2025-07-09
 - **Funkcjonalność i Interfejs Użytkownika:**
@@ -386,7 +392,7 @@
     - Dodano opisowe etykiety dla filtrów.
     - Dodano sumaryczną pracochłonność do nagłówka listy działań.
     - Komponent `WorkOrderComponent` teraz rozszerza się, aby pokazać pełną listę działań bez przewijania.
-    - Wyrównano rozmiary kolumn między nagłówkiem w `ActivityList` a elementami w `ActivityDisplay`, aby uzyskać spójny wygląd.
+    - Wyrównano rozmiary kolumn między nagłówkiem w `ActivityList` a elementami w `ActivityDisplay` dla spójnego wyglądu.
     - Użytkownicy mogą teraz klikać na statystykę "Akcje" w widoku zlecenia pracy, aby zobaczyć szczegółową listę działań.
     - Lista działań jest wyświetlana w kompaktowym, czytelnym formacie tabeli.
 - **Zmiany w kodzie:**
@@ -395,9 +401,9 @@
     - Poprawiono deserializację JSON dla modelu `Activity`, dodając `[JsonConstructor]` do domyślnego konstruktora.
     - Utworzono model `Activity.cs`.
     - Dodano `ActivityController` do pobierania danych o działaniach z zewnętrznego API.
-    - Zaimplementowano `GetActivityByWO` w `ApiServiceClient` w celu pobierania działań.
+    - Zaimplementowano `GetActivityByWO` w `ApiServiceClient` do pobierania działań.
     - Opracowano komponenty Blazor `ActivityList` i `ActivityDisplay` do wyświetlania działań.
-    - Zmodyfikowano `WorkOrderComponent` w celu wyświetlania listy działań po interakcji użytkownika.
+    - Zmodyfikowano `WorkOrderComponent` do wyświetlania listy działań po interakcji użytkownika.
     - Porządek na ChangelogPage
 
 ## 2025-07-01
