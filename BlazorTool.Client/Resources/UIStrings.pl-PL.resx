@@ -303,6 +303,9 @@
   <data name="Settings_NetworkSharePassword" xml:space="preserve">
     <value>Hasło udziału sieciowego</value>
   </data>
+  <data name="Settings_NetworkShareServer" xml:space="preserve">
+    <value>Serwer udziału sieciowego</value>
+  </data>
   <data name="MainLayout_ApplicationLoading" xml:space="preserve">
     <value>Aplikacja się ładuje...</value>
   </data>

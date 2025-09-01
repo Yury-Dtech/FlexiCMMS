@@ -1,6 +1,7 @@
 ﻿@page "/settings"
 @using BlazorTool.Client.Services
 @using BlazorTool.Client.Components
+@using BlazorTool.Client.Models
 @inject ApiServiceClient apiService
 @inject NavigationManager Navigation
 @inject UserState UserState
@@ -56,6 +57,17 @@
     </div>
 
     <div class="row mb-3">
+        <label for="networkShareServer" class="col-sm-4 col-form-label">
+            @Localizer["Settings_NetworkShareServer"]
+        </label>
+        <div class="col-sm-8">
+            <TelerikTextBox Id="networkShareServer"
+                            @bind-Value="@NetworkShareServer"
+                            class="settings-input-width" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
         <label for="networkShareUsername" class="col-sm-4 col-form-label">
             @Localizer["Settings_NetworkShareUsername"]
         </label>
@@ -77,6 +89,25 @@
                             class="settings-input-width" />
         </div>
     </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-8 offset-sm-4">
+            <button class="btn btn-info" @onclick="CheckSmbCredentialsAsync">
+                Check SMB Credentials
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(SmbCheckStatusMessage))
+    {
+        <div class="row mb-3">
+            <div class="col-sm-8 offset-sm-4">
+                <div class="mt-2 @SmbCheckStatusClass">
+                    @SmbCheckStatusMessage
+                </div>
+            </div>
+        </div>
+    }
 
     <div class="row mb-3">
         <div class="col-sm-8 offset-sm-4">
@@ -118,6 +149,9 @@
     private bool UseOriginalColors { get; set; }
     protected string? NetworkShareUsername { get; set; }
     protected string? NetworkSharePassword { get; set; }
+    protected string? NetworkShareServer { get; set; }
+    protected string? SmbCheckStatusMessage { get; set; }
+    protected string? SmbCheckStatusClass { get; set; }
 
     private bool isConfirmDialogVisible = false;
     private string oldApiAddress = "";
@@ -180,6 +214,7 @@
         UseOriginalColors = UserState.UseOriginalColors;
         NetworkShareUsername = UserState.NetworkShareUsername;
         NetworkSharePassword = UserState.NetworkSharePassword;
+        NetworkShareServer = UserState.NetworkShareServer;
     }
 
     protected async Task<string?> LoadSettingAsync(string key)
@@ -267,12 +302,14 @@
             var s2 = await SaveSettingAsync("useOriginalColors", UseOriginalColors.ToString(), currentUser);
             var s3 = await SaveSettingAsync("NetworkShareUsername", NetworkShareUsername, currentUser);
             var s4 = await SaveSettingAsync("NetworkSharePassword", NetworkSharePassword, currentUser);
-            if (s1 && s2 && s3 && s4)
+            var s5 = await SaveSettingAsync("NetworkShareServer", NetworkShareServer, currentUser);
+            if (s1 && s2 && s3 && s4 && s5)
             {
                 UserState.UseOriginalColors = UseOriginalColors;
                 UserState.LangCode = SelectedLanguage;
                 UserState.NetworkSharePassword = NetworkSharePassword;
                 UserState.NetworkShareUsername = NetworkShareUsername;
+                UserState.NetworkShareServer = NetworkShareServer;
                 needReload = await UserState.SwitchLanguage(SelectedLanguage);
                 StatusMessage = Localizer["Settings_SettingsSaved"];
                 StatusMessageClass = "text-success";
@@ -304,6 +341,39 @@
         }
     }
 
+    protected async Task CheckSmbCredentialsAsync()
+    {
+        SmbCheckStatusMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(NetworkShareServer) ||
+            string.IsNullOrWhiteSpace(NetworkShareUsername) ||
+            string.IsNullOrWhiteSpace(NetworkSharePassword))
+        {
+            SmbCheckStatusMessage = "All SMB credential fields must be filled.";
+            SmbCheckStatusClass = "text-danger";
+            return;
+        }
+
+        var credentials = new SmbCredentials
+        {
+            Server = NetworkShareServer,
+            Username = NetworkShareUsername,
+            Password = NetworkSharePassword,
+            Domain = null // Assuming domain is not used or can be null for now
+        };
+
+        var (isValid, message) = await apiService.CheckSmbCredentialsAsync(credentials);
+
+        if (isValid)
+        {
+            SmbCheckStatusMessage = $"SMB Credentials valid: {message}";
+            SmbCheckStatusClass = "text-success";
+        }
+        else
+        {
+            SmbCheckStatusMessage = $"SMB Credentials invalid: {message}";
+            SmbCheckStatusClass = "text-danger";
+        }
+    }
 
     protected async Task<bool> SaveSettingAsync(string? key, string? value, string? user)
     {

@@ -40,6 +40,7 @@ namespace BlazorTool.Client.Services
         public bool CanHaveManyActiveTake { get; set; } = false;
         public string? NetworkShareUsername { get; set; }
         public string? NetworkSharePassword { get; set; }
+        public string? NetworkShareServer { get; set; }
 
         public bool HasPermission(PermissionType permission)
         {
@@ -84,6 +85,7 @@ namespace BlazorTool.Client.Services
             CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
             NetworkShareUsername = identityData.NetworkShareUsername;
             NetworkSharePassword = identityData.NetworkSharePassword;
+            NetworkShareServer = identityData.NetworkShareServer;
             var cultureInfo = new CultureInfo(identityData.LangCode);
             bool isForceReload = identityData.LangCode != CultureInfo.CurrentCulture.Name;
             CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -116,7 +118,8 @@ namespace BlazorTool.Client.Services
                 RigthMatrix = this.RightMatrix,
                 UseOriginalColors = this.UseOriginalColors,
                 NetworkShareUsername = this.NetworkShareUsername,
-                NetworkSharePassword = this.NetworkSharePassword
+                NetworkSharePassword = this.NetworkSharePassword,
+                NetworkShareServer = this.NetworkShareServer
             };
             await _localStorageService.SetItemAsStringAsync("identityData", JsonConvert.SerializeObject(data));
         }
@@ -133,6 +136,7 @@ namespace BlazorTool.Client.Services
                 CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
                 NetworkShareUsername = identityData.NetworkShareUsername;
                 NetworkSharePassword = identityData.NetworkSharePassword;
+                NetworkShareServer = identityData.NetworkShareServer;
                 var cultureInfo = new CultureInfo(identityData.LangCode);
                 CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
                 CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
@@ -160,6 +164,7 @@ namespace BlazorTool.Client.Services
                     CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
                     NetworkShareUsername = identityData.NetworkShareUsername;
                     NetworkSharePassword = identityData.NetworkSharePassword;
+                    NetworkShareServer = identityData.NetworkShareServer;
                     isForceReload = identityData.LangCode != CultureInfo.CurrentCulture.Name;
                     var cultureInfo = new CultureInfo(identityData.LangCode);
                     CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -185,6 +190,9 @@ namespace BlazorTool.Client.Services
             RightMatrix = null;
             UseOriginalColors = true;
             CanHaveManyActiveTake = false;
+            NetworkShareUsername = null;
+            NetworkSharePassword = null;
+            NetworkShareServer = null;
             //var cultureInfo = new CultureInfo("en-EN");
             //CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
             //CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;

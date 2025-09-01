@@ -39,5 +39,8 @@ namespace BlazorTool.Client.Models
 
         [JsonPropertyName("networkSharePassword")]
         public string? NetworkSharePassword { get; set; }
+
+        [JsonPropertyName("networkShareServer")]
+        public string? NetworkShareServer { get; set; }
     }
 }

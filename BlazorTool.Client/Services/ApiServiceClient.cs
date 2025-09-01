@@ -1657,27 +1657,47 @@ namespace BlazorTool.Client.Services
                 .ToList();
         }
 
-        //public async Task<bool> AddNewWODict(string name, int listType, bool isDefault = false, int? machineCategoryId = null)
-        //{//TODO: remove this method, dict is only read from API
-        //    if (string.IsNullOrEmpty(name) || listType < 1 || listType > 5) return false;
-        //    WODict newDict = new WODict
-        //    {
-        //        Name = name,
-        //        ListType = listType,
-        //        IsDefault = false,
-        //        MachineCategoryID = null, // or set to a specific value if needed
-        //        Id = 0 // API will assign the ID
-        //    };
-        //    if (_dictCache.Any(d=>d.Name == name && d.ListType == listType && d.MachineCategoryID == machineCategoryId))
-        //    {
-        //        return false;
-        //    }
-        //    _dictCache.Add(newDict); 
-        //    Console.WriteLine($"[{_userState.UserName}] = = = = = = Dictionary with name '{name}' and ListType {listType} added to cache.");
-        //    return true;
-        //   //TODO SAVE return await PostSingleAsync<Dict, Dict>("wo/adddict", newDict) is { IsValid: true, Data: { } };
-        //}
+        /// <summary>
+        /// Checks the validity of SMB credentials by calling the DeviceController's CheckCredentials endpoint.
+        /// </summary>
+        /// <param name="credentials">The SMB credentials to check.</param>
+        /// <returns>A tuple indicating success (bool) and a message (string).</returns>
+        public async Task<(bool IsValid, string Message)> CheckSmbCredentialsAsync(SmbCredentials credentials)
+        {
+            var url = "device/checksmb";
+            try
+            {
+                var response = await _http.PostAsJsonAsync(url, credentials);
 
+                if (response.IsSuccessStatusCode)
+                {
+                    var successMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check successful: {successMessage}");
+                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check successful: {successMessage}");
+                    return (true, successMessage);
+                }
+                else
+                {
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check failed. Status: {response.StatusCode}, Details: {errorMessage}");
+                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check failed. Status: {response.StatusCode}, Details: {errorMessage}");
+                    return (false, errorMessage);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
+                return (false, $"Network error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
+                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
+                return (false, $"An unexpected error occurred: {ex.Message}");
+            }
+        }
+        
         public async Task<ApiResponse<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data)
         {
             try

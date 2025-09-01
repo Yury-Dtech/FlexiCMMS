@@ -49,25 +49,18 @@ h3 {
 
 /* Ограничиваем максимальную ширину правой колонки с контролами,
    чтобы все поля выглядели одинаково (можно поменять значение под задачу) */
-.form-grid .control-max {
+.form-grid .settings-input-width {
     width: 200px;
 }
 
 .form-grid .row{
-    max-width:45rem;
+    max-width:60rem;
 }
 
 .settings-button-center {
     text-align: center;
 }
 
-.container {
-    max-width: 755px;
-    text-align: -webkit-right;
+.form-grid {
 }
 
-.form-check {
-    text-align: left;
-    padding-left: 0!important;
-}
-}
