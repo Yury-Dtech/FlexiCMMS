@@ -198,6 +198,9 @@
   <data name="NavMenu_Scheduler" xml:space="preserve">
     <value>Scheduler</value>
   </data>
+  <data name="NavMenu_Activities" xml:space="preserve">
+    <value>Activities</value>
+  </data>
   <data name="NavMenu_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -388,6 +391,18 @@
   <data name="Scheduler_Remove" xml:space="preserve">
     <value>Remove</value>
   </data>
+  <data name="Scheduler_AddNewActivity" xml:space="preserve">
+    <value>Add new activity</value>
+  </data>
+  <data name="Scheduler_AddNewWorkOrder" xml:space="preserve">
+    <value>Add new work order</value>
+  </data>
+  <data name="Add_New_Activity" xml:space="preserve">
+    <value>Add new activity</value>
+  </data>
+  <data name="NoActionsAvailable" xml:space="preserve">
+    <value>No actions available</value>
+  </data>
   <data name="Scheduler_Duplicate" xml:space="preserve">
     <value>Duplicate</value>
   </data>
@@ -513,6 +528,7 @@
   </data>
   <data name="ActivityList_HoursAbbreviation" xml:space="preserve">
     <value>h</value>
+    <comment>h</comment>
   </data>
   <data name="ActivityList_LoadingActivities" xml:space="preserve">
     <value>Loading activities...</value>

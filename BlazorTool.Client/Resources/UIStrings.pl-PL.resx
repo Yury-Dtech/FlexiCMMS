@@ -198,6 +198,9 @@
   <data name="NavMenu_Scheduler" xml:space="preserve">
     <value>Harmonogram</value>
   </data>
+  <data name="NavMenu_Activities" xml:space="preserve">
+    <value>Aktywności</value>
+  </data>
   <data name="NavMenu_Settings" xml:space="preserve">
     <value>Ustawienia</value>
   </data>
@@ -390,6 +393,18 @@
   </data>
   <data name="Scheduler_Duplicate" xml:space="preserve">
     <value>Duplikuj</value>
+  </data>
+  <data name="Scheduler_AddNewActivity" xml:space="preserve">
+    <value>Dodaj nową czynność</value>
+  </data>
+  <data name="Scheduler_AddNewWorkOrder" xml:space="preserve">
+    <value>Dodaj nowe zlecenie</value>
+  </data>
+  <data name="Add_New_Activity" xml:space="preserve">
+    <value>Dodaj nową czynność</value>
+  </data>
+  <data name="NoActionsAvailable" xml:space="preserve">
+    <value>Brak dostępnych działań</value>
   </data>
   <data name="AppointmentEditor_AssetNo" xml:space="preserve">
     <value>Nr majątku:</value>
@@ -608,7 +623,7 @@
     <value>Dodać osobę do wybranej aktywności</value>
   </data>
   <data name="Add" xml:space="preserve">
-    <value>Dodać</value>
+    <value>Dodaj</value>
   </data>
   <data name="All_Fields_Required" xml:space="preserve">
     <value>Wszystkie pola są wymagane</value>

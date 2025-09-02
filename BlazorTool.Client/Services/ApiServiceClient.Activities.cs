@@ -1,14 +1,21 @@
 using BlazorTool.Client.Models;
 using Newtonsoft.Json;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 using Activity = BlazorTool.Client.Models.Activity;
 
 namespace BlazorTool.Client.Services
 {
     public partial class ApiServiceClient
     {
+        // Cache for activities per work order
+        private readonly Dictionary<int, List<Activity>> _activitiesCache = new Dictionary<int, List<Activity>>();
+        private readonly object _activitiesCacheLock = new object();
         #region Activity
-        public async Task<List<Models.Activity>> GetActivitiesByWO(int workorder_id)
+        /// <summary>
+        /// Retrieves activities for a work order.
+        /// </summary>
+        public async Task<List<Activity>> GetActivitiesByWO(int workorder_id)
         {
             var url = $"activity/getlist?woID={workorder_id}&lang={_userState.LangCode}";
             try
@@ -17,7 +24,15 @@ namespace BlazorTool.Client.Services
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync();
                 var wrapper = JsonConvert.DeserializeObject<ApiResponse<Activity>>(content);
-                return wrapper?.Data ?? new List<Activity>();
+                var result = wrapper?.Data ?? new List<Activity>();
+
+                lock (_activitiesCacheLock)
+                {
+                    // store a shallow copy to avoid accidental external mutation
+                    _activitiesCache[workorder_id] = new List<Activity>(result);
+                }
+
+                return result;
             }
             catch (HttpRequestException ex)
             {
@@ -29,6 +44,73 @@ namespace BlazorTool.Client.Services
                 Console.WriteLine($"ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
                 return new List<Activity>();
             }
+        }
+
+        /// <summary>
+        /// Returns cached activities for a work order if present, otherwise new request.
+        /// </summary>
+        public async Task<List<Activity>> GetCachedActivitiesByWO(int workorder_id)
+        {
+            lock (_activitiesCacheLock)
+            {
+                if (_activitiesCache.TryGetValue(workorder_id, out var cached))
+                {
+                    return cached;
+                }
+            }
+            return await GetActivitiesByWO(workorder_id);
+        }
+
+        /// <summary>
+        /// Retrieves activities for a list of work orders. Uses cache when available and fetches missing ones in parallel.
+        /// Returns a mapping from work order id to its activities (empty list if none or request failed).
+        /// </summary>
+        public async Task<List<Activity>> GetActivitiesByWO(List<WorkOrder> orders)
+        {
+            if (orders == null) throw new ArgumentNullException(nameof(orders));
+
+            var tasks = new List<Task<List<Activity>>>();
+            var ids = new List<int>();
+
+            foreach (var order in orders)
+            {
+                ids.Add(order.WorkOrderID);
+                tasks.Add(GetActivitiesByWO(order.WorkOrderID));
+            }
+
+            var results = await Task.WhenAll(tasks);
+
+            var acts = new List<Activity>();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                acts.AddRange(results[i] ?? new List<Activity>());
+            }
+
+            return acts;
+        }
+
+        public async Task<List<Activity>> GetCachedActivitiesByWO(List<WorkOrder> orders)
+        {
+            if (orders == null) throw new ArgumentNullException(nameof(orders));
+
+            var tasks = new List<Task<List<Activity>>>();
+            var ids = new List<int>();
+
+            foreach (var order in orders)
+            {
+                ids.Add(order.WorkOrderID);
+                tasks.Add(GetCachedActivitiesByWO(order.WorkOrderID));
+            }
+
+            var results = await Task.WhenAll(tasks);
+
+            var map = new List<Activity>();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                map.AddRange(results[i] ?? new List<Activity>());
+            }
+
+            return map;
         }
 
         public async Task<SingleResponse<NewActivityResponse>> CreateActivityAsync(AddActivity activity)

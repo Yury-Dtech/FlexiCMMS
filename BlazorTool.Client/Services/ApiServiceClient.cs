@@ -21,6 +21,8 @@ namespace BlazorTool.Client.Services
         private Dictionary<string, SingleResponse<DeviceImage>> _deviceImageCache = new Dictionary<string, SingleResponse<DeviceImage>>();
         private Dictionary<string, ApiResponse<DeviceDict>> _deviceDictCache = new Dictionary<string, ApiResponse<DeviceDict>>();
 
+        // Cache for work orders retrieved with person filter
+        private Dictionary<int, List<WorkOrder>> _workOrdersWithPersonCache = new Dictionary<int, List<WorkOrder>>();
         public ApiServiceClient(HttpClient http, UserState userState)
         {
             _http = http;

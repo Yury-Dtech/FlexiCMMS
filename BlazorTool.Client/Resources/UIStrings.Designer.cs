@@ -331,6 +331,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add new activity.
+        /// </summary>
+        public static string Add_New_Activity {
+            get {
+                return ResourceManager.GetString("Add_New_Activity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add date.
         /// </summary>
         public static string AddDate {
@@ -1294,6 +1303,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Activities.
+        /// </summary>
+        public static string NavMenu_Activities {
+            get {
+                return ResourceManager.GetString("NavMenu_Activities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Devices.
         /// </summary>
         public static string NavMenu_Devices {
@@ -1362,6 +1380,15 @@ namespace BlazorTool.Client.Resources {
         public static string No {
             get {
                 return ResourceManager.GetString("No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No actions available.
+        /// </summary>
+        public static string NoActionsAvailable {
+            get {
+                return ResourceManager.GetString("NoActionsAvailable", resourceCulture);
             }
         }
         
@@ -1740,6 +1767,24 @@ namespace BlazorTool.Client.Resources {
         public static string Scheduler_AddNew {
             get {
                 return ResourceManager.GetString("Scheduler_AddNew", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add new activity.
+        /// </summary>
+        public static string Scheduler_AddNewActivity {
+            get {
+                return ResourceManager.GetString("Scheduler_AddNewActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add new work order.
+        /// </summary>
+        public static string Scheduler_AddNewWorkOrder {
+            get {
+                return ResourceManager.GetString("Scheduler_AddNewWorkOrder", resourceCulture);
             }
         }
         

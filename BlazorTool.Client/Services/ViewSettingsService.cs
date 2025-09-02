@@ -44,14 +44,15 @@ namespace BlazorTool.Client.Services
 
         public static Dictionary<string, string> SettingsKeys = new Dictionary<string, string>()
         {
-            { "OrdersPage", "orders-grid-settings" },
-            { "SchedulerPage", "scheduler-filter-settings" },
+            {"OrdersPage", "orders-grid-settings" },
+            {"SchedulerPage", "scheduler-filter-settings" },
             {"Home-Assigned", "home-assigned-orders-grid" },
             {"Home-Taken", "home-taken-orders-grid" },
             {"Home-Department", "home-department-orders-grid" },
             {"Home-SectionStates", "home-section-collapse-states" },
             {"Home-WorkOrdersWithPerson", "home-work-orders-with-person-grid" },
-            { "DevicesPage", "devices-grid-settings" }
+            {"DevicesPage", "devices-grid-settings" },
+            {"ActivitiesPage", "activities-settings" }
         };
 
         public async Task ClearAsync()

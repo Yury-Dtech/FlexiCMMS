@@ -314,9 +314,31 @@ namespace BlazorTool.Client.Services
             return apiOrder;
         }
 
-        public async Task<List<WorkOrder>> GetWorkOrdersWithPerson()
+        /// <summary>
+        /// Retrieves cached work orders for a person if available.
+        /// </summary>
+        public async Task<List<WorkOrder>> GetWorkOrdersWithPersonCachedAsync(int? personId = null, string? langCode = null)
         {
-            var url = $"wo/getlist?IsWithPerson=true&PersonID={_userState.PersonID}&Lang={Uri.EscapeDataString(_userState.LangCode)}";
+            var id = personId ?? _userState.PersonID ?? 0;
+            if (_workOrdersWithPersonCache.TryGetValue(id, out var list) && list != null)
+            {
+                Console.WriteLine($"[{_userState.UserName}] Returning cached work orders for person {id}: {list.Count}");
+                Debug.WriteLine($"[{_userState.UserName}] Returning cached work orders for person {id}: {list.Count}");
+                return list;
+            }
+            return await GetWorkOrdersWithPerson(personId, langCode);
+        }
+        public async Task<List<WorkOrder>> GetWorkOrdersWithPerson(int? personId = null, string? langCode = null)
+        {
+            var id = personId ?? _userState.PersonID ?? 0;
+            // Return cached if present
+            if (_workOrdersWithPersonCache.TryGetValue(id, out var cached) && cached != null && cached.Count > 0)
+            {
+                Console.WriteLine($"[{_userState.UserName}] Work orders with person {id} found in cache: {cached.Count}");
+                Debug.WriteLine($"[{_userState.UserName}] Work orders with person {id} found in cache: {cached.Count}");
+                return cached;
+            }
+            var url = $"wo/getlist?IsWithPerson=true&PersonID={id}&Lang={Uri.EscapeDataString(langCode ?? _userState.LangCode)}";
             try
             {
                 var wrapper = await _http.GetFromJsonAsync<ApiResponse<WorkOrder>>(url);
@@ -326,6 +348,8 @@ namespace BlazorTool.Client.Services
                     Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: API response is not valid.");
                     return new List<WorkOrder>();
                 }
+                // Cache fetched results
+                _workOrdersWithPersonCache[id] = wrapper.Data;
                 return wrapper.Data;
             }
             catch (Exception ex)
