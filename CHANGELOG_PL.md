@@ -1,13 +1,27 @@
 ## 2025-09-01
 ### Nowe Funkcje
-*   **Obsługa Dat i Lokalizacja**:
+*   **Dostęp do plików SMB i poświadczenia**:
+    *   Dodano obsługę dostępu do plików w udziałach sieciowych (SMB) z poświadczeniami dostarczonymi przez użytkownika.
+    *   Zaimplementowano nowy interfejs użytkownika w ustawieniach do konfigurowania serwera SMB, nazwy użytkownika i hasła.
+    *   Dodano funkcję sprawdzania poprawności poświadczeń SMB.
+*   **Ulepszony system powiadomień**:
+    *   Wprowadzono nowy system powiadomień wykorzystujący komponent Telerik Notification do wyświetlania użytkownikowi różnych typów komunikatów (informacyjnych, sukcesu, ostrzeżeń, błędów).
+*   **Ulepszony formularz aktywności**:
     *   Ulepszono obsługę dat w formularzach aktywności, umożliwiając bardziej elastyczne minimalne i maksymalne daty aktywności w oparciu o właściwości zlecenia pracy.
     *   Wprowadzono walidację dla pola obciążenia (workload) w zakresie od 0 do 24 godzin.
     *   Dodano nowe ciągi lokalizacyjne dla ustawień udziału sieciowego i walidacji obciążenia.
-*   **Ładowanie Ustawień Użytkownika**: Ulepszono ładowanie ustawień użytkownika po zalogowaniu, w tym danych uwierzytelniających udziału sieciowego i preferencji schematu kolorów.
+*   **Profil użytkownika i ustawienia**:
+    *   Wyświetlanie profilu użytkownika obejmuje teraz `RightMatrixID` i `DepartmentID`.
+    *   Ulepszono ładowanie ustawień użytkownika po zalogowaniu, w tym danych uwierzytelniających udziału sieciowego i preferencji schematu kolorów.
+
 ### Naprawiono / Ulepszenia
 *   **Formularz Aktywności**: Warunkowo wyświetla minimalne i maksymalne daty aktywności dla lepszej przejrzystości dla użytkownika.
 *   **Proces Logowania**: Zoptymalizowano proces logowania poprzez scentralizowanie ładowania ustawień użytkownika w dedykowanej metodzie klienta API, zapewniając spójne zarządzanie stanem.
+*   **Pobieranie plików**: Zmieniono linki do pobierania plików, aby otwierały się w nowej karcie (`target="_blank"`).
+*   **Menu nawigacyjne**: Menu nawigacyjne jest teraz widoczne tylko wtedy, gdy użytkownik jest uwierzytelniony.
+*   **Strona główna**: Główna zawartość strony głównej jest teraz widoczna tylko wtedy, gdy użytkownik jest uwierzytelniony.
+*   **Uprawnienia administratora**: Sprawdzanie administratora obejmuje teraz `RightMatrixID == 1`.
+*   **Zależności**: Zastąpiono `SharpCifs.Std` przez `SMBLibrary` dla funkcjonalności SMB.
 
 ## 2025-08-28
 ### Naprawiono / Ulepszenia

@@ -1,14 +1,27 @@
 ## 2025-09-01
 ### Features
-*   **Date Handling and Localization**:
-    *   Improved date handling in activity forms, allowing for more flexible minimum and maximum activity dates based on work order properties.
+*   **SMB File Access and Credentials**:
+    *   Added support for accessing files on network shares (SMB) with user-provided credentials.
+    *   Implemented a new UI in settings for configuring SMB server, username, and password.
+    *   Added a feature to check SMB credentials validity.
+*   **Enhanced Notification System**:
+    *   Introduced a new notification system using Telerik Notification component for displaying various types of messages (Info, Success, Warning, Error) to the user.
+*   **Improved Activity Form**:
+    *   Enhanced date handling in activity forms, allowing for more flexible minimum and maximum activity dates based on work order properties.
     *   Workload input now has a validation range of 0 to 24 hours.
     *   Added new localization strings for network share settings and workload validation.
-*   **User Settings Loading**: Enhanced the loading of user settings upon login, including network share credentials and color scheme preferences.
+*   **User Profile and Settings**:
+    *   User profile display now includes `RightMatrixID` and `DepartmentID`.
+    *   Enhanced the loading of user settings upon login, including network share credentials and color scheme preferences.
 
 ### Fixed / Improvements
 *   **Activity Form**: Conditionally displays minimum and maximum activity dates for better user clarity.
 *   **Login Process**: Optimized the login process by centralizing user settings loading into a dedicated API client method, ensuring consistent state management.
+*   **File Download**: Changed file download links to open in a new tab (`target="_blank"`).
+*   **Navigation Menu**: The navigation menu is now only visible when the user is authenticated.
+*   **Home Page**: The main content of the home page is now only visible when the user is authenticated.
+*   **Admin Privileges**: Admin check now includes `RightMatrixID == 1`.
+*   **Dependencies**: Replaced `SharpCifs.Std` with `SMBLibrary` for SMB functionality.
 
 ## 2025-08-28
 ### Fixed / Improvements
