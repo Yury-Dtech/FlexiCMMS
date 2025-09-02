@@ -187,12 +187,13 @@ h1:focus {
     padding-bottom:5px;
 }
 
-.order-header .order-title {
-    display: inline; /* Позволяем ему быть в одной строке с другими */
-    border-bottom: none; /* Убираем нижнюю границу, т.к. она здесь не нужна */
-    margin-bottom: 0; /* Убираем нижний отступ, т.к. он задан в .order-header */
-    padding-bottom: 0; /* Убираем внутренний отступ снизу */
-}
+    .order-header .order-title {
+        display: inline; /* Позволяем ему быть в одной строке с другими */
+        border-bottom: none; /* Убираем нижнюю границу, т.к. она здесь не нужна */
+        margin-bottom: 0; /* Убираем нижний отступ, т.к. он задан в .order-header */
+        padding-bottom: 0; /* Убираем внутренний отступ снизу */
+        white-space: nowrap;
+    }
 
 .orders-grid-container .can-have-many {
     display: inline;

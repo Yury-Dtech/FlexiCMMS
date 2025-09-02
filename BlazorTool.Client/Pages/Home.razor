@@ -13,7 +13,7 @@
 @inject ViewSettingsService ViewSettingsService
 
 <BlazorTool.Client.Components.CheckSession ApiService="@ApiClient" UserState="@UserState" />
-@if(UserState?.IsAuthenticated == true){
+
 <div class="main-page-root-container">
         
 <TelerikSplitter Class="home-splitter" Width="100%" Height="100%" Orientation="SplitterOrientation.Vertical">
@@ -37,10 +37,13 @@
                                 }
                         </span>
                                                         <span class="order-title">@Localizer["Home_MyAssignedOrders"]: @myAssignedOrders.Count()</span>
-                        
+                        <div class="buttons-row"> 
                 @if (UserState.HasPermission(PermissionType.WO_Add)) {
                         <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrder">@Localizer["Scheduler_AddNew"]</TelerikButton>
                         }
+                            <TelerikButton  Title="@Localizer["Scheduler_ReloadAllData"]" OnClick="@HardReloadDataAsync">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
+
+                        </div>
                                                 </div>
                 <div class="grid-content @(assignedCollapsed ? "collapsed-content" : "")">
                                 <OrdersGrid @key="@assignedGridKey"
@@ -183,8 +186,6 @@
 @if(false){<p>@loaderText</p>}
 </div>
 
-}
-
 <TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="500px">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_AddActivity"]</strong>
@@ -198,6 +199,7 @@
 </TelerikWindow>
 
 @code {
+    #region Fields
     private string AssignedGridSettingsKey = ViewSettingsService.SettingsKeys["Home-Assigned"];
     private string TakenGridSettingsKey = ViewSettingsService.SettingsKeys["Home-Taken"];
     private string DepartmentGridSettingsKey = ViewSettingsService.SettingsKeys["Home-Department"];
@@ -252,7 +254,7 @@
     private bool workOrdersWithPersonCollapsed = false;
     private System.Threading.Timer _saveStateTimer;
     private const int SaveStateDelay = 500; // ms
-
+    #endregion Fields
     #region Spoilers
     private void ToggleSpoiler(string pane)
     {
@@ -575,7 +577,7 @@
         }
 
         if(UserState.HasPermission(PermissionType.WO_SET_AssignedPerson))
-        myDepartmentOrdersMenuItems.Add(new ContextMenuItem { Text = assignToMyselfText, CommandName = "AssignToMyself", Icon = SvgIcon.Eye });
+            myDepartmentOrdersMenuItems.Add(new ContextMenuItem { Text = assignToMyselfText, CommandName = "AssignToMyself", Icon = SvgIcon.Eye });
 
         if (UserState.CanHaveManyActiveTake || !HaveAnyTakenOrders)
         {
@@ -627,6 +629,22 @@
         allOrders = FilterWorkOrders(allOrders);
         TakeListsOrders();
         HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HardReloadDataAsync()
+    {
+        isDataLoading = true;
+        await InvokeAsync(StateHasChanged);
+        allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
+        allOrders = FilterWorkOrders(allOrders);
+        await ApiClient.GetWODictionaries(UserState.PersonID, UserState.LangCode);
+        allDepartments = ApiClient.GetWODepartments().Select(d => d.Name).ToList();
+        TakeListsOrders();
+        HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
+        workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
+        MakeContextMenu();
+        isDataLoading = false;
         await InvokeAsync(StateHasChanged);
     }
 
