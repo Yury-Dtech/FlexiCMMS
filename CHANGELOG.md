@@ -1,3 +1,19 @@
+## 2025-09-02
+
+### Features
+*   **Activities Module**:
+    *   Added `Activities` page with scheduler and new components: `ActivitySchedulerItem`, `NewActivityFormComponent`.
+    *   New models: `ActivityAppointment`, `NewActivityFormModel`.
+    *   Added page-specific CSS and layout for activities.
+*   **API Client — refactor**:
+    *   Split `ApiServiceClient.cs` into partial files for modularity: `ApiServiceClient.Activities.cs`, `ApiServiceClient.Devices.cs`, `ApiServiceClient.Dictionaries.cs`, `ApiServiceClient.Settings.cs`, `ApiServiceClient.Users.cs`, `ApiServiceClient.WorkOrders.cs`.
+    *   Improves organization and maintainability of client API calls.
+*   **Home / Navigation**:
+    *   Added a data refresh button on the Home page.
+    *   Adjusted `NavMenu.razor` and `Home.razor` so main content and navigation are shown only when user is authenticated.
+*   **Localization**:
+    *   Updated `UIStrings.resx` and `UIStrings.pl-PL.resx` to include keys used by the new activities UI.
+
 ## 2025-09-01
 ### Features
 *   **SMB File Access and Credentials**:

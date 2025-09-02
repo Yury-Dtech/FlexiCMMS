@@ -1,3 +1,18 @@
+## 2025-09-02
+
+### Nowe Funkcje
+*   **Moduł Aktywności (Activities)**:
+    *   Dodano stronę `Activities` z harmonogramem oraz nowe komponenty: `ActivitySchedulerItem`, `NewActivityFormComponent`.
+    *   Nowe modele: `ActivityAppointment`, `NewActivityFormModel`.
+    *   Dodano pliki CSS i układ dla strony aktywności.
+*   **Refaktoryzacja klienta API**:
+    *   Podzielono `ApiServiceClient.cs` na części (`ApiServiceClient.Activities.cs`, `...Devices.cs`, `...Dictionaries.cs`, `...Settings.cs`, `...Users.cs`, `...WorkOrders.cs`) w celu lepszej organizacji.
+*   **Strona główna / Nawigacja**:
+    *   Dodano przycisk odświeżania danych na stronie głównej.
+    *   Zmieniono `NavMenu.razor` i `Home.razor`, aby główna zawartość i menu były widoczne tylko dla uwierzytelnionych użytkowników.
+*   **Lokalizacja**:
+    *   Zaktualizowano `UIStrings.resx` i `UIStrings.pl-PL.resx` o klucze dla nowego interfejsu aktywności.
+
 ## 2025-09-01
 ### Nowe Funkcje
 *   **Dostęp do plików SMB i poświadczenia**:
