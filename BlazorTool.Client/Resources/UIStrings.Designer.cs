@@ -1771,24 +1771,6 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add new activity.
-        /// </summary>
-        public static string Scheduler_AddNewActivity {
-            get {
-                return ResourceManager.GetString("Scheduler_AddNewActivity", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Add new work order.
-        /// </summary>
-        public static string Scheduler_AddNewWorkOrder {
-            get {
-                return ResourceManager.GetString("Scheduler_AddNewWorkOrder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Assigned persons:.
         /// </summary>
         public static string Scheduler_AssignedPersons {

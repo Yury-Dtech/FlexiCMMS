@@ -152,7 +152,7 @@
             <SchedulerViews>
                 <SchedulerDayView StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
                             <SchedulerItem Item="@(context as SchedulerAppointment)" View="@SchedulerView.Day" />
                         </div>
                     </ItemTemplate>
@@ -166,7 +166,7 @@
                 </SchedulerDayView>
                 <SchedulerWeekView StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
                             <SchedulerItem Item="@(context as SchedulerAppointment)" View="@SchedulerView.Week" />
                         </div>
                     </ItemTemplate>

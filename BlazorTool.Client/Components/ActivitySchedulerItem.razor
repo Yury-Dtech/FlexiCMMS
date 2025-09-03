@@ -1,0 +1,50 @@
+@using BlazorTool.Client.Models
+@using Telerik.Blazor.Components
+@inject IStringLocalizer<Resources.UIStrings> Loc
+
+<div class="scheduler-item-wrapper view-@View.ToString().ToLower()">
+    @* @if (View == SchedulerView.Month)
+    {
+        <div class="scheduler-item-month">
+            <span class="item-assignee"> : @Item.Description</span>
+        </div>
+    }
+    else if(View == SchedulerView.Timeline)
+    {
+        <div class="scheduler-item-month">
+            <span class="item-assignee">: @Item.Description</span>
+        </div>
+    } *@
+    @if (View == SchedulerView.Week)// Week or Day view
+    {
+        @if (Item.IsWorkOrder) //workorder
+        {
+            <div class="scheduler-workorder-details">
+                <div class="item-header">@Loc["WorkOrder_OrderNo"]@Item.AppointmentId]</div>
+                <div class="item-body">
+                    <span>@Item.WorkOrder?.AssetNo</span>
+                </div>
+                <div class="item-description">@Item.Description</div>
+            </div>
+        }
+        else //activity
+        {
+            <div class="scheduler-activity-details">
+                <div class="item-header">[@Item.AppointmentId] @Item.ActCategory</div>
+                <div class="item-body">
+                    <span>@Item.ActPersonsName.Replace("#",", ")</span>
+                </div>
+                <div class="item-description">@Item.Description</div>
+            </div>
+        }
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public ActivityAppointment Item { get; set; } = new();
+
+    [Parameter]
+    public SchedulerView View { get; set; }
+}

@@ -391,20 +391,14 @@
   <data name="Scheduler_Remove" xml:space="preserve">
     <value>Usuń</value>
   </data>
-  <data name="Scheduler_Duplicate" xml:space="preserve">
-    <value>Duplikuj</value>
-  </data>
-  <data name="Scheduler_AddNewActivity" xml:space="preserve">
-    <value>Dodaj nową czynność</value>
-  </data>
-  <data name="Scheduler_AddNewWorkOrder" xml:space="preserve">
-    <value>Dodaj nowe zlecenie</value>
-  </data>
   <data name="Add_New_Activity" xml:space="preserve">
     <value>Dodaj nową czynność</value>
   </data>
   <data name="NoActionsAvailable" xml:space="preserve">
     <value>Brak dostępnych działań</value>
+  </data>
+  <data name="Scheduler_Duplicate" xml:space="preserve">
+    <value>Duplikuj</value>
   </data>
   <data name="AppointmentEditor_AssetNo" xml:space="preserve">
     <value>Nr majątku:</value>

@@ -11,10 +11,16 @@
 }
 
 /* --- Common styles for Day/Week details --- */
-.scheduler-item-details {
+.scheduler-activity-details {
     display: flex;
     flex-direction: column;
 
+}
+
+.scheduler-workorder-details {
+    display: flex;
+    flex-direction: column;
+/*    background-color: #8acdfe8f;*/
 }
 
 .item-header {
@@ -22,8 +28,7 @@
 }
 
 .item-body {
-    white-space: nowrap;
-
+    white-space: collapse;
 }
 
 .item-description {
@@ -38,7 +43,7 @@
     padding: 2px 4px;
 }
 
-.view-week .scheduler-item-details {
+.view-week .scheduler-activity-details, .view-week .scheduler-workorder-details {
     font-size: 16px;
 }
 
@@ -57,9 +62,9 @@
     padding: 5px;
 }
 
-.view-day .scheduler-item-details {
-    font-size: 18px; /* Larger base font */
-}
+    .view-day .scheduler-activity-details, .view-week .scheduler-workorder-details {
+        font-size: 18px; /* Larger base font */
+    }
 
 .view-day .item-body {
     font-size: 18px;

@@ -331,13 +331,7 @@ namespace BlazorTool.Client.Services
         public async Task<List<WorkOrder>> GetWorkOrdersWithPerson(int? personId = null, string? langCode = null)
         {
             var id = personId ?? _userState.PersonID ?? 0;
-            // Return cached if present
-            if (_workOrdersWithPersonCache.TryGetValue(id, out var cached) && cached != null && cached.Count > 0)
-            {
-                Console.WriteLine($"[{_userState.UserName}] Work orders with person {id} found in cache: {cached.Count}");
-                Debug.WriteLine($"[{_userState.UserName}] Work orders with person {id} found in cache: {cached.Count}");
-                return cached;
-            }
+            
             var url = $"wo/getlist?IsWithPerson=true&PersonID={id}&Lang={Uri.EscapeDataString(langCode ?? _userState.LangCode)}";
             try
             {
