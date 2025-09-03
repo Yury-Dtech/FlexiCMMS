@@ -18,7 +18,7 @@
                     <FormItem Field="@nameof(ActivityFormModel.DeviceID)">
                         <Template>
                             <div style="display: flex; align-items: center;">
-                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["Device"]:</label>
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["Device"] [@ActivityFormModel.DeviceID]:</label>
                                 <TelerikComboBox Data="@Devices" 
                                                  @bind-Value="@ActivityFormModel.DeviceID"
                                                  ValueField="@nameof(Device.MachineID)"
@@ -37,7 +37,7 @@
                     <FormItem Field="@nameof(ActivityFormModel.WorkOrderID)">
                         <Template>
                             <div style="display: flex; align-items: center;">
-                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["WorkOrder"]:</label>
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["WorkOrder"] [@ActivityFormModel.WorkOrderID]:</label>
                                 <TelerikComboBox Data="@WorkOrders"
                                                  @bind-Value="@ActivityFormModel.WorkOrderID"
                                                  ValueField="@nameof(WorkOrder.WorkOrderID)"
@@ -148,7 +148,7 @@
     private List<WorkOrder> WorkOrders { get; set; } = new List<WorkOrder>();
     private List<WODict> ActivityCategories { get; set; } = new List<WODict>();
     private string ErrorMessage { get; set; } = string.Empty;
-    private string minWidthLabel = "110px";
+    private string minWidthLabel = "180px";
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,7 +156,8 @@
         ActivityFormModel.ActDate = InitialStartDate;
         ActivityFormModel.EndDate = InitialEndDate;
         ActivityFormModel.Cost = 0;
-
+        ActivityFormModel.DeviceID = 0;
+        ActivityFormModel.WorkOrderID = 0;
         Devices = await ApiClient.GetAllDevicesAsync();
         // Initially load all work orders, or none, depending on desired behavior
         // For now, let's load all work orders if no device is selected initially

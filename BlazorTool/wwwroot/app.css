@@ -233,3 +233,7 @@ h1:focus {
     background-color: #e8efff;
     border-radius: 13px;
 }
+
+.k-event .k-event-template {
+    color: darkblue !important;
+}

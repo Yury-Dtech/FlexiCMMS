@@ -75,7 +75,7 @@
 
         public SchedulerAppointment ToSchedulerAppointment()
         {
-            if (IsWorkOrder && WorkOrder != null)
+            if (WorkOrder != null)
             {
                 return new SchedulerAppointment(WorkOrder);
             }

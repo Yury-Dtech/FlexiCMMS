@@ -616,7 +616,7 @@
         }
         WOEditFormShown = false;
         isOrderCardOpen = false;
-        await LoadData();
+        await HardLoadData();
         SchedulerRef?.Rebind();
     }
 
@@ -768,6 +768,8 @@
     private async Task ShowContextMenuFromAppointment(MouseEventArgs e, ActivityAppointment appointment)
     {
         CurrentAppointment = appointment;
+        WorkOrder? workOrder = _allOrders.FirstOrDefault(o => o.WorkOrderID == CurrentAppointment.WorkOrderID);
+        CurrentAppointment.WorkOrder = workOrder;
         _clickedSlotContext = null;
         MenuItems = new List<ContextMenuItem>();
         if(appointment.IsWorkOrder)
