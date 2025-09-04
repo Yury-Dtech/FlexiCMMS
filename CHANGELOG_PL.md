@@ -1,3 +1,21 @@
+## 2025-09-03
+
+### Nowe Funkcje
+*   **Interfejs Aktywności / Komponenty**:
+    *   Dodano komponent `ActivityCard` z obsługą lokalizacji oraz zmiennymi CSS dla lepszego themingu.
+    *   Zaktualizowano `ActivitySchedulerItem` oraz style `ActivityDisplay`, aby poprawić renderowanie terminów i wspierać różne widoki harmonogramu.
+*   **Strona Aktywności**:
+    *   Dodano okno/modal do dodawania aktywności i dopracowano obsługę terminów na stronie.
+    *   Zmieniono wywołanie ładowania danych z `LoadData()` na `HardLoadData()` w celu bardziej niezawodnego odświeżania.
+*   **Modele i API**:
+    *   Ulepszono model `ActivityAppointment`: właściwość `Title` teraz zawiera informacje o zleceniu, dodano dodatkowe konstruktory.
+    *   Uproszczono logikę pobierania zleceń po stronie klienta API (usunięto przestarzałe cache), co poprawia spójność danych.
+
+### Naprawiono / Ulepszenia
+*   **Formularz Nowej Aktywności**: Zaktualizowano etykiety w `NewActivityFormComponent`, tak aby zawierały identyfikatory Urządzenia i Zlecenia Pracy; zwiększono minimalną szerokość etykiet oraz poprawiono walidację i UX formularza.
+*   **Style**: Wprowadzono poprawki CSS (komponentowe i globalne `app.css`) oraz zmienne CSS dla lepszego wyglądu kart aktywności i terminów.
+*   **Wyświetlanie Urządzenia**: Drobne aktualizacje integracji, aby lepiej wyświetlać informacje związane z aktywnościami.
+
 ## 2025-09-02
 
 ### Nowe Funkcje

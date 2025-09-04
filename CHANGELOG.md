@@ -1,3 +1,21 @@
+## 2025-09-03
+
+### Features
+*   **Activity UI / Components**:
+    *   Added `ActivityCard` component with localized layout and CSS variables for theming.
+    *   Updated `ActivitySchedulerItem` and `ActivityDisplay` styles to improve appointment rendering and support multiple scheduler views.
+*   **Activities Page**:
+    *   Introduced a dedicated add-activity window/modal and refined appointment handling on the page.
+    *   Switched the page data loading call from `LoadData()` to `HardLoadData()` to ensure more reliable refreshes.
+*   **Models & API**:
+    *   Enhanced `ActivityAppointment` model: `Title` now includes work order information and new constructors were added for clearer initialization.
+    *   Simplified work order fetching logic in the API client (removed outdated caching) to improve data consistency.
+
+### Fixed / Improvements
+*   **New Activity Form**: Updated `NewActivityFormComponent` labels to include Device and WorkOrder identifiers, increased minimum label width to accommodate longer text, and improved form UX/validation.
+*   **Styling**: Added CSS improvements (component-level and global `app.css`) and introduced CSS variables for theming of activity cards and appointments.
+*   **Device Display**: Minor integration updates so device display renders activity-related information more clearly.
+
 ## 2025-09-02
 
 ### Features

@@ -469,9 +469,9 @@
         takePersons = takePersons.TrimEnd(',', ' ');
         return takePersons;
     }
-    private async Task HandleActivityAdded(bool success)
+    private async Task HandleActivityAdded(Models.Activity newActivity)
     {
-        if (success) //------------------- NOWA AKTYWNOŚĆ
+        if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
         {
             IsAddActivityWindowVisible = false;
             // Optionally, refresh the activity list or statistics here

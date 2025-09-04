@@ -648,9 +648,9 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleActivityAdded(bool success)
+    private async Task HandleActivityAdded(Models.Activity newActivity)
     {
-        if (success) //------------------- NOWA AKTYWNOŚĆ
+        if (newActivity != null) //------<------------- NOWA AKTYWNOŚĆ
         {
             IsAddActivityWindowVisible = false;
             if (selectedWorkOrder != null)

@@ -61,7 +61,7 @@
                                                  @bind-Value="@ActivityFormModel.ActivityCategoryID"
                                                  ValueField="@nameof(WODict.Id)"
                                                  TextField="@nameof(WODict.Name)"
-                                                 Placeholder="@Localizer["WorkOrder_SelectWOCategory"]"
+                                                 Placeholder="@Localizer["OrdersPage_SelectCategory"]"
                                                  Filterable="true"
                                                  FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
                                                  ShowClearButton="true">
@@ -141,7 +141,10 @@
     public DateTime InitialEndDate { get; set; }
 
     [Parameter]
-    public EventCallback<bool> OnActivityAdded { get; set; }
+    public int? WorkOrderID { get; set; }
+
+    [Parameter]
+    public EventCallback<Activity?> OnActivityAdded { get; set; }
 
     private NewActivityFormModel ActivityFormModel { get; set; } = new NewActivityFormModel();
     private List<Device> Devices { get; set; } = new List<Device>();
@@ -156,13 +159,14 @@
         ActivityFormModel.ActDate = InitialStartDate;
         ActivityFormModel.EndDate = InitialEndDate;
         ActivityFormModel.Cost = 0;
-        ActivityFormModel.DeviceID = 0;
-        ActivityFormModel.WorkOrderID = 0;
+        ActivityFormModel.WorkOrderID = WorkOrderID ?? 0;
         Devices = await ApiClient.GetAllDevicesAsync();
         // Initially load all work orders, or none, depending on desired behavior
         // For now, let's load all work orders if no device is selected initially
         WorkOrders = await ApiClient.GetWorkOrdersCachedAsync();
-
+        var wo = WorkOrders.FirstOrDefault(w => w.WorkOrderID == ActivityFormModel.WorkOrderID);
+        ActivityFormModel.DeviceID = Devices.FirstOrDefault(d=>d.MachineID == wo?.MachineID)?.MachineID ?? 0;
+        ActivityCategories = await ApiClient.GetActCategoriesByDeviceCategory(wo?.DeviceCategoryID ?? 0);
         // If an initial device is set (e.g., from a context menu on a device-specific scheduler)
         // you might want to pre-filter WorkOrders here.
         // For now, categories will be loaded when a WorkOrder is selected.
@@ -174,7 +178,8 @@
         {
             WorkOrders = await ApiClient.GetWorkOrdersCachedAsync(deviceId);
             ActivityFormModel.WorkOrderID = 0; // Reset WorkOrder selection
-            ActivityCategories.Clear(); // Clear categories
+            var devCategory = Devices.FirstOrDefault(d=>d.MachineID == deviceId)?.CategoryID;
+            ActivityCategories = await ApiClient.GetActCategoriesByDeviceCategory(devCategory);
         }
         else
         {
@@ -184,24 +189,9 @@
         }
     }
 
-    private async Task OnWorkOrderChanged(object value)
+    private void OnWorkOrderChanged(object value)
     {
-        if (value is int workOrderId && workOrderId > 0)
-        {
-            var selectedWorkOrder = WorkOrders.FirstOrDefault(wo => wo.WorkOrderID == workOrderId);
-            if (selectedWorkOrder != null && selectedWorkOrder.DeviceCategoryID.HasValue)
-            {
-                ActivityCategories = await ApiClient.GetActCategoriesByDeviceCategory(selectedWorkOrder.DeviceCategoryID.Value);
-            }
-            else
-            {
-                ActivityCategories.Clear();
-            }
-        }
-        else
-        {
-            ActivityCategories.Clear();
-        }
+        
     }
 
     private void OnDateChanged(object value)
@@ -238,14 +228,16 @@
                 EndDate = InitialEndDate,
                 Cost = 0
             };
-            await OnActivityAdded.InvokeAsync(true);
+            var acts = await ApiClient.GetActivitiesByWO(addActivity.WorkOrderID);
+            var newActivity = acts.FirstOrDefault(a => a.ActivityID == response.Data.ActivityID);
+            await OnActivityAdded.InvokeAsync(newActivity);
             StateHasChanged();
         }
         else
         {
             Console.WriteLine($"Error creating activity: {string.Join(", ", response.Errors)}");
             ErrorMessage = $"Error creating activity: {string.Join(", ", response.Errors)}";
-            await OnActivityAdded.InvokeAsync(false);
+            await OnActivityAdded.InvokeAsync(null);
         }
     }
 
@@ -259,6 +251,6 @@
             Cost = 0
         };
         ErrorMessage = string.Empty;
-        OnActivityAdded.InvokeAsync(false);
+        OnActivityAdded.InvokeAsync(null);
     }
 }

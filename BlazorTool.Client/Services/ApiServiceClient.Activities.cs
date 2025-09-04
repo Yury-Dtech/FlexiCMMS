@@ -17,6 +17,7 @@ namespace BlazorTool.Client.Services
         /// </summary>
         public async Task<List<Activity>> GetActivitiesByWO(int workorder_id)
         {
+            if (workorder_id <= 0) throw new Exception(nameof(workorder_id) +" = " +workorder_id);
             var url = $"activity/getlist?woID={workorder_id}&lang={_userState.LangCode}";
             try
             {
@@ -121,9 +122,13 @@ namespace BlazorTool.Client.Services
                 var response = await _http.PostAsJsonAsync(url, activity);
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var activityResponse = JsonConvert.DeserializeObject<NewActivityResponse>(content);
-                    return new SingleResponse<NewActivityResponse> { IsValid = true, Data = activityResponse };
+                    var content = await response.Content.ReadFromJsonAsync<SingleResponse<NewActivityResponse>>();
+                    if (content == null)
+                    {
+                        Console.WriteLine($"ApiServiceClient: Failed to parse response from {url}");
+                        return new SingleResponse<NewActivityResponse> { IsValid = false, Errors = new List<string> { "Failed to parse server response." } };
+                    }
+                    return new SingleResponse<NewActivityResponse> { IsValid = true, Data = content.Data };
                 }
                 else
                 {

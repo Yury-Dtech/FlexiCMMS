@@ -216,7 +216,7 @@ namespace BlazorTool.Client.Services
                 .ToList();
         }
 
-        public async Task<List<WODict>> GetActCategoriesByDeviceCategory(int deviceCategoryId)
+        public async Task<List<WODict>> GetActCategoriesByDeviceCategory(int? deviceCategoryId)
         {
             if (_actDictCache == null || _actDictCache.Count == 0)
             {

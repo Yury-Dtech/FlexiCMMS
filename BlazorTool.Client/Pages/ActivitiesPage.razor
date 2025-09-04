@@ -178,11 +178,12 @@
     <WindowContent>
         <NewActivityFormComponent InitialStartDate="@newActivityInitialStartDate"
                                   InitialEndDate="@newActivityInitialEndDate"
-                                  OnActivityAdded="@OnNewActivityAdded" />
+                                  OnActivityAdded="@OnNewActivityAdded"
+                                  WorkOrderID = "@CurrentAppointment?.WorkOrderID"/>
     </WindowContent>
 </TelerikWindow>
 
-    <TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="500px">
+    <TelerikWindow @bind-Visible="ShowAddActivityForOrderForm" Modal="true" Width="500px">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_AddActivity"]</strong>
         </WindowTitle>
@@ -190,11 +191,11 @@
                 <WindowAction Name="Close" />
             </WindowActions>
         <WindowContent>
-            <AddActivityForm WorkOrderID="@(CurrentAppointment?.WorkOrderID ?? 0)" OnActivityAdded="OnNewActivityAdded" />
+            <AddActivityForm WorkOrderID="@(CurrentAppointment?.WorkOrderID ?? 0)" OnActivityAdded="OnNewActivityAdded" RecommendedStart="@NewActivityTime"/>
         </WindowContent>
     </TelerikWindow>
 
-    <TelerikWindow @bind-Visible="IsActivityWindowVisible" Modal="true" Width="500px" CloseOnOverlayClick="true">
+    <TelerikWindow @bind-Visible="ShowActivityCard" Modal="true" Width="500px" CloseOnOverlayClick="true">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_Action"]</strong>
         </WindowTitle>
@@ -233,14 +234,15 @@
     private SchedulerView CurrentView { get; set; } = SchedulerView.Month;
     private DateTime DayStart => DateTime.Today.AddHours(7);
     private DateTime DayEnd => DateTime.Today.AddHours(20);
+    private DateTime? NewActivityTime { get; set; } = null;
     private MarkupString cellStyles = new MarkupString(); //for rows colors
     private List<WorkOrder> TakenOrders { get; set; } = new();
     private List<WorkOrder> _allOrders = new();
     private bool isLoading { get; set; } = true;
     private bool WOEditFormShown { get; set; } = false;
     private bool isOrderCardOpen = false;
-    private bool IsAddActivityWindowVisible { get; set; } = false;
-    private bool IsActivityWindowVisible { get; set; } = false;
+    private bool ShowAddActivityForOrderForm { get; set; } = false;
+    private bool ShowActivityCard { get; set; } = false;
     private ActivityAppointment? CurrentAppointment { get; set; } = new ActivityAppointment();
     private List<Models.Activity> activities = new();
     private List<Person> allPersons = new();
@@ -642,7 +644,7 @@
         if (item?.IsWorkOrder ?? false || item?.WorkOrderID == 0)
             WOEditFormShown = true;
         else
-            IsActivityWindowVisible = true;
+            ShowActivityCard = true;
     }
 
     void CancelEditing()
@@ -654,17 +656,17 @@
 
     private void OnSchedulerCellRender(SchedulerCellRenderEventArgs args)
     {
-        if (CurrentView == SchedulerView.Month)
+        if (CurrentView != SchedulerView.Day)
         {
             args.Class = "month-view-slot";
             if (args.Start.Date == DateTime.Today)
             {
                 args.Class += " current-day";
             }
-            else if (args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
-            {
-                args.Class += " weekend-day";
-            }
+            // else if (args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
+            // {
+            //     args.Class += " weekend-day";
+            // }
         }
     }
     #endregion
@@ -807,12 +809,33 @@
     private void OnAddActivity()
     {
         Console.WriteLine($"[{currentUser.Name}]:  Adding new activity at {_clickedSlotContext?.Start}");
-        if (_clickedSlotContext != null)
+        if (_clickedSlotContext != null) //from empty slot
         {
             newActivityInitialStartDate = _clickedSlotContext.Start;
             newActivityInitialEndDate = _clickedSlotContext.End;
+            //try to find WorkOrder in this slot
+            var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, _clickedSlotContext.Start, _clickedSlotContext.End)).WorkOrderID;
+            if (WO_ID_InSlot != 0)
+            {
+                CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
+            }            
             showNewActivityForm = true;
             StateHasChanged();
+        }
+        else if(CurrentAppointment != null)//from appointment
+        {
+            var WO_activities = _allAppointments.Where(a => a.WorkOrderID == CurrentAppointment.WorkOrderID && !a.IsWorkOrder).ToList();
+            var lastActivity = WO_activities.OrderByDescending(a => a.End).FirstOrDefault();
+            if (lastActivity != null)
+            {
+                NewActivityTime = lastActivity.End;
+            }
+            else
+            {
+                NewActivityTime = CurrentAppointment.Start;
+            }
+
+            ShowAddActivityForOrderForm = true;
         }
     }
 
@@ -826,7 +849,7 @@
     private void OpenActivity()
     {
         Console.WriteLine($"[{currentUser.Name}]:  Open activity: {CurrentAppointment?.Title}");
-        IsActivityWindowVisible = true;
+        ShowActivityCard = true;
     }
     private void OnAddWorkOrder()
     {
@@ -884,13 +907,19 @@
         StateHasChanged();
     }
 
-    private async Task OnNewActivityAdded(bool success)
+    private void OnNewActivityAdded(Models.Activity? newActivity)
     {
         showNewActivityForm = false;
-        IsAddActivityWindowVisible = false;
-        if (success)
+        ShowAddActivityForOrderForm = false;
+        if (newActivity != null)
         {
-            await LoadData(); // Refresh scheduler data to show new activity if it's represented as a WorkOrder
+            activities.Add(newActivity);
+            _allAppointments.Add(new ActivityAppointment(newActivity));
+            DisplayAppointments();
+        }
+        else
+        {
+            //provide error message?
         }
         StateHasChanged();
     }

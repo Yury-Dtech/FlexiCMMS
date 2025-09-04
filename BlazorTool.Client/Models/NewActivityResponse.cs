@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 namespace BlazorTool.Client.Models
 {
     public class NewActivityResponse
@@ -10,44 +10,44 @@ namespace BlazorTool.Client.Models
     //"work_Load": 1,
     //"cost": 0.00,
     //"workers": 1
-    [JsonProperty("activityID")]
+    [JsonPropertyName("activityID")]
     public int ActivityID { get; set; }
 
-    [JsonProperty("workOrderID")]
+    [JsonPropertyName("workOrderID")]
     public int WorkOrderID { get; set; }
 
-    [JsonProperty("description")]
-    public string Description { get; set; }
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = string.Empty;
 
-    [JsonProperty("categoryID")]
+    [JsonPropertyName("categoryID")]
     public int CategoryID { get; set; }
 
-    [JsonProperty("work_Load")]
-    public int WorkLoad { get; set; }
+    [JsonPropertyName("work_Load")]
+    public decimal WorkLoad { get; set; }
 
-    [JsonProperty("cost")]
+    [JsonPropertyName("cost")]
     public decimal Cost { get; set; }
 
-    [JsonProperty("workers")]
+    [JsonPropertyName("workers")]
     public int Workers { get; set; }
 
     }
 
     public class AddToActivityResponse
     {
-        [JsonProperty("activityID")]
+        [JsonPropertyName("activityID")]
         public int ActivityID { get; set; }
        
-        [JsonProperty("work_Load")]
+        [JsonPropertyName("work_Load")]
         public decimal WorkLoad { get; set; }
 
-        [JsonProperty("personID")]
+        [JsonPropertyName("personID")]
         public int PersonID { get; set; }
 
-        [JsonProperty("activityPersonID")]
+        [JsonPropertyName("activityPersonID")]
         public int ActivityPersonID { get; set; }
         
-        [JsonProperty("add_Date")]
+        [JsonPropertyName("add_Date")]
         public DateTime AddDate { get; set; }
     }
 }

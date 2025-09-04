@@ -407,9 +407,9 @@ else
 		// await LoadData();
 	}
 
-    private async Task HandleActivityAdded(bool success)
+    private async Task HandleActivityAdded(Models.Activity newActivity)
 	{
-		if (success) //------------------- NOWA AKTYWNOŚĆ
+		if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
 		{
 			if (selectedWorkOrder != null)
 			{

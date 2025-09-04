@@ -4,7 +4,7 @@
 
 @if (ActivityItem != null)
 {
-    <div class="activity-row">
+    <div class="activity-row" onclick="@OnRowClick">
         <span class="activity-category" title="@Localizer["ActivityDisplay_Category"]">@ActivityItem.ActCategory</span>
         <span class=@(isExternalWindow ? "activity-description-external" : "activity-description") title="@Localizer["ActivityDisplay_Description"]">@((MarkupString)Markdig.Markdown.ToHtml(ActivityItem.Description ?? ""))</span>
         <span class="activity-workload" title="@Localizer["ActivityDisplay_WorkLoad"]">@ActivityItem.WorkLoad.ToString("F2") @Localizer["ActivityDisplay_HoursAbbreviation"]</span>
@@ -22,8 +22,17 @@
         <span class="activity-workload" title="@Localizer["Cost"]">@(ActivityItem?.Cost.Value.ToString("C2", new CultureInfo("pl-PL")))</span>
     </div>
 }
-
-
+<TelerikWindow @bind-Visible="isActivityDisplayOpened" Modal="true" CloseOnOverlayClick="true">
+    <WindowTitle>
+        <strong>@Localizer["WorkOrder_Action"] @ActivityItem?.ActivityID</strong>
+    </WindowTitle>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+    <WindowContent>
+        <ActivityCard Activity="@ActivityItem" LangCode="@LangCode" />
+    </WindowContent>
+</TelerikWindow>
 @code {
 
     [Parameter]
@@ -36,4 +45,13 @@
     public EventCallback<int> OnClick { get; set; }
     [Parameter]
     public bool isExternalWindow { get; set; } =false;
+    [Parameter]
+    public string LangCode { get; set; } = "pl-PL";
+
+    private bool isActivityDisplayOpened = false;
+
+    private void OnRowClick()
+    {
+        isActivityDisplayOpened = true;
+    }
 }

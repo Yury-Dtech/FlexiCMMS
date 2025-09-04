@@ -122,9 +122,12 @@
 
     [Parameter]
     public int WorkOrderID { get; set; }
-
     [Parameter]
-    public EventCallback<bool> OnActivityAdded { get; set; }
+    public string LangCode { get; set; } = "pl-PL";
+    [Parameter]
+    public DateTime? RecommendedStart { get; set; }
+    [Parameter]
+    public EventCallback<Activity?> OnActivityAdded { get; set; }
 
     private AddActivity ActivityModel { get; set; } = new AddActivity();
     private List<Person> People { get; set; } = new List<Person>();
@@ -142,7 +145,15 @@
         var WO = await ApiClient.GetWorkOrderByIdAsync(WorkOrderID);
         MinActDate = WO?.StartDate ?? WO?.AddDate ?? DateTime.MinValue;
         MaxActDate = WO?.EndDate ?? WO?.CloseDate ?? DateTime.MaxValue;
-        ActivityModel.ActDate = ((MinActDate < DateTime.Now) && (MaxActDate > DateTime.Now)) ? DateTime.Now : MinActDate;
+        if (RecommendedStart != null && RecommendedStart > MinActDate && RecommendedStart < MaxActDate)
+        {
+            ActivityModel.ActDate = RecommendedStart.Value;
+        }
+        else
+        {
+            ActivityModel.ActDate = ((MinActDate < DateTime.Now) && (MaxActDate > DateTime.Now)) ? DateTime.Now : MinActDate;
+        }
+
         var takePersonsIDs = WO.TakePersons?.Split('#');
         bool isMyOrder = takePersonsIDs?.Any(x => x == UserState.PersonID.ToString()) ?? false;
         ActivityModel.WorkLoad = isMyOrder ? CalculateDecimalHours(WO?.PersonTakeDate ?? WO?.TakeDate) : 0.25m;
@@ -161,7 +172,8 @@
                 WorkOrderID = this.WorkOrderID,
                 PersonID = UserState.PersonID ?? 0
             };
-            await OnActivityAdded.InvokeAsync(true);
+            var activities = await ApiClient.GetActivitiesByWO(WorkOrderID);
+            await OnActivityAdded.InvokeAsync(activities.FirstOrDefault(a=> a.ActivityID == response.Data.ActivityID));
             StateHasChanged();
         }
         else
@@ -169,7 +181,7 @@
             // Handle error (e.g., show notification)
             Console.WriteLine($"Error creating activity: {string.Join(", ", response.Errors)}");
             ErrorMessage = $"Error creating activity: {string.Join(", ", response.Errors)}";
-            await OnActivityAdded.InvokeAsync(false);
+            await OnActivityAdded.InvokeAsync(null);
         }
     }
 
@@ -192,6 +204,6 @@
             PersonID = UserState.PersonID ?? 0
         };
         ErrorMessage = string.Empty;
-        OnActivityAdded.InvokeAsync(false);
+        OnActivityAdded.InvokeAsync(null);
     }
 }
