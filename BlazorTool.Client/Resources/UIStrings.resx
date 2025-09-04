@@ -1082,4 +1082,19 @@
     <value>Total</value>
     <comment>Total</comment>
   </data>
+  <data name="Select_Device" xml:space="preserve">
+    <value>Select device</value>
+  </data>
+  <data name="SelectWorkOrder" xml:space="preserve">
+    <value>Selec workorder</value>
+  </data>
+  <data name="ActivityList_EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="OpenOrder" xml:space="preserve">
+    <value>Open order</value>
+  </data>
+  <data name="OpenActivity" xml:space="preserve">
+    <value>Open activity</value>
+  </data>
 </root>

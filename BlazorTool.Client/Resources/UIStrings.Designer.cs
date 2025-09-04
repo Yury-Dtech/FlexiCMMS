@@ -259,6 +259,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to End date.
+        /// </summary>
+        public static string ActivityList_EndDate {
+            get {
+                return ResourceManager.GetString("ActivityList_EndDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to h.
         /// </summary>
         public static string ActivityList_HoursAbbreviation {
@@ -1402,6 +1411,24 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open activity.
+        /// </summary>
+        public static string OpenActivity {
+            get {
+                return ResourceManager.GetString("OpenActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open order.
+        /// </summary>
+        public static string OpenOrder {
+            get {
+                return ResourceManager.GetString("OpenOrder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clear.
         /// </summary>
         public static string OrdersPage_Clear {
@@ -1996,6 +2023,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Slot Divisions:.
+        /// </summary>
+        public static string Scheduler_SlotDivisions {
+            get {
+                return ResourceManager.GetString("Scheduler_SlotDivisions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slot Duration (min):.
         /// </summary>
         public static string Scheduler_SlotDuration {
@@ -2028,6 +2064,24 @@ namespace BlazorTool.Client.Resources {
         public static string SchedulerSummary_Total {
             get {
                 return ResourceManager.GetString("SchedulerSummary_Total", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select device.
+        /// </summary>
+        public static string Select_Device {
+            get {
+                return ResourceManager.GetString("Select_Device", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selec workorder.
+        /// </summary>
+        public static string SelectWorkOrder {
+            get {
+                return ResourceManager.GetString("SelectWorkOrder", resourceCulture);
             }
         }
         

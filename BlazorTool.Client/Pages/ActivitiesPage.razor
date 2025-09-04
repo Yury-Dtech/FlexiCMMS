@@ -125,14 +125,13 @@
                           ViewChanged="@OnViewChanged"
                           AllowCreate="true"
                           AllowUpdate="true"
-                          AllowDelete="true"
                           OnCreate="@OnCreateAppointment"
                           OnUpdate="@OnUpdateAppointment"
                           OnDelete="@OnDeleteAppointment"
                           OnEdit="@EditHandler"
                           OnCellRender="@OnSchedulerCellRender"
                           ConfirmDelete="true"
-                          IdField="@nameof(ActivityAppointment.WorkOrderID)"
+                          IdField="@nameof(ActivityAppointment.AppointmentId)"
                           StartField="@nameof(ActivityAppointment.Start)"
                           EndField="@nameof(ActivityAppointment.End)"
                           TitleField="@nameof(ActivityAppointment.Title)"
@@ -438,7 +437,6 @@
         DeviceCategories.Insert(0, "All");
         DisplayAppointments();
         isLoading = false;
-        StateHasChanged();
         Console.WriteLine($"--- LoadData completed. Appointments count: {Appointments.Count}");
     }
 
@@ -459,7 +457,7 @@
         {
             PersonResources = allPersons.Where(p => p.PersonId == selectedPersonID).ToList();
         }
-
+        StateHasChanged();
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
 
@@ -526,7 +524,7 @@
     private void SaveFilterStateToCacheAsync()
     {
         _viewSettings.SetCustomFilter("selectedPersonID", selectedPersonID);
-        _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedAssetNo);
+        _viewSettings.SetCustomFilter("selectedAssetNo", selectedAssetNo);
         _viewSettings.SetCustomFilter("selectedDepartments", selectedDepartments);
         _viewSettings.SetCustomFilter("CurrentView", CurrentView);
         _viewSettings.SetCustomFilter("CustomDays", numberOfDays);
@@ -582,26 +580,31 @@
 
     private async Task OnUpdateAppointment(SchedulerUpdateEventArgs args)
     {
-        // if (args.Item is ActivityAppointment updAppt)
-        // {
-        //     var result = await ApptService.UpdateAppointment(updAppt);
-        //     if (result.IsValid && result.Data != null)
-        //     {
-        //         Find and update the item in the local collections
-        //         var index = Appointments.FindIndex(a => a.AppointmentId == result.Data.WorkOrderID);
-        //         if (index >= 0) Appointments[index] = new ActivityAppointment(result.Data);
+        Console.WriteLine("--- OnUpdateAppointment called.");
+        if (!UserState.HasPermission(PermissionType.WO_Edit)) return;
+        if (args.Item is ActivityAppointment editedAppointment)
+        {
+            if (editedAppointment.IsWorkOrder)
+            {
+                var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
+                if (index != -1)
+                {
+                    _allAppointments[index] = editedAppointment;
+                }
+                else
+                {
+                    _allAppointments.Add(editedAppointment);
+                }
 
-        //         var allIndex = _allAppointments.FindIndex(a => a.AppointmentId == result.Data.WorkOrderID);
-        //         if (allIndex >= 0) _allAppointments[allIndex] = new ActivityAppointment(result.Data);
-        //         Console.WriteLine($"--- OnUpdateAppointment: Appointment updated. AssignedPerson: {updAppt.AssignedPerson}");
-        //     }
-        //     else
-        //     {
-        //         Console.WriteLine($"Failed to update appointment: {string.Join(", ", result.Errors)}");
-        //         Optional: revert changes in the UI or show a notification
-        //     }
-        //     SchedulerRef?.Rebind();
-        // }
+                WOEditFormShown = false;
+                isOrderCardOpen = false;
+                //DisplayAppointments();
+            }
+            else
+            {
+                
+            }
+        }
     }
 
     private async Task OnDeleteAppointment(SchedulerDeleteEventArgs args)
@@ -683,9 +686,9 @@
             //copying is implemented in the appointment model and it is needed because
             //this is a reference to the data collection so modifying it directly
             //will immediately modify the data and no cancelling will be possible
-            CurrentAppointment = item;//.ShallowCopy();
+            CurrentAppointment = item;
         }
-        else
+        else //NEW
         {
             bool isStartEqualsEnd = args.Start == args.End;
             CurrentAppointment = item ?? new ActivityAppointment();
@@ -808,13 +811,12 @@
         _clickedSlotContext = slotContext;
         CurrentAppointment = null;
         MenuItems = new List<ContextMenuItem>();
+        MenuItems.Add(new ContextMenuItem { Text = @Localizer["WorkOrder_AddActivity"], CommandName = "AddActivity", Icon = SvgIcon.Plus });
         if (UserState.HasPermission(PermissionType.WO_Add))
         {
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["Scheduler_AddNew"], CommandName = "AddWorkOrder", Icon = SvgIcon.Plus });
         }
 
-        if(MenuItems.Count == 0)    MenuItems.Add(new ContextMenuItem { Text = @Localizer["NoActionsAvailable"], CommandName = "NoActionsAvailable", Icon = SvgIcon.CancelOutline });
-        MenuItems.Add(new ContextMenuItem { Text = @Localizer["WorkOrder_AddActivity"], CommandName = "AddActivity", Icon = SvgIcon.Plus });
         await ContextMenuRef?.ShowAsync(e.ClientX, e.ClientY)!;
     }
 
@@ -827,13 +829,13 @@
         MenuItems = new List<ContextMenuItem>();
         if(appointment.IsWorkOrder)
         {
-            MenuItems.Add(new ContextMenuItem { Text = "Open order", CommandName = "OpenOrder", Icon = SvgIcon.FolderOpen }); 
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["WorkOrder_AddActivity"], CommandName = "AddActivity", Icon = SvgIcon.Plus });
+            MenuItems.Add(new ContextMenuItem { Text = @Localizer["OpenOrder"], CommandName = "OpenOrder", Icon = SvgIcon.FolderOpen }); 
         }
         else
         {
-            MenuItems.Add(new ContextMenuItem { Text = "Open order", CommandName = "OpenOrder", Icon = SvgIcon.FolderOpen });
-            MenuItems.Add(new ContextMenuItem { Text = "Open activity", CommandName = "OpenActivity", Icon = SvgIcon.FolderOpen });
+            MenuItems.Add(new ContextMenuItem { Text = @Localizer["OpenActivity"], CommandName = "OpenActivity", Icon = SvgIcon.FolderOpen });
+            MenuItems.Add(new ContextMenuItem { Text = @Localizer["OpenOrder"], CommandName = "OpenOrder", Icon = SvgIcon.FolderOpen });
         }   
         await ContextMenuRef?.ShowAsync(e.ClientX, e.ClientY)!;
     }
@@ -904,30 +906,35 @@
     }
     private void OnAddWorkOrder()
     {
-        // Console.WriteLine($"[{currentUser.Name}]:  Adding new work order at {_clickedSlotContext?.Start}");
-        // if (_clickedSlotContext != null)
-        // {
-        //     bool isStartEqualsEnd = _clickedSlotContext.Start == _clickedSlotContext.End;
-        //     CurrentAppointment = new ActivityAppointment()
-        //     {
-        //         Start = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(8) : _clickedSlotContext.Start,
-        //         End = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(16) : _clickedSlotContext.End,
-        //         IsAllDay = true
-        //     };
-        //     if (_clickedSlotContext.Resources != null && _clickedSlotContext.Resources.Any())
-        //     {
-        //         var personResource = _clickedSlotContext.Resources.FirstOrDefault(r => r.Key == "AssignedPerson");
-        //         if (personResource.Key != null && personResource.Value is string personName)
-        //         {
-        //             CurrentAppointment.AssignedPerson = personName;
-        //         }
-        //     }
-        //     customEditFormShown = true;
-        //     StateHasChanged();
-        // }
+        Console.WriteLine($"[{currentUser.Name}]:  Adding new work order at {_clickedSlotContext?.Start}");
+        if (_clickedSlotContext != null) //Empty slot
+        {
+            bool isStartEqualsEnd = _clickedSlotContext.Start == _clickedSlotContext.End;
+            var Start = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(8) : _clickedSlotContext.Start;
+            var End = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(16) : _clickedSlotContext.End;
+            CurrentAppointment = new ActivityAppointment()
+            {
+                Start = Start,
+                End = End,
+                IsAllDay = false,
+                IsWorkOrder = true,
+                WorkOrderID = 0, //new
+                WorkOrder = new WorkOrder() {WorkOrderID = 0, StartDate = Start, EndDate = End }
+            };
+            if (_clickedSlotContext.Resources != null && _clickedSlotContext.Resources.Any())
+            {
+                var personResource = _clickedSlotContext.Resources.FirstOrDefault(r => r.Key == "AssignedPerson");
+                if (personResource.Key != null && personResource.Value is string personName)
+                {
+                    CurrentAppointment.WorkOrder.AssignedPerson = personName;
+                }
+            }
+            WOEditFormShown = true;
+            StateHasChanged();
+        }
     }
 
-    async Task RefreshData(SchedulerAppointment? editedAppointment)
+    void RefreshData(SchedulerAppointment? editedAppointment)
     {
         //all changes only in cache
         if (editedAppointment == null)//was removed or cancelled NEW
@@ -938,18 +945,17 @@
         }
         else
         {
-            var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId);
+            var newAppointment = new ActivityAppointment(editedAppointment);
+            var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
             if (index != -1)
             {
-                _allAppointments[index] = new ActivityAppointment(editedAppointment);
+                _allAppointments.RemoveAt(index);
             }
-            else
-                _allAppointments.Add(new ActivityAppointment(editedAppointment));
+                _allAppointments.Add(newAppointment);
         }
         WOEditFormShown = false;
         isOrderCardOpen = false;
-        //await LoadData();
-        SchedulerRef?.Rebind();
+        DisplayAppointments();
     }
 
     private void CancelNewActivityForm()

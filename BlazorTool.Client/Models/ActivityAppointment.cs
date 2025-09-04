@@ -2,7 +2,7 @@
 {
     public class ActivityAppointment : Activity
     {
-        public int AppointmentId { get => WorkOrderID; set => WorkOrderID = value; }
+        public int AppointmentId { get => IsWorkOrder ? WorkOrderID : (WorkOrderID + ActivityID + 10000); set => WorkOrderID = value; }
         public string Title
         {
             get
@@ -59,7 +59,7 @@
         }
 
         public ActivityAppointment(WorkOrder wo)
-        {
+        {          
             this.WorkOrder = wo;
             this.IsWorkOrder = true;
             this.AppointmentId = wo.WorkOrderID;
