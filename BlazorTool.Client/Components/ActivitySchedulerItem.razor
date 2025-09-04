@@ -15,7 +15,7 @@
             <span class="item-assignee">: @Item.Description</span>
         </div>
     } *@
-    @if (View == SchedulerView.Week)// Week or Day view
+    @if (View == SchedulerView.Week || View == SchedulerView.Day)
     {
         @if (Item.IsWorkOrder) //workorder
         {

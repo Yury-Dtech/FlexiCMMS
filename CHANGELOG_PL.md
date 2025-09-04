@@ -1,5 +1,11 @@
-## 2025-09-03
+## 2025-09-04
 
+### Funkcje
+*   Dodano możliwość otwierania szczegółów aktywności w oknie modalnym po kliknięciu w wiersz
+*   Ulepszono proces dodawania aktywności: formularz obsługuje sugerowaną datę rozpoczęcia (`RecommendedStart`) i zwraca utworzoną aktywność po zapisaniu, co daje natychmiastowe potwierdzenie.
+*   Wybór urządzenia teraz filtruje powiązane zlecenia i kategorie aktywności w formularzu nowej aktywności, ułatwiając wybór.
+
+## 2025-09-03
 ### Nowe Funkcje
 *   **Interfejs Aktywności / Komponenty**:
     *   Dodano komponent `ActivityCard` z obsługą lokalizacji oraz zmiennymi CSS dla lepszego themingu.

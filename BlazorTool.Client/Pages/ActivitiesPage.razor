@@ -23,7 +23,7 @@
 <CheckSession apiService="@apiService" UserState="@UserState" />
 
 <div class="filter-controls-row">
-    <div style="flex-basis: 66%; flex-shrink:1; flex-grow:0; border-right: outset; display: flex; align-items: top; gap: 1rem;">
+    <div style="flex-basis: 66%; flex-shrink:1; flex-grow:0; display: flex; gap: 1rem;">
         @if (UserState.HasPermission(PermissionType.WO_Edit))
         {
             <div style="max-width: 400px;">
@@ -83,6 +83,37 @@
         <div style="display:flex; flex-direction: row; gap:10px">
             <div><p>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</p></div>
             <div><TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+            @if (CurrentView == SchedulerView.Timeline)
+            {
+                <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
+                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                    <TelerikNumericTextBox @bind-Value="@slotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <label>@Localizer["Scheduler_SlotDuration"]</label>
+                    <TelerikNumericTextBox @bind-Value="@slotDuration" Width="110px" Min="15" Max="1440" Step="15" Size="Small" />
+                </div>
+            }
+            else if (CurrentView == SchedulerView.Day)
+            {
+                <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
+                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                    <TelerikNumericTextBox @bind-Value="@daySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <label>@Localizer["Scheduler_SlotDuration"]</label>
+                    <TelerikNumericTextBox @bind-Value="@daySlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
+                </div>
+            }
+            else if (CurrentView == SchedulerView.Week)
+            {
+                <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
+                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                    <TelerikNumericTextBox @bind-Value="@weekSlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <label>@Localizer["Scheduler_SlotDuration"]</label>
+                    <TelerikNumericTextBox @bind-Value="@weekSlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
+                </div>
+            }
+            else
+            {
+                <div></div>
+            }
         </div>
 
         <TelerikScheduler TItem="ActivityAppointment"
@@ -106,16 +137,17 @@
                           EndField="@nameof(ActivityAppointment.End)"
                           TitleField="@nameof(ActivityAppointment.Title)"
                           DescriptionField="@nameof(ActivityAppointment.Description)"
+                          Class="compact-scheduler"
                           Height="100%">
 
             <SchedulerResources>
                 <SchedulerResource Field="WOState" Title="WOState" Data="@statuses" />
             </SchedulerResources>
             <SchedulerViews>
-                <SchedulerDayView StartTime="@DayStart" EndTime="@DayEnd">
+                <SchedulerDayView SlotDivisions="@(daySlotDivisions ?? 1)" SlotDuration="@(daySlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
                         <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
-                            <ActivitySchedulerItem_ Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
+                            <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
                         </div>
                     </ItemTemplate>
                     <SlotTemplate>
@@ -126,7 +158,7 @@
                         }
                     </SlotTemplate>
                 </SchedulerDayView>
-                <SchedulerWeekView >
+                <SchedulerWeekView SlotDivisions="@(weekSlotDivisions ?? 1)" SlotDuration="@(weekSlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
                         <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Week" />
@@ -232,8 +264,8 @@
     private TelerikPopup? PopupRef { get; set; }
     private DateTime SchedulerDate { get; set; } = DateTime.Today;
     private SchedulerView CurrentView { get; set; } = SchedulerView.Month;
-    private DateTime DayStart => DateTime.Today.AddHours(7);
-    private DateTime DayEnd => DateTime.Today.AddHours(20);
+    private DateTime DayStart => new DateTime(2000, 1, 1, 7, 0, 0);
+    private DateTime DayEnd => new DateTime(2000, 1, 1, 19, 0, 0);
     private DateTime? NewActivityTime { get; set; } = null;
     private MarkupString cellStyles = new MarkupString(); //for rows colors
     private List<WorkOrder> TakenOrders { get; set; } = new();
@@ -261,8 +293,13 @@
     private Person currentUser = new Person();
     private string popupMessage = string.Empty;
     private int? columnWidth = 50; //for TimelineView alt=80
-    private int? slotDuration = 180; //in minutes for TimelineView
+    private int? slotDuration = 60; //in minutes for TimelineView (timeline view)
     private int? slotDivisions = 1; //for TimelineView
+    // Separate slot settings for Day and Week views
+    private int? daySlotDuration = 60; //minutes for Day view
+    private int? daySlotDivisions = 1;
+    private int? weekSlotDuration = 60; //minutes for Week view
+    private int? weekSlotDivisions = 1;
     private int? numberOfDays = 5; //for TimelineView alt=3
     private string selectedTimelineOption = "5";
     private bool showCustomTimelineInputs = false;
@@ -493,6 +530,13 @@
         _viewSettings.SetCustomFilter("selectedDepartments", selectedDepartments);
         _viewSettings.SetCustomFilter("CurrentView", CurrentView);
         _viewSettings.SetCustomFilter("CustomDays", numberOfDays);
+        // save custom slot settings for Day/Week/Timeline views
+        _viewSettings.SetCustomFilter("daySlotDivisions", daySlotDivisions);
+        _viewSettings.SetCustomFilter("daySlotDuration", daySlotDuration);
+        _viewSettings.SetCustomFilter("weekSlotDivisions", weekSlotDivisions);
+        _viewSettings.SetCustomFilter("weekSlotDuration", weekSlotDuration);
+        _viewSettings.SetCustomFilter("timelineSlotDivisions", slotDivisions);
+        _viewSettings.SetCustomFilter("timelineSlotDuration", slotDuration);
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);       
     }
 
@@ -503,6 +547,13 @@
         selectedDepartments = _viewSettings.GetCustomFilter("selectedDepartments", new List<string>());
         CurrentView = _viewSettings.GetCustomFilter("CurrentView", SchedulerView.Week);
         numberOfDays = _viewSettings.GetCustomFilter("CustomDays", 7);
+        // restore custom slot settings
+        daySlotDivisions = _viewSettings.GetCustomFilter("daySlotDivisions", daySlotDivisions);
+        daySlotDuration = _viewSettings.GetCustomFilter("daySlotDuration", daySlotDuration);
+        weekSlotDivisions = _viewSettings.GetCustomFilter("weekSlotDivisions", weekSlotDivisions);
+        weekSlotDuration = _viewSettings.GetCustomFilter("weekSlotDuration", weekSlotDuration);
+        slotDivisions = _viewSettings.GetCustomFilter("timelineSlotDivisions", slotDivisions);
+        slotDuration = _viewSettings.GetCustomFilter("timelineSlotDuration", slotDuration);
 
     }
     #endregion
@@ -814,8 +865,8 @@
             newActivityInitialStartDate = _clickedSlotContext.Start;
             newActivityInitialEndDate = _clickedSlotContext.End;
             //try to find WorkOrder in this slot
-            var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, _clickedSlotContext.Start, _clickedSlotContext.End)).WorkOrderID;
-            if (WO_ID_InSlot != 0)
+            var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, _clickedSlotContext.Start, _clickedSlotContext.End))?.WorkOrderID;
+            if (WO_ID_InSlot != null && WO_ID_InSlot != 0)
             {
                 CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
             }            

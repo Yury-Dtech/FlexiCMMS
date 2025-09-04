@@ -352,6 +352,9 @@
   <data name="Scheduler_ColumnWidth" xml:space="preserve">
     <value>Column Width:</value>
   </data>
+  <data name="Scheduler_SlotDivisions" xml:space="preserve">
+    <value>Slot Divisions:</value>
+  </data>
   <data name="Scheduler_SlotDuration" xml:space="preserve">
     <value>Slot Duration (min):</value>
   </data>

@@ -352,6 +352,9 @@
   <data name="Scheduler_ColumnWidth" xml:space="preserve">
     <value>Szerokość kolumn:</value>
   </data>
+  <data name="Scheduler_SlotDivisions" xml:space="preserve">
+    <value>Liczba podziałów slotu:</value>
+  </data>
   <data name="Scheduler_SlotDuration" xml:space="preserve">
     <value>Czas trwania slotu (min):</value>
   </data>

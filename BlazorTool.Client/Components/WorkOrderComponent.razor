@@ -279,7 +279,7 @@
                 @if (isEditable && UserState.HasPermission(PermissionType.AcT_Add))
                 {
                     <div class="activity-controls">
-                        <TelerikButton OnClick="@(() => IsAddActivityWindowVisible = true)" Icon="@SvgIcon.Plus" ThemeColor="primary">@Localizer["WorkOrder_AddActivity"]</TelerikButton>
+                        <TelerikButton OnClick="@AddActivity" Icon="@SvgIcon.Plus" ThemeColor="primary">@Localizer["WorkOrder_AddActivity"]</TelerikButton>
                     </div>
                 }
             <div>
@@ -304,7 +304,7 @@
                 <WindowAction Name="Close" />
             </WindowActions>
         <WindowContent>
-            <AddActivityForm WorkOrderID="@WorkOrder.WorkOrderID" OnActivityAdded="HandleActivityAdded" />
+            <AddActivityForm WorkOrderID="@WorkOrder.WorkOrderID" OnActivityAdded="HandleActivityAdded" RecommendedStart="@lastActivityDate"/>
         </WindowContent>
     </TelerikWindow>
 
@@ -373,6 +373,7 @@
     private List<WODict> ListDepartments = new List<WODict>();
     private List<WODict> ListLevels = new List<WODict>();
     private List<WODict> ListReasons = new List<WODict>();
+    private DateTime? lastActivityDate;
     private string takePersons = string.Empty;
     private string StateColor = string.Empty;
     private string cb_size = "sm";
@@ -449,6 +450,8 @@
     }
     public void AddActivity()
     {
+        var lastActivity = activityListComponent?.activities?.OrderByDescending(a => a.AddDate).FirstOrDefault();
+        lastActivityDate = (lastActivity?.AddDate + TimeSpan.FromMinutes(60 * (double)(lastActivity?.WorkLoad ?? 0)) ) ?? null;
         IsAddActivityWindowVisible = true;    
     }
     private string ParseTakePersons(string? TakePersons)

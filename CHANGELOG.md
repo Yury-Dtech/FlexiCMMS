@@ -1,5 +1,11 @@
-## 2025-09-03
+## 2025-09-04
 
+### Features
+*   Added ability to open activity details in a modal by clicking an activity row.
+*   Improved Add Activity flow: the form now accepts a suggested start date (`RecommendedStart`) and returns the created `Activity?` after saving so you get immediate confirmation.
+*   Device selection now filters related Work Orders and activity categories in the New Activity form, making it easier to pick the correct items.
+
+## 2025-09-03
 ### Features
 *   **Activity UI / Components**:
     *   Added `ActivityCard` component with localized layout and CSS variables for theming.
