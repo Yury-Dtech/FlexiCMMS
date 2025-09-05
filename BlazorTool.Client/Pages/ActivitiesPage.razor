@@ -152,19 +152,33 @@
             <SchedulerViews>
                 <SchedulerDayView SlotDivisions="@(daySlotDivisions ?? 1)" SlotDuration="@(daySlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div>
+                       <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
                         </div>
                     </ItemTemplate>
-                    
+                    <SlotTemplate>
+                        @{
+                            SchedulerSlotTemplateContext slot = context as SchedulerSlotTemplateContext;
+                            <div class="context-menu-area" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromEmptySlot(e, slot))">
+                            </div>
+                        }
+                    </SlotTemplate>
                 </SchedulerDayView>
                 <SchedulerWeekView SlotDivisions="@(weekSlotDivisions ?? 1)" SlotDuration="@(weekSlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div>
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Week" />
                         </div>  
                     </ItemTemplate>
+                    <SlotTemplate>
+                        @{
+                            SchedulerSlotTemplateContext slot = context as SchedulerSlotTemplateContext;
                     
+                             <div class="context-menu-area" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromEmptySlot(e, slot))">
+                             </div>
+                            
+                        }
+                    </SlotTemplate>
                 </SchedulerWeekView>
             </SchedulerViews>
         </TelerikScheduler>
@@ -651,6 +665,9 @@
         args.IsCancelled = true;//prevent built-in edit form from showing up
         ActivityAppointment item = (args.Item as ActivityAppointment) ?? new ActivityAppointment();
         if (item == null) return;
+
+        bool isStartEqualsEnd = args.Start == args.End;
+
         if (!args.IsNew) // an edit operation, otherwise - an insert operation
         {
             //copying is implemented in the appointment model and it is needed because
@@ -660,13 +677,21 @@
         }
         else //NEW
         {
-            bool isStartEqualsEnd = args.Start == args.End;
             CurrentAppointment = item ?? new ActivityAppointment();
             CurrentAppointment.Start = isStartEqualsEnd ? args.Start.AddHours(8) : args.Start;
             CurrentAppointment.End = isStartEqualsEnd ? args.End.AddHours(16) : args.End;
+            newActivityInitialStartDate = CurrentAppointment.Start ?? DateTime.Now;
+            newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(4);
         }
-        if (item.IsWorkOrder || item.WorkOrderID == 0)
-            WOEditFormShown = true;
+        if (item.IsWorkOrder)
+            {
+                if (CurrentAppointment.WorkOrder == null) CurrentAppointment.WorkOrder = new WorkOrder();
+                CurrentAppointment.WorkOrder.StartDate = isStartEqualsEnd ? args.Start.AddHours(8) : args.Start;
+                CurrentAppointment.WorkOrder.EndDate = isStartEqualsEnd ? args.End.AddHours(16) : args.End;
+                WOEditFormShown = true;
+            }
+        else if(item.WorkOrderID == 0)
+        showNewActivityForm = true;
         else
             ShowActivityCard = true;
     }

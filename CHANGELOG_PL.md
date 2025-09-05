@@ -1,3 +1,13 @@
+## 2025-09-05
+
+### Funkcje
+*   Dodano filtry na stronie Aktywności: filtrowanie po użytkownikach oraz po urządzeniach (zasobach). Kontrolka filtrowania po dziale istnieje, ale jest obecnie nieaktywna (oczekuje na aktualizację API).
+*   Zaktualizowano modele związane z aktywnościami i klucze lokalizacyjne, aby wesprzeć nowe zachowania interfejsu.
+
+### Naprawiono / Ulepszenia
+*   Naprawiono trwałość stanu użytkownika — `MatrixID/RightMatrixID` oraz `DepartmentID` są prawidłowo zapisywane i odczytywane z local storage.
+*   Zapisano i przywrócono stan filtrów i ustawień widoku: wybrany użytkownik, wybrane urządzenie, wybrany dział (kontrolka filtrowania po dziale jest zapisywana i przywracana; rzeczywiste filtrowanie po działach aktualnie nieaktywne) oraz ustawienia widoku harmonogramu.
+
 ## 2025-09-04
 
 ### Funkcje

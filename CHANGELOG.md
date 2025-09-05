@@ -1,3 +1,13 @@
+## 2025-09-05
+
+### Features
+*   Added filters on the Activities page: filtering by users and by devices (assets). A department filter control exists but is currently inactive (wait for API update).
+*   Updated activity-related models and localization keys to support the new UI behavior.
+
+### Fixed / Improvements
+*   Fixed UserState persistence so MatrixID/RightMatrixID and DepartmentID are saved and loaded correctly from local storage.
+*   Persisted filter and view settings: selected user, selected device, selected department (the department filter control is saved and restored; actual department-based filtering is currently not active), and scheduler view settings.
+
 ## 2025-09-04
 
 ### Features
