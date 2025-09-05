@@ -20,7 +20,7 @@
         @if (Item.IsWorkOrder) //workorder
         {
             <div class="scheduler-workorder-details">
-                <div class="item-header">@Loc["WorkOrder_OrderNo"]@Item.AppointmentId]</div>
+                <div class="item-header">@Loc["WorkOrder_OrderNo"]@Item.WorkOrderID]</div>
                 <div class="item-body">
                     <span>@Item.WorkOrder?.AssetNo</span>
                 </div>

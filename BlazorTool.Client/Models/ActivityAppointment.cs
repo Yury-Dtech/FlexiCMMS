@@ -2,7 +2,7 @@
 {
     public class ActivityAppointment : Activity
     {
-        public int AppointmentId { get => IsWorkOrder ? WorkOrderID : (WorkOrderID + ActivityID + 10000); set => WorkOrderID = value; }
+        public int AppointmentId { get; set; } = Guid.NewGuid().GetHashCode();
         public string Title
         {
             get
@@ -21,8 +21,54 @@
                 return Description.Remove(length);
             }
         }
-        public DateTime? Start { get => AddDate; set => AddDate = value ?? DateTime.Now; }
-        public DateTime? End { get => AddDate.AddHours((double)WorkLoad); set => WorkLoad = (decimal)(value?.Subtract(AddDate).TotalHours ?? 0); }
+        public DateTime? Start 
+        { 
+            get { 
+                if (IsWorkOrder)
+                {
+                    return WorkOrder?.StartDate ?? WorkOrder?.AddDate ?? DateTime.Now;
+                }
+                else
+                {
+                    return AddDate; 
+                }
+            } 
+            set {
+                if (IsWorkOrder)
+                {
+                    if (WorkOrder != null)
+                    {
+                        WorkOrder.StartDate = value ?? DateTime.Now;
+                    }
+                }
+                else
+                {
+                    AddDate = value ?? DateTime.Now;
+                }
+            } 
+        }
+        public DateTime? End 
+        {
+            get  
+            { 
+                if (IsWorkOrder)
+                {
+                    return WorkOrder?.EndDate ?? WorkOrder?.CloseDate ?? WorkOrder?.AddDate?.AddHours(8) ?? DateTime.Now.AddHours(8);
+                }
+                return AddDate.AddHours((double)WorkLoad);
+            }
+            set  
+            {
+                if (IsWorkOrder)
+                {
+                    if (WorkOrder != null)
+                    {
+                        WorkOrder.EndDate = value ?? DateTime.Now.AddHours(8);
+                    }
+                }
+                WorkLoad = (decimal)(value?.Subtract(AddDate).TotalHours ?? 0); 
+            }
+        }
         public bool IsAllDay { get; set; } = false;
         public WorkOrder? WorkOrder { get; set; }
         public bool IsWorkOrder { get; set; } = false;
@@ -40,11 +86,8 @@
 
         public ActivityAppointment()
         {
-            AppointmentId = 0;
-            Start = DateTime.Now;
-            End = DateTime.Now.AddHours(8);
-            Description = string.Empty;
-            IsWorkOrder = false;
+            CopyFromActivity(new Activity());
+            WorkOrder = new WorkOrder();
         }
 
         public ActivityAppointment(Activity act)
@@ -60,9 +103,9 @@
 
         public ActivityAppointment(WorkOrder wo)
         {          
-            this.WorkOrder = wo;
+            this.WorkOrderID = wo.WorkOrderID;
             this.IsWorkOrder = true;
-            this.AppointmentId = wo.WorkOrderID;
+            this.WorkOrder = wo;
             this.Start = wo.StartDate ?? wo.AddDate ?? DateTime.Now;
             this.End = wo.EndDate ?? wo.CloseDate ?? wo.AddDate?.AddHours(8) ?? DateTime.Now.AddHours(8);
             this.Description = wo.WODesc ?? string.Empty;
@@ -81,7 +124,7 @@
             }
             return new SchedulerAppointment
             {
-                AppointmentId = this.AppointmentId,
+                AppointmentId = this.WorkOrderID,
                 Title = this.Title,
                 Start = this.Start,
                 End = this.End,

@@ -1,4 +1,4 @@
-﻿@page "/activities"
+@page "/activities"
 
 @using System.Linq
 @using BlazorTool.Client.Models
@@ -26,7 +26,7 @@
                      VerticalPosition="@NotificationVerticalPosition.Top"/>
 <div class="filter-controls-row">
     <div style="flex-basis: 66%; flex-shrink:1; flex-grow:0; display: flex; gap: 1rem;">
-        @if (UserState.HasPermission(PermissionType.ADMIN))
+        @if (UserState.HasPermission(PermissionType.WO_Edit))
         {
             <div style="max-width: 400px;">
                 <label>@Localizer["Scheduler_AssignedPersons"] </label>
@@ -148,19 +148,36 @@
             <SchedulerViews>
                 <SchedulerDayView SlotDivisions="@(daySlotDivisions ?? 1)" SlotDuration="@(daySlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div>
+                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
                         </div>
                     </ItemTemplate>
-                    
+                    <SlotTemplate>
+                        @{
+                            SchedulerSlotTemplateContext slot = context as SchedulerSlotTemplateContext;
+                            <div class="context-menu-area" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromEmptySlot(e, slot))">
+                            </div>
+                        }
+                    </SlotTemplate>
                 </SchedulerDayView>
                 <SchedulerWeekView SlotDivisions="@(weekSlotDivisions ?? 1)" SlotDuration="@(weekSlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div>
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Week" />
                         </div>  
                     </ItemTemplate>
-                    
+                    <SlotTemplate>
+                        @{
+                            SchedulerSlotTemplateContext slot = context as SchedulerSlotTemplateContext;
+
+                             <div class="context-menu-area" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromEmptySlot(e, slot))">
+                             </div>
+                            //         @foreach (var WO in _allOrders.Where(a => isWOinTimeSlot(a, slot.Start, slot.End)))
+                            //     {
+                            //             <div class="wo-background state-@WO.StateColor"></div>
+                            //     }
+                        }
+                    </SlotTemplate>
                 </SchedulerWeekView>
             </SchedulerViews>
         </TelerikScheduler>
@@ -264,8 +281,8 @@
     private List<Models.Activity> activities = new();
     private List<Person> allPersons = new();
     private List<Person> PersonResources { get; set; } = new();
-    private int? selectedPersonID;
-    // private Person selectedPerson = new Person();
+    private int selectedPersonID = 0;
+    private Person selectedPerson = new Person();
     private List<string> PersonsNames = new();
     private List<string> Departments = new();
     private List<string> WOCategories = new();
@@ -297,6 +314,59 @@
     private DateTime newActivityInitialStartDate;
     private DateTime newActivityInitialEndDate;
     #endregion 
+    private List<Resource> GetStatuses(List<WorkOrder> orders)
+    {
+        List<Resource> resources = new List<Resource>();
+        if (UserState.UseOriginalColors)
+        {
+            var st = orders.Select(a => a.WOState).Distinct().ToList();
+            foreach (var s in st)
+            {
+                var status = new Resource
+                {
+                    Text = s,
+                    Value = s,
+                    Color = orders.FirstOrDefault(a => a.WOState == s)?.StateColor ?? "LightGray"
+                };
+                resources.Add(status);
+            }
+        }
+        else
+        {
+
+            resources = new List<Resource>
+            {
+                new Resource { Text = @Localizer["Scheduler_NotStarted"], Value = "Nie rozpoczęte", Color = "LightCoral" },
+                new Resource { Text = @Localizer["Scheduler_InProgress"], Value = "W trakcie realizacji", Color = "LightYellow" },
+                new Resource { Text = @Localizer["Scheduler_InProgress"], Value = "Zawieszone", Color = "lightsteelblue" },
+                new Resource { Text = @Localizer["Scheduler_Completed"], Value = "Zakończony", Color = "LightGreen" },
+                new Resource { Text = @Localizer["Scheduler_Completed"], Value = "Zakończone", Color = "LightGreen" },
+                new Resource { Text = @Localizer["Scheduler_Completed"], Value = "default", Color = "LightGray" },
+            };
+
+            foreach (var order in orders)
+            {
+                var color = GeneratePastelColor(order.WorkOrderID);
+                resources.Add(new Resource
+                {
+                    Text = $"WO-{order.WorkOrderID}",
+                    Value = order.WorkOrderID.ToString(),
+                    Color = color
+                });
+            }
+        }
+        return resources;
+    }
+
+
+    private string GeneratePastelColor(int id)
+    {
+        int hue = 100*id % 360;
+        int saturation = 60; // softened tone
+        int lightness = 80;
+        return $"hsl({hue}, {saturation}%, {lightness}%)";
+    }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -304,11 +374,6 @@
         if (_viewSettings != null)
         {
             RestoreCustomFilterState();
-            if (!UserState.HasPermission(PermissionType.ADMIN))
-            {
-                selectedDepartments = new List<string>();
-                selectedPersonID = UserState.PersonID;
-            }
         }
 
         var isWASM = JSRuntime is IJSInProcessRuntime;
@@ -342,9 +407,8 @@
         PersonsNames.Insert(0, Person.NotAssigned.Name);
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
-        selectedPersonID = selectedPersonID == null ? UserState.PersonID ?? 0 : selectedPersonID;
-        //selectedPerson = selectedPerson ?? allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
-        _allOrders = (await apiService.GetWorkOrdersWithPerson(selectedPersonID)).Where(w=>w.CloseDate == null).ToList(); //Only opened
+        selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
+        _allOrders = (await apiService.GetWorkOrdersWithPerson(selectedPerson.PersonId)).Where(w=>w.CloseDate == null).ToList(); //Only opened
         activities = await apiService.GetActivitiesByWO(_allOrders);
         _allAppointments = ConvertAppointmentsFromActivities(activities);
         _allAppointments.AddRange(ConvertAppointmentsFromWorkOrders(_allOrders));
@@ -362,8 +426,8 @@
         Console.WriteLine("--- LoadData started.");
         isLoading = true;
         StateHasChanged();
-        // selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
-        _allOrders = (await apiService.GetWorkOrdersWithPersonCachedAsync(selectedPersonID)).Where(w=>w.CloseDate == null).ToList(); //Only opened
+        selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
+        _allOrders = (await apiService.GetWorkOrdersWithPersonCachedAsync(selectedPerson.PersonId)).Where(w=>w.CloseDate == null).ToList(); //Only opened
         WO_AssetNo = new List<string> { "All" };
         WO_AssetNo.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo)).Select(x => x.AssetNo).Distinct().ToList());
         activities = await apiService.GetCachedActivitiesByWO(_allOrders);
@@ -384,6 +448,22 @@
     /// </summary>
     private void DisplayAppointments()
     {
+            StringBuilder sb = new StringBuilder();
+        foreach(var appt in _allAppointments)
+        {
+            if (_allAppointments.Count(a => a.AppointmentId == appt.AppointmentId) > 1)
+            {
+                string s= $"Duplicate appointment ID found: {appt.AppointmentId}. WorkOrderID = {appt.WorkOrderID} . ActivityID={appt.ActivityID}";
+                sb.AppendLine(s);
+                Logger.LogWarning(s);
+            }
+        }
+            if(sb.Length >1) NotificationReference.Show(new NotificationModel()
+            {
+                Text = sb.ToString(),
+                ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                CloseAfter = 5000
+            });
         Appointments = FilterAppointments();
 
         // PersonResources should always contain all possible persons for grouping, including "Not assigned".
@@ -396,6 +476,7 @@
         {
             PersonResources = allPersons.Where(p => p.PersonId == selectedPersonID).ToList();
         }
+        StateHasChanged();
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
 
@@ -413,49 +494,35 @@
 
     #region filters
 
-    private async Task OnMultiDepartmentsClosed()
+    private void OnMultiDepartmentsClosed()
     {
-        return; //wait for API modification
-        // Filter appointments based on the selected department. Take Workorders for selected departments and take activities for these workorders
-        var listDepIDs = apiService.GetWODepartments().Where(d => selectedDepartments.Contains(d.Name)).Select(d => d.Id).ToList();
-        // var personsInDepartments = allPersons.Where(p => p != null && selectedDepartments.Contains(p.DepartmentID)).Select(p => p.PersonId).ToList();
-        // foreach (var personId in personsInDepartments)
-        // {
-        //     var ordersForPerson = await apiService.GetWorkOrdersWithPerson(personId).Where(w=>w.CloseDate == null).ToList();
-        //     _allOrders.AddRange(ordersForPerson.Where(x=>_allOrders.All(o=>o.WorkOrderID != x.WorkOrderID)));
-        // }
-        //TODO: change selectedPersonID to List<int> selectedPersonIDs
-        activities = await apiService.GetActivitiesByWO(_allOrders);
-        _allAppointments = ConvertAppointmentsFromActivities(activities);
-        _allAppointments.AddRange(ConvertAppointmentsFromWorkOrders(_allOrders));
-        SaveFilterStateToCacheAsync();
         DisplayAppointments();
+        SaveFilterStateToCacheAsync();
     }
 
     private void OnAssetNoChanged(string assetNo)
     {
         selectedAssetNo = assetNo ?? "All";
-        SaveFilterStateToCacheAsync();
         DisplayAppointments();
+        SaveFilterStateToCacheAsync();
     }
 
-    private async Task OnPersonSelectChanged(object args)
+    private void OnPersonSelectChanged(object args)
     {
-        // selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
-        await HardLoadData();
-        SaveFilterStateToCacheAsync();
+        selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
         DisplayAppointments();
+        SaveFilterStateToCacheAsync();
     }
 
     private List<ActivityAppointment> FilterAppointments()
     {
         var filteredAppointments = new List<ActivityAppointment>(_allAppointments);
-        // if (selectedDepartments.Any())
-        // {
-        //     Filter appointments based on the selected department. Take Workorders for selected departments and take activities for these workorders
-
-        //     TODO: filter by departments of the work orders
-        // }
+        if (selectedDepartments.Any())
+        {
+            // Filter appointments based on the selected department
+            // filteredAppointments = filteredAppointments.Where(a => selectedDepartments.Contains(a.DepName)).ToList();
+            //TODO: filter by departments of the work orders
+        }
         if (!string.IsNullOrEmpty(selectedAssetNo) && selectedAssetNo != "All")
         {
             // Filter appointments based on the selected asset number
@@ -465,7 +532,7 @@
         if (selectedPersonID > 0)
         {
             // Filter appointments based on the selected assigned persons
-            filteredAppointments = filteredAppointments.Where(a => (!a.IsWorkOrder && a.ActPersons.Contains(selectedPersonID?.ToString() ?? "0")) ||
+            filteredAppointments = filteredAppointments.Where(a => (!a.IsWorkOrder && a.ActPersons.Contains(selectedPersonID.ToString())) ||
                                                                    (a.IsWorkOrder )).ToList();
             // || (isNotAssignedSelected && string.IsNullOrEmpty(a.AssignedPerson))).ToList();
         }
@@ -554,7 +621,7 @@
             }
             else
             {
-                await apiService.GetActDictionaries(1);
+                
             }
         }
     }
@@ -633,7 +700,6 @@
     {
         args.IsCancelled = true;//prevent built-in edit form from showing up
         ActivityAppointment item = (args.Item as ActivityAppointment) ?? new ActivityAppointment();
-        if (item == null) return;
         if (!args.IsNew) // an edit operation, otherwise - an insert operation
         {
             //copying is implemented in the appointment model and it is needed because
@@ -648,7 +714,7 @@
             CurrentAppointment.Start = isStartEqualsEnd ? args.Start.AddHours(8) : args.Start;
             CurrentAppointment.End = isStartEqualsEnd ? args.End.AddHours(16) : args.End;
         }
-        if (item.IsWorkOrder || item.WorkOrderID == 0)
+        if (item?.IsWorkOrder ?? false || item?.WorkOrderID == 0)
             WOEditFormShown = true;
         else
             ShowActivityCard = true;
@@ -938,58 +1004,4 @@
     {        
         return (wo.StartDate <= slotEnd && wo.EndDate >= slotStart);
     }
-
-    private List<Resource> GetStatuses(List<WorkOrder> orders)
-    {
-        List<Resource> resources = new List<Resource>();
-        if (UserState.UseOriginalColors)
-        {
-            var st = orders.Select(a => a.WOState).Distinct().ToList();
-            foreach (var s in st)
-            {
-                var status = new Resource
-                {
-                    Text = s,
-                    Value = s,
-                    Color = orders.FirstOrDefault(a => a.WOState == s)?.StateColor ?? "LightGray"
-                };
-                resources.Add(status);
-            }
-        }
-        else
-        {
-
-            resources = new List<Resource>
-            {
-                new Resource { Text = @Localizer["Scheduler_NotStarted"], Value = "Nie rozpoczęte", Color = "LightCoral" },
-                new Resource { Text = @Localizer["Scheduler_InProgress"], Value = "W trakcie realizacji", Color = "LightYellow" },
-                new Resource { Text = @Localizer["Scheduler_InProgress"], Value = "Zawieszone", Color = "lightsteelblue" },
-                new Resource { Text = @Localizer["Scheduler_Completed"], Value = "Zakończony", Color = "LightGreen" },
-                new Resource { Text = @Localizer["Scheduler_Completed"], Value = "Zakończone", Color = "LightGreen" },
-                new Resource { Text = @Localizer["Scheduler_Completed"], Value = "default", Color = "LightGray" },
-            };
-
-            foreach (var order in orders)
-            {
-                var color = GeneratePastelColor(order.WorkOrderID);
-                resources.Add(new Resource
-                {
-                    Text = $"WO-{order.WorkOrderID}",
-                    Value = order.WorkOrderID.ToString(),
-                    Color = color
-                });
-            }
-        }
-        return resources;
-    }
-
-    private string GeneratePastelColor(int id)
-    {
-        int hue = 100*id % 360;
-        int saturation = 60; // softened tone
-        int lightness = 80;
-        return $"hsl({hue}, {saturation}%, {lightness}%)";
-    }
-
-
 }

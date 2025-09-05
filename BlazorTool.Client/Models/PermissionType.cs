@@ -19,6 +19,7 @@ namespace BlazorTool.Client.Models
         MD_Edit,
         MD_Edit_Warranty,
         ParT_Add,
-        MD_Add_ForceCycle
+        MD_Add_ForceCycle,
+            ADMIN
     }
 }

@@ -6,7 +6,7 @@ namespace BlazorTool.Client.Models
     public class WorkOrder
     {
         [JsonPropertyName("workOrderID")]
-        public int WorkOrderID { get; set; }
+        public int WorkOrderID { get; set; } = 0;
 
         [JsonPropertyName("machineID")]
         public int MachineID { get; set; }

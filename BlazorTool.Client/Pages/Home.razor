@@ -432,6 +432,10 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (UserState == null || !UserState.IsAuthenticated)
+        {
+            return;
+        }
         if (firstRender && !hasInitialized)
         {
             hasInitialized = true;
@@ -611,10 +615,10 @@
 
     private List<WorkOrder> FilterWorkOrders(List<WorkOrder> orders)
     {
-        return orders
+        return new List<WorkOrder>( orders
             .Where(o => o.CloseDate == null)
             .OrderByDescending(o => o.ModDate)
-            .ToList();
+            .ToList());
     }
 
     private void AddNewOrder()

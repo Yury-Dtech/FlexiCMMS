@@ -71,6 +71,7 @@ namespace BlazorTool.Client.Services
                 PermissionType.MD_Edit_Warranty => RightMatrix.MD_Edit_Warranty,
                 PermissionType.ParT_Add => RightMatrix.ParT_Add,
                 PermissionType.MD_Add_ForceCycle => RightMatrix.MD_Add_ForceCycle,
+                PermissionType.ADMIN => RightMatrixID == 1,
                 _ => false,
             };
         }

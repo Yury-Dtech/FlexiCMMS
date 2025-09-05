@@ -60,7 +60,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100%; 
 }
 
 .ClearFilters-btn {
@@ -110,16 +110,13 @@
 
 
 ::deep .compact-scheduler .k-slot-cell {
-    /* уменьшаем минимальную высоту «строки» слота */
     height:auto;
-    /* выравниваем внутренний контент по новой высоте */
     line-height: 10px;
-    /* при необходимости подправьте внутренние отступы */
     padding-top: 0;
     padding-bottom: 0;
 }
 
-/* (необязательно) сделать подписи времени более «плотными» */
+ 
 ::deep .compact-scheduler .k-scheduler-times,
 .compact-scheduler .k-scheduler-times * {
     line-height: 10px;
