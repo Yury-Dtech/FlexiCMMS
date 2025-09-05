@@ -29,19 +29,22 @@
         @if (UserState.HasPermission(PermissionType.ADMIN))
         {
             <div style="max-width: 400px;">
-                <label>@Localizer["Scheduler_AssignedPersons"] </label>
-                <TelerikComboBox Data="@allPersons"
-                                    @bind-Value="@selectedPersonID"
-                                    ValueField="@nameof(Person.PersonId)"
-                                    TextField="@nameof(Person.Name)"
-                                    Placeholder="@Localizer["Scheduler_SelectAssignedPersons"]"
-                                    Filterable="true"
-                                    FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
-                                    OnChange="@OnPersonSelectChanged"
-                                    ShowClearButton="true"
-                                    Size="sm">
-
-                </TelerikComboBox>
+                <label>@Localizer["TakePersons"] </label>
+                <TelerikMultiSelect
+                    Data="@allPersons"
+                    @bind-Value="@selectedPersonIDs"
+                    ValueField="@nameof(Person.PersonId)"
+                    TextField="@nameof(Person.Name)"
+                    Placeholder="@Localizer["Scheduler_SelectAssignedPersons"]"
+                    Filterable="true"
+                    FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                    AutoClose="false"
+                    OnOpen="@(()=>{UserSelectionOpen = true;})"
+                    OnClose="@OnPersonSelectChanged"
+                    OnChange="@(async () => { if (!UserSelectionOpen) await OnPersonSelectChanged(); })"
+                    ShowClearButton="true"
+                    Size="sm">
+                </TelerikMultiSelect>
             </div>
             <div>
                 <label>@Localizer["Scheduler_Department"] </label>
@@ -51,7 +54,8 @@
                                  @bind-Value="@selectedDepartments"
                                  AutoClose="false"
                                  OnClose="@OnMultiDepartmentsClosed"
-                                 OnChange="@(async (arg) => { if (selectedDepartments.Count == 0) await LoadData(); })"
+                                 OnOpen = "@(()=>{DepartmentSelectionOpen = true;})"
+                                 OnChange="@(async (arg) => { if (!DepartmentSelectionOpen) await OnMultiDepartmentsClosed(); })"
                                  Filterable="true"
                                  FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
                                  ShowClearButton="true"
@@ -61,16 +65,16 @@
         }
         <div>
             <label>@Localizer["Scheduler_Device"] </label>
-            <TelerikComboBox Data="@WO_AssetNo"
+            <TelerikMultiSelect Data="@DeviceNames"
                              Placeholder="@Localizer["Scheduler_SelectAsset"]"
                              Filterable="true"
                              FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
-                             AllowCustom="true"
-                             Value="@selectedAssetNo"
-                             ValueChanged="@((string assetNo) => OnAssetNoChanged(assetNo))"
+                             AutoClose="false"
+                             @bind-Value="@selectedDevices"
+                             OnChange="@OnAssetNoClosed"
                              Size="sm"
                              class=@(WOEditFormShown ? "" : "popup-target")>
-            </TelerikComboBox>
+            </TelerikMultiSelect>
         </div>
         <div class="ClearFilters-btn">
             <button class="ClearFilters-btn" @onclick="OnClearFilters" title="@Localizer["ClearFilters"]">
@@ -264,7 +268,7 @@
     private List<Models.Activity> activities = new();
     private List<Person> allPersons = new();
     private List<Person> PersonResources { get; set; } = new();
-    private int? selectedPersonID;
+    private List<int> selectedPersonIDs = new();
     // private Person selectedPerson = new Person();
     private List<string> PersonsNames = new();
     private List<string> Departments = new();
@@ -272,9 +276,8 @@
     private List<string> WOStates = new();
     private List<string> selectedDepartments = new List<string>();
     private List<string> DeviceCategories = new();//for Orders grid filter
-    private string selectedCategory = "All";
-    private List<string> WO_AssetNo = new();
-    private string selectedAssetNo = "All";
+    private List<string> DeviceNames = new();
+    private List<string> selectedDevices = new List<string>();
     private Person currentUser = new Person();
     private string popupMessage = string.Empty;
     private int? columnWidth = 50; //for TimelineView alt=80
@@ -296,6 +299,8 @@
     private bool showNewActivityForm = false;
     private DateTime newActivityInitialStartDate;
     private DateTime newActivityInitialEndDate;
+    private bool UserSelectionOpen = false;
+    private bool DepartmentSelectionOpen = false;
     #endregion 
 
     protected override async Task OnInitializedAsync()
@@ -307,7 +312,7 @@
             if (!UserState.HasPermission(PermissionType.ADMIN))
             {
                 selectedDepartments = new List<string>();
-                selectedPersonID = UserState.PersonID;
+                selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
             }
         }
 
@@ -342,9 +347,16 @@
         PersonsNames.Insert(0, Person.NotAssigned.Name);
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
-        selectedPersonID = selectedPersonID == null ? UserState.PersonID ?? 0 : selectedPersonID;
-        //selectedPerson = selectedPerson ?? allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
-        _allOrders = (await apiService.GetWorkOrdersWithPerson(selectedPersonID)).Where(w=>w.CloseDate == null).ToList(); //Only opened
+        if (selectedPersonIDs == null || selectedPersonIDs.Count == 0)
+        {
+            selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
+        }
+        //load all orders and activities for all selected persons
+        foreach(var personId in selectedPersonIDs)
+        {
+            var ordersForPerson = (await apiService.GetWorkOrdersWithPerson(personId)).Where(w => w.CloseDate == null).ToList();
+            _allOrders.AddRange(ordersForPerson.Where(x => _allOrders.All(o => o.WorkOrderID != x.WorkOrderID))); //ensure no duplicates
+        }
         activities = await apiService.GetActivitiesByWO(_allOrders);
         _allAppointments = ConvertAppointmentsFromActivities(activities);
         _allAppointments.AddRange(ConvertAppointmentsFromWorkOrders(_allOrders));
@@ -357,15 +369,19 @@
         Console.WriteLine($"--- HardLoadData completed. Appointments count: {Appointments.Count}");
     }
 
+    //for cached data
     private async Task LoadData()
     {
         Console.WriteLine("--- LoadData started.");
         isLoading = true;
         StateHasChanged();
-        // selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
-        _allOrders = (await apiService.GetWorkOrdersWithPersonCachedAsync(selectedPersonID)).Where(w=>w.CloseDate == null).ToList(); //Only opened
-        WO_AssetNo = new List<string> { "All" };
-        WO_AssetNo.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo)).Select(x => x.AssetNo).Distinct().ToList());
+        foreach(var personId in selectedPersonIDs)
+        {
+            var ordersForPerson = (await apiService.GetWorkOrdersWithPersonCachedAsync(personId)).Where(w => w.CloseDate == null).ToList();
+            _allOrders.AddRange(ordersForPerson.Where(x => _allOrders.All(o => o.WorkOrderID != x.WorkOrderID))); //ensure no duplicates
+        }
+        DeviceNames = new List<string>();
+        DeviceNames.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo)).Select(x => x.AssetNo).Distinct().ToList());
         activities = await apiService.GetCachedActivitiesByWO(_allOrders);
         _allAppointments = ConvertAppointmentsFromActivities(activities);
         _allAppointments.AddRange(ConvertAppointmentsFromWorkOrders(_allOrders));
@@ -388,13 +404,13 @@
 
         // PersonResources should always contain all possible persons for grouping, including "Not assigned".
         // Filtering by selectedAssignedPersons is handled in FilterAppointments().
-        if (selectedPersonID == 0) //show all persons
+        if (selectedPersonIDs == null || selectedPersonIDs.Count == 0) //show all persons
         {
             PersonResources = new List<Person>(allPersons);
         }
         else
         {
-            PersonResources = allPersons.Where(p => p.PersonId == selectedPersonID).ToList();
+            PersonResources = allPersons.Where(p => selectedPersonIDs.Contains(p.PersonId)).ToList();
         }
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
@@ -415,6 +431,7 @@
 
     private async Task OnMultiDepartmentsClosed()
     {
+        DepartmentSelectionOpen = false;
         return; //wait for API modification
         // Filter appointments based on the selected department. Take Workorders for selected departments and take activities for these workorders
         var listDepIDs = apiService.GetWODepartments().Where(d => selectedDepartments.Contains(d.Name)).Select(d => d.Id).ToList();
@@ -432,15 +449,15 @@
         DisplayAppointments();
     }
 
-    private void OnAssetNoChanged(string assetNo)
+    private async Task OnAssetNoClosed()
     {
-        selectedAssetNo = assetNo ?? "All";
         SaveFilterStateToCacheAsync();
         DisplayAppointments();
     }
 
-    private async Task OnPersonSelectChanged(object args)
+    private async Task OnPersonSelectChanged()
     {
+        UserSelectionOpen= false;
         // selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
         await HardLoadData();
         SaveFilterStateToCacheAsync();
@@ -456,17 +473,17 @@
 
         //     TODO: filter by departments of the work orders
         // }
-        if (!string.IsNullOrEmpty(selectedAssetNo) && selectedAssetNo != "All")
+        if (selectedDevices.Any() && !selectedDevices.Contains("All"))
         {
             // Filter appointments based on the selected asset number
-            // filteredAppointments = filteredAppointments.Where(a => a.AssetNo == selectedAssetNo).ToList();
+            var filteredOrders = _allOrders.Where(o => selectedDevices.Contains(o.AssetNo)).Select(o => o.WorkOrderID).ToList();
+            filteredAppointments = filteredAppointments.Where(a => filteredOrders.Contains(a.WorkOrderID)).ToList();
             //TODO : filter by asset number of the work orders
         }
-        if (selectedPersonID > 0)
+        if (selectedPersonIDs != null && selectedPersonIDs.Count > 0)
         {
             // Filter appointments based on the selected assigned persons
-            filteredAppointments = filteredAppointments.Where(a => (!a.IsWorkOrder && a.ActPersons.Contains(selectedPersonID?.ToString() ?? "0")) ||
-                                                                   (a.IsWorkOrder )).ToList();
+            // filteredAppointments = filteredAppointments.Where(a => (!a.IsWorkOrder && a.ActPersons.Split('#').Any(pid => selectedPersonIDs.Contains(int.Parse(pid)))) || (a.IsWorkOrder )).ToList();
             // || (isNotAssignedSelected && string.IsNullOrEmpty(a.AssignedPerson))).ToList();
         }
 
@@ -475,8 +492,8 @@
 
     private void SaveFilterStateToCacheAsync()
     {
-        _viewSettings.SetCustomFilter("selectedPersonID", selectedPersonID);
-        _viewSettings.SetCustomFilter("selectedAssetNo", selectedAssetNo);
+        _viewSettings.SetCustomFilter("selectedPersonIDs", selectedPersonIDs);
+        _viewSettings.SetCustomFilter("selectedDevices", selectedDevices);
         _viewSettings.SetCustomFilter("selectedDepartments", selectedDepartments);
         _viewSettings.SetCustomFilter("CurrentView", CurrentView);
         _viewSettings.SetCustomFilter("CustomDays", numberOfDays);
@@ -492,8 +509,8 @@
 
     private void RestoreCustomFilterState()
     {
-        selectedPersonID = _viewSettings.GetCustomFilter("selectedPersonID", UserState.PersonID ?? 0);
-        selectedAssetNo = _viewSettings.GetCustomFilter("selectedAssetNo", "All");
+        selectedPersonIDs = _viewSettings.GetCustomFilter("selectedPersonIDs", UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>());
+        selectedDevices = _viewSettings.GetCustomFilter("selectedDevices", new List<string>() { "All"});
         selectedDepartments = _viewSettings.GetCustomFilter("selectedDepartments", new List<string>());
         CurrentView = _viewSettings.GetCustomFilter("CurrentView", SchedulerView.Week);
         numberOfDays = _viewSettings.GetCustomFilter("CustomDays", 7);
@@ -597,8 +614,8 @@
     private void OnClearFilters()
     {
         selectedDepartments = new List<string> ();
-        selectedAssetNo = "All";
-        selectedPersonID = new();
+        selectedDevices = new List<string> ();
+        selectedPersonIDs = new List<int>();
         DisplayAppointments();
     }
 

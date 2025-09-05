@@ -77,7 +77,7 @@ namespace BlazorTool.Client.Services
         }
 
         public async Task<bool> SaveIdentityDataToCacheAsync(IdentityData identityData)
-        {
+        {//TODO: make function identityData <==> UserStat
             _logger.LogInformation("DEBUG: SaveIdentityDataAsync started. LangCode from data: {LangCode}", identityData.LangCode);
             UserName = identityData.Name;
             Token = identityData.Token;
@@ -121,6 +121,8 @@ namespace BlazorTool.Client.Services
                 PersonID = this.PersonID ?? 0,
                 LangCode = this.LangCode,
                 RigthMatrix = this.RightMatrix,
+                RigthMatrixID = this.RightMatrixID,
+                DepartmentID = this.DepartmentID,
                 UseOriginalColors = this.UseOriginalColors,
                 NetworkShareUsername = this.NetworkShareUsername,
                 NetworkSharePassword = this.NetworkSharePassword,
@@ -137,6 +139,8 @@ namespace BlazorTool.Client.Services
                 PersonID = identityData.PersonID;
                 LangCode = identityData.LangCode;
                 RightMatrix = identityData.RigthMatrix;
+                RightMatrixID = identityData.RigthMatrixID;
+                DepartmentID = identityData.DepartmentID;
                 UseOriginalColors = identityData.UseOriginalColors;
                 CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
                 NetworkShareUsername = identityData.NetworkShareUsername;
@@ -165,6 +169,8 @@ namespace BlazorTool.Client.Services
                     PersonID = identityData.PersonID;
                     LangCode = identityData.LangCode;
                     RightMatrix = identityData.RigthMatrix;
+                    RightMatrixID = identityData.RigthMatrixID;
+                    DepartmentID = identityData.DepartmentID;
                     UseOriginalColors = identityData.UseOriginalColors;
                     CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
                     NetworkShareUsername = identityData.NetworkShareUsername;
@@ -193,6 +199,8 @@ namespace BlazorTool.Client.Services
             PersonID = null;
             LangCode = string.Empty;
             RightMatrix = null;
+            RightMatrixID = null;
+            DepartmentID = null;
             UseOriginalColors = true;
             CanHaveManyActiveTake = false;
             NetworkShareUsername = null;
