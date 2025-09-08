@@ -366,6 +366,7 @@
             selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
         }
         //load all orders and activities for all selected persons
+        _allOrders.Clear();
         foreach(var personId in selectedPersonIDs)
         {
             var ordersForPerson = (await apiService.GetWorkOrdersWithPerson(personId)).Where(w => w.CloseDate == null).ToList();
@@ -572,16 +573,17 @@
                 var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
                 if (index != -1)
                 {
-                    _allAppointments[index] = editedAppointment;
+                    var upd_WO = await apiService.UpdateWorkOrderAsync(editedAppointment.GetWorkOrder() ?? new WorkOrder());
+                    _allAppointments[index] = new ActivityAppointment(upd_WO.Data);
                 }
                 else
                 {
-                    _allAppointments.Add(editedAppointment);
+                    return;
                 }
-
+                //Save WO to Server
                 WOEditFormShown = false;
                 isOrderCardOpen = false;
-                //DisplayAppointments();
+                DisplayAppointments();
             }
             else
             {
@@ -674,6 +676,15 @@
             //this is a reference to the data collection so modifying it directly
             //will immediately modify the data and no cancelling will be possible
             CurrentAppointment = item;
+            if (item.IsWorkOrder)
+            {
+                WOEditFormShown = true;
+            }
+            else //Activity
+            {
+                ShowActivityCard = true;
+            }
+            return;
         }
         else //NEW
         {
@@ -683,17 +694,26 @@
             newActivityInitialStartDate = CurrentAppointment.Start ?? DateTime.Now;
             newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(4);
         }
+
         if (item.IsWorkOrder)
+        {
+            WOEditFormShown = true;
+        }
+        else //Activity NEW
+        {
+            var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, newActivityInitialStartDate, newActivityInitialEndDate))?.WorkOrderID;
+            if (WO_ID_InSlot != null && WO_ID_InSlot != 0)
             {
-                if (CurrentAppointment.WorkOrder == null) CurrentAppointment.WorkOrder = new WorkOrder();
-                CurrentAppointment.WorkOrder.StartDate = isStartEqualsEnd ? args.Start.AddHours(8) : args.Start;
-                CurrentAppointment.WorkOrder.EndDate = isStartEqualsEnd ? args.End.AddHours(16) : args.End;
-                WOEditFormShown = true;
-            }
-        else if(item.WorkOrderID == 0)
-        showNewActivityForm = true;
-        else
-            ShowActivityCard = true;
+                CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
+            }          
+            showNewActivityForm = true;
+            StateHasChanged();        
+            
+        }
+        // if(item.WorkOrderID == 0)
+        // showNewActivityForm = true;
+        // else
+        //     ShowActivityCard = true;
     }
 
     void CancelEditing()
@@ -921,7 +941,7 @@
                 var personResource = _clickedSlotContext.Resources.FirstOrDefault(r => r.Key == "AssignedPerson");
                 if (personResource.Key != null && personResource.Value is string personName)
                 {
-                    CurrentAppointment.WorkOrder.AssignedPerson = personName;
+                    CurrentAppointment.GetWorkOrder().AssignedPerson = personName;
                 }
             }
             WOEditFormShown = true;

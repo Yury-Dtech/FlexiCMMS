@@ -22,7 +22,7 @@
             <div class="scheduler-workorder-details">
                 <div class="item-header">@Loc["WorkOrder_OrderNo"]@Item.WorkOrderID]</div>
                 <div class="item-body">
-                    <span>@Item.WorkOrder?.AssetNo</span>
+                    <span>@Item.GetWorkOrder().AssetNo</span>
                 </div>
                 <div class="item-description">@Item.Description</div>
             </div>

@@ -1,114 +1,98 @@
-﻿namespace BlazorTool.Client.Models
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace BlazorTool.Client.Models
 {
     public class ActivityAppointment : Activity
     {
-        public int AppointmentId { get; set; } = Guid.NewGuid().GetHashCode();
-        public string Title
-        {
-            get
-            {
-                if (IsWorkOrder && WorkOrder != null)
-                {
-                    return ($"[{WorkOrder.WorkOrderID}] {WorkOrder.AssetNo}") ?? string.Empty;
-                }
-
-                if (string.IsNullOrEmpty(Description))
-                {
-                    return string.Empty;
-                }
-
-                int length = Description.Length > trimTitleSize ? trimTitleSize : Description.Length;
-                return Description.Remove(length);
-            }
-        }
-        public DateTime? Start 
-        { 
-            get { 
-                if (IsWorkOrder)
-                {
-                    return WorkOrder?.StartDate ?? WorkOrder?.AddDate ?? DateTime.Now;
-                }
-                else
-                {
-                    return AddDate; 
-                }
-            } 
-            set {
-                if (IsWorkOrder)
-                {
-                    if (WorkOrder != null)
-                    {
-                        WorkOrder.StartDate = value ?? DateTime.Now;
-                    }
-                }
-                else
-                {
-                    AddDate = value ?? DateTime.Now;
-                }
-            } 
-        }
-        public DateTime? End 
-        {
-            get  
-            { 
-                if (IsWorkOrder)
-                {
-                    return WorkOrder?.EndDate ?? WorkOrder?.CloseDate ?? WorkOrder?.AddDate?.AddHours(8) ?? DateTime.Now.AddHours(8);
-                }
-                return AddDate.AddHours((double)WorkLoad);
-            }
-            set  
-            {
-                if (IsWorkOrder)
-                {
-                    if (WorkOrder != null)
-                    {
-                        WorkOrder.EndDate = value ?? DateTime.Now.AddHours(8);
-                    }
-                }
-                WorkLoad = (decimal)(value?.Subtract(AddDate).TotalHours ?? 0); 
-            }
-        }
+        public int AppointmentId { get; private set; }
+        public string Title { get; private set; }
+        public DateTime? Start { get; set; }
+        public DateTime? End { get; set; }
         public bool IsAllDay { get; set; } = false;
-        public WorkOrder? WorkOrder { get; set; }
+        public WorkOrder? WorkOrder { private get; set; }
         public bool IsWorkOrder { get; set; } = false;
-        /// <summary>
-        /// Count of characters to show in the title
-        /// </summary>
         public int trimTitleSize = 30;
-        public string WOState { get { 
-                if(IsWorkOrder && WorkOrder != null)
-                    return WorkOrder.WOState ?? WorkOrder.WorkOrderID.ToString() ?? "default";
-               return WorkOrderID.ToString();
-            }
-            set {  }
-        }
+        public string WOState { get; private set; }
 
         public ActivityAppointment()
         {
             CopyFromActivity(new Activity());
             WorkOrder = new WorkOrder();
+            IsWorkOrder = false;
+            SetCalculatedFields();
         }
 
         public ActivityAppointment(Activity act)
         {
             CopyFromActivity(act);
+            WorkOrder = null;
+            IsWorkOrder = false;
+            SetCalculatedFields();
         }
 
+        public WorkOrder GetWorkOrder()
+        {
+            if (WorkOrder == null) 
+                WorkOrder = new WorkOrder();
+
+            WorkOrder.WorkOrderID = WorkOrderID;
+            WorkOrder.StartDate = Start;
+            WorkOrder.EndDate = End;
+            WorkOrder.WODesc = Description;
+            return WorkOrder;
+        }
         public ActivityAppointment(Activity act, WorkOrder wo) : this(act)
         {
-            this.WorkOrder = wo;
-            this.IsWorkOrder = true;
+            WorkOrder = wo;
+            IsWorkOrder = true;
+            SetCalculatedFields();
         }
 
-        public ActivityAppointment(WorkOrder wo)
-        {          
+        public ActivityAppointment(WorkOrder? wo)
+        { if (wo == null) 
+                wo = new WorkOrder();
             this.WorkOrderID = wo.WorkOrderID;
             this.IsWorkOrder = true;
             this.WorkOrder = wo;
             this.Start = wo.StartDate ?? wo.AddDate ?? DateTime.Now;
             this.End = wo.EndDate ?? wo.CloseDate ?? wo.AddDate?.AddHours(8) ?? DateTime.Now.AddHours(8);
             this.Description = wo.WODesc ?? string.Empty;
+            SetCalculatedFields();
+        }
+
+        private void SetCalculatedFields()
+        {
+            AppointmentId = IsWorkOrder ? WorkOrderID : 10000 * WorkOrderID + ActivityID;
+
+            if (IsWorkOrder && WorkOrder != null)
+            {
+                Title = $"[{WorkOrder.WorkOrderID}] {WorkOrder.AssetNo}" ?? string.Empty;
+            }
+            else if (!string.IsNullOrEmpty(Description))
+            {
+                int length = Description.Length > trimTitleSize ? trimTitleSize : Description.Length;
+                Title = Description.Remove(length);
+            }
+            else
+            {
+                Title = string.Empty;
+            }
+
+            if (IsWorkOrder && WorkOrder != null)
+            {
+                WOState = WorkOrder.WOState ?? WorkOrder.WorkOrderID.ToString() ?? "default";
+            }
+            else
+            {
+                WOState = WorkOrderID.ToString();
+            }
+
+            if (!IsWorkOrder)
+            {
+                Start ??= AddDate;
+                End ??= AddDate.AddHours((double)WorkLoad);
+            }
         }
 
         public ActivityAppointment ShallowCopy()
@@ -119,8 +103,8 @@
         public SchedulerAppointment ToSchedulerAppointment()
         {
             if (WorkOrder != null)
-            {
-                return new SchedulerAppointment(WorkOrder);
+            {                
+                return new SchedulerAppointment(GetWorkOrder());
             }
             return new SchedulerAppointment
             {
@@ -132,6 +116,7 @@
                 Description = this.Description,
             };
         }
+
         private void CopyFromActivity(Activity activity)
         {
             this.WorkOrderID = activity.WorkOrderID;
