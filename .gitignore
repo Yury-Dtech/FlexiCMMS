@@ -386,3 +386,4 @@ commit_message.txt
 gha-creds-*.json
 
 /temp_CheckSmbCredentialsAsync.txt
+/updates.md
