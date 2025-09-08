@@ -23,6 +23,7 @@
 
 ::deep .weekend-day-multiday {
     background-color: #e0e0e0 !important; /* Lighter background for weekend days in MultiDayView */
+/*    max-width: fit-content;*/
 }
 
 /* Target the day number link */

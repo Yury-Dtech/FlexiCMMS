@@ -361,6 +361,10 @@
   <data name="Scheduler_NumberOfDays" xml:space="preserve">
     <value>Number of days:</value>
   </data>
+  <data name="Scheduler_NumberOfWorkDays" xml:space="preserve">
+    <value>Number of work days:</value>
+    <comment>Liczba dni roboczych</comment>
+  </data>
   <data name="Scheduler_LoadingAppointments" xml:space="preserve">
     <value>Loading appointments...</value>
   </data>

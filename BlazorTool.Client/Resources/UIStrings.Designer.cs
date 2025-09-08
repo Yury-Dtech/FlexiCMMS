@@ -1933,6 +1933,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of work days:.
+        /// </summary>
+        public static string Scheduler_NumberOfWorkDays {
+            get {
+                return ResourceManager.GetString("Scheduler_NumberOfWorkDays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open.
         /// </summary>
         public static string Scheduler_Open {

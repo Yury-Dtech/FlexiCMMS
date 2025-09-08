@@ -361,6 +361,9 @@
   <data name="Scheduler_NumberOfDays" xml:space="preserve">
     <value>Liczba dni:</value>
   </data>
+  <data name="Scheduler_NumberOfWorkDays" xml:space="preserve">
+    <value>Liczba dni roboczych:</value>
+  </data>
   <data name="Scheduler_LoadingAppointments" xml:space="preserve">
     <value>Ładowanie terminów...</value>
   </data>
@@ -1073,9 +1076,6 @@
   <data name="Total" xml:space="preserve">
     <value>Łącznie</value>
   </data>
-  <data name="Login_AnErrorOccurred" xml:space="preserve">
-    <value>Wystąpił błąd:</value>
-  </data>
   <data name="Select_Device" xml:space="preserve">
     <value>Wybierz urządzenie</value>
   </data>
@@ -1090,5 +1090,8 @@
   </data>
   <data name="OpenActivity" xml:space="preserve">
     <value>Otwórz aktywność</value>
+  </data>
+  <data name="Login_AnErrorOccurred" xml:space="preserve">
+    <value>Wystąpił błąd:</value>
   </data>
 </root>

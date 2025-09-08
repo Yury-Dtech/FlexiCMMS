@@ -193,6 +193,18 @@
                     </SlotTemplate>
                 </SchedulerWeekView>
                 <SchedulerMultiDayView NumberOfDays="@(CalculateNumberOfDays(numberOfWorkDays ?? 10))" StartTime="@DayStart" EndTime="@DayEnd">
+                    <DateHeaderTemplate>
+                        <div>
+                            @if(context.DayOfWeek == DayOfWeek.Saturday || context.DayOfWeek == DayOfWeek.Sunday)
+                            {
+                                @context.ToString("ddd")
+                            }
+                            else
+                            {
+                                @context.ToString("dd.MM")
+                            }
+                        </div>
+                    </DateHeaderTemplate>
                     <ItemTemplate>
                         <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
