@@ -116,6 +116,18 @@
                     <TelerikNumericTextBox @bind-Value="@weekSlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
                 </div>
             }
+            else if (CurrentView == SchedulerView.MultiDay)
+            {
+                <div class="timeline-options">
+                    <label>@Localizer["Scheduler_NumberOfWorkDays"]</label>
+                    <TelerikButtonGroup Class="telerikButtonGroup">
+                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(5))" Selected="@(numberOfWorkDays == 5)">5 </ButtonGroupToggleButton>
+                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(7))" Selected="@(numberOfWorkDays == 7)">7 </ButtonGroupToggleButton>
+                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(10))" Selected="@(numberOfWorkDays == 10)">10 </ButtonGroupToggleButton>
+                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(14))" Selected="@(numberOfWorkDays == 14)">14 </ButtonGroupToggleButton>
+                    </TelerikButtonGroup>
+                </div>
+            }
             else
             {
                 <div></div>
@@ -180,6 +192,20 @@
                         }
                     </SlotTemplate>
                 </SchedulerWeekView>
+                <SchedulerMultiDayView NumberOfDays="@(CalculateNumberOfDays(numberOfWorkDays ?? 10))" StartTime="@DayStart" EndTime="@DayEnd">
+                    <ItemTemplate>
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
+                            <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
+                        </div>
+                    </ItemTemplate>
+                    <SlotTemplate>
+                        @{
+                            SchedulerSlotTemplateContext slot = context as SchedulerSlotTemplateContext;
+                            <div class="context-menu-area" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromEmptySlot(e, slot))">
+                            </div>
+                        }
+                    </SlotTemplate>
+                </SchedulerMultiDayView>
             </SchedulerViews>
         </TelerikScheduler>
 
@@ -303,6 +329,7 @@
     private int? weekSlotDuration = 60; //minutes for Week view
     private int? weekSlotDivisions = 1;
     private int? numberOfDays = 5; //for TimelineView alt=3
+    private int? numberOfWorkDays = 10; // for MultiDayView
     private string selectedTimelineOption = "5";
     private bool showCustomTimelineInputs = false;
     private List<Resource> statuses = new List<Resource>();
@@ -316,6 +343,24 @@
     private bool UserSelectionOpen = false;
     private bool DepartmentSelectionOpen = false;
     #endregion 
+
+    private int CalculateNumberOfDays(int desiredWorkDays)
+    {
+        int totalDays = 0;
+        int workDaysCount = 0;
+        DateTime currentDate = SchedulerDate; // Start from the current scheduler date
+
+        while (workDaysCount < desiredWorkDays)
+        {
+            if (currentDate.DayOfWeek != DayOfWeek.Saturday && currentDate.DayOfWeek != DayOfWeek.Sunday)
+            {
+                workDaysCount++;
+            }
+            totalDays++;
+            currentDate = currentDate.AddDays(1);
+        }
+        return totalDays;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -725,7 +770,7 @@
 
     private void OnSchedulerCellRender(SchedulerCellRenderEventArgs args)
     {
-        if (CurrentView != SchedulerView.Day)
+        if (CurrentView == SchedulerView.Week)
         {
             args.Class = "month-view-slot";
             if (args.Start.Date == DateTime.Today)
@@ -735,6 +780,13 @@
             else if (!args.IsAllDay && args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
             {
                 args.Class += " weekend-day";
+            }
+        }
+        else if (CurrentView == SchedulerView.MultiDay) // Add this block for MultiDayView
+        {
+            if (args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
+            {
+                args.Class += " weekend-day-multiday"; // Custom class for weekend days in MultiDayView
             }
         }
     }
@@ -999,6 +1051,14 @@
     private bool isWOinTimeSlot(WorkOrder wo, DateTime slotStart, DateTime slotEnd)
     {        
         return (wo.StartDate <= slotEnd && wo.EndDate >= slotStart);
+    }
+
+    private async Task OnMultiDayOptionChanged(int days)
+    {
+        numberOfWorkDays = days;
+        await InvokeAsync(StateHasChanged);
+        SchedulerRef?.Rebind();
+        _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
 
     private List<Resource> GetStatuses(List<WorkOrder> orders)

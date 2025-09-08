@@ -1,4 +1,4 @@
-﻿::deep .month-view-slot {
+::deep .month-view-slot {
     height: 150px;
     /* Use flexbox to control alignment */
     display: flex;
@@ -17,8 +17,12 @@
     background-color: #b4b4b4 !important;
 }
 
-::deep .k-nonwork-hour {
+/*::deep .k-nonwork-hour {
     background-color: #b4b4b4 !important;
+}*/
+
+::deep .weekend-day-multiday {
+    background-color: #e0e0e0 !important; /* Lighter background for weekend days in MultiDayView */
 }
 
 /* Target the day number link */
