@@ -1,3 +1,8 @@
+## 2025-09-08
+
+### Fixed
+- Fixed drag-and-drop functionality for calendar entries by refactoring the `ActivityAppointment` class.
+
 ## 2025-09-05
 
 ### Features

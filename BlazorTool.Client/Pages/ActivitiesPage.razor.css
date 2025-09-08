@@ -10,11 +10,15 @@
 }
 
 ::deep .current-day {
-    background-color: rgba(66, 135, 245, 0.2);
+    background-color: #fbf1b7;
 }
 
 ::deep .weekend-day {
-    background-color: #bbc4c8;
+    background-color: #b4b4b4 !important;
+}
+
+::deep .k-nonwork-hour {
+    background-color: #b4b4b4 !important;
 }
 
 /* Target the day number link */

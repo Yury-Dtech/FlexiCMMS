@@ -1,3 +1,8 @@
+## 2025-09-08
+
+### Naprawiono
+- Naprawiono funkcjonalność przeciągania i upuszczania wpisów w kalendarzu poprzez refaktoryzację klasy `ActivityAppointment`.
+
 ## 2025-09-05
 
 ### Funkcje

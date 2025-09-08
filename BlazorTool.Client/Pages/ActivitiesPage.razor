@@ -230,7 +230,7 @@
         </WindowContent>
     </TelerikWindow>
 
-    <TelerikWindow @bind-Visible="ShowActivityCard" Modal="true" Width="500px" CloseOnOverlayClick="true">
+    <TelerikWindow @bind-Visible="ShowActivityCard" Modal="true"  CloseOnOverlayClick="true">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_Action"]</strong>
         </WindowTitle>
@@ -732,10 +732,10 @@
             {
                 args.Class += " current-day";
             }
-            // else if (args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
-            // {
-            //     args.Class += " weekend-day";
-            // }
+            else if (!args.IsAllDay && args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
+            {
+                args.Class += " weekend-day";
+            }
         }
     }
     #endregion
