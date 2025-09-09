@@ -2,6 +2,7 @@ using BlazorTool.Client.Models;
 using Newtonsoft.Json;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using Telerik.SvgIcons;
 using Activity = BlazorTool.Client.Models.Activity;
 
 namespace BlazorTool.Client.Services
@@ -166,6 +167,31 @@ namespace BlazorTool.Client.Services
             {
                 Console.WriteLine($"ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
                 return new SingleResponse<AddToActivityResponse> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
+            }
+        }
+
+        public async Task<SingleResponse<bool>> UpdateActivity(UpdateActivity activity)
+        {
+            var url = "activity/update";
+            try
+            {
+                var response = await _http.PutAsJsonAsync(url, activity);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadFromJsonAsync<SingleResponse<bool>>();
+                    return content ?? new SingleResponse<bool> { IsValid = false, Errors = new List<string> { "Failed to parse server response." } };
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"ApiServiceClient: Failed to update activity. Status: {response.StatusCode}, Details: {errorContent}");
+                    return new SingleResponse<bool> { IsValid = false, Errors = new List<string> { $"Server error: {errorContent}" } };
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ApiServiceClient: Unexpected error during PUT to {url}: {ex.Message}");
+                return new SingleResponse<bool> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
         #endregion

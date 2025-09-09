@@ -33,5 +33,5 @@ namespace BlazorTool.Client.Models
 
         [JsonProperty("cost")]
         public decimal? Cost { get; set; } = 0;
-    }
+    }    
 }

@@ -36,33 +36,30 @@ namespace BlazorTool.Client.Services
             if (machineIDs != null)
                 foreach (var id in machineIDs)
                     qp.Add($"MachineIDs={id}");
-            Console.WriteLine($" ====    name:{name} MachineIDs.count={machineIDs?.Count()}");
+            _logger.LogDebug(" ====    name:{Name} MachineIDs.count={MachineIDsCount}", name, machineIDs?.Count());
             var url = "device/getlist" + (qp.Count > 0 ? "?" + string.Join("&", qp) : "");
             try
             {
                 var response = await _http.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"\n[{_userState.UserName}] = = = = = = Devices response error: " + response.ReasonPhrase + "\n");
-                    Debug.WriteLine($"\n[{_userState.UserName}] = = = = = Devices response error: " + response.ReasonPhrase + "\n");
+                    _logger.LogError("[{UserName}] Devices response error: {ReasonPhrase}", _userState.UserName, response.ReasonPhrase);
                     return new List<Device>();
                 }
                 var wrapper = await response.Content.ReadFromJsonAsync<ApiResponse<Device>>();
 
-                Console.WriteLine($"\n[{_userState.UserName}] = = = = = = response Devices: " + wrapper?.Data.Count.ToString() + "\n");
-                Debug.WriteLine($"\n[{_userState.UserName}] = = = = = response Devices: " + wrapper?.Data.Count.ToString() + "\n");
+                _logger.LogDebug("[{UserName}] response Devices: {Count}", _userState.UserName, wrapper?.Data.Count);
                 return wrapper?.Data ?? new List<Device>();
             }
             catch (HttpRequestException ex)
             {
                 //await _userState.ClearAsync();
-                Console.WriteLine($"ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: HTTP Request error during GET to {Url}: {Message}", url, ex.Message);
                 return new List<Device>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: Unexpected error during GET to {Url}: {Message}", url, ex.Message);
                 return new List<Device>();
             }
         }
@@ -86,20 +83,18 @@ namespace BlazorTool.Client.Services
 
             try
             {
-                var wrapper = await _http.GetFromJsonAsync<ApiResponse<DeviceDetailProperty>>(url);
-                Console.WriteLine($"[{_userState.UserName}] = = = = = = = API response-> DeviceDetailProperty.Count: " + wrapper?.Data.Count.ToString());
+                                var wrapper = await _http.GetFromJsonAsync<ApiResponse<DeviceDetailProperty>>(url);
+                _logger.LogDebug("[{UserName}] API response-> DeviceDetailProperty.Count: {Count}", _userState.UserName, wrapper?.Data.Count);
                 return wrapper ?? new ApiResponse<DeviceDetailProperty> { IsValid = false, Errors = new List<string> { "Empty response from API." } };
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: HTTP Request error during GET to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return new ApiResponse<DeviceDetailProperty> { IsValid = false, Errors = new List<string> { $"Network error: {ex.Message}" } };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: Unexpected error during GET to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return new ApiResponse<DeviceDetailProperty> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
@@ -119,19 +114,17 @@ namespace BlazorTool.Client.Services
             try
             {
                 var wrapper = await _http.GetFromJsonAsync<ApiResponse<DeviceState>>(url);
-                Console.WriteLine($"[{_userState.UserName}] = = = = = = = API response-> DeviceState.Count: " + wrapper?.Data.Count.ToString());
+                _logger.LogDebug("[{UserName}] API response-> DeviceState.Count: {Count}", _userState.UserName, wrapper?.Data.Count);
                 return wrapper ?? new ApiResponse<DeviceState> { IsValid = false, Errors = new List<string> { "Empty response from API." } };
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: HTTP Request error during GET to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return new ApiResponse<DeviceState> { IsValid = false, Errors = new List<string> { $"Network error: {ex.Message}" } };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: Unexpected error during GET to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return new ApiResponse<DeviceState> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
@@ -145,8 +138,7 @@ namespace BlazorTool.Client.Services
 
             if (_deviceStatusCache.TryGetValue(lang, out var cachedResponse))
             {
-                Console.WriteLine($"[{_userState.UserName}] Device status for lang {lang} found in cache.");
-                Debug.WriteLine($"[{_userState.UserName}] Device status for lang {lang} found in cache.");
+                _logger.LogDebug("[{UserName}] Device status for lang {Lang} found in cache.", _userState.UserName, lang);
                 return cachedResponse;
             }
 
@@ -155,17 +147,17 @@ namespace BlazorTool.Client.Services
             try
             {
                 var wrapper = await _http.GetFromJsonAsync<ApiResponse<DeviceStatus>>(url);
-                Console.WriteLine($"[{_userState.UserName}] = = = = = = = API response-> DeviceStatus.Count: " + wrapper?.Data.Count.ToString());
+                _logger.LogDebug("[{UserName}] API response-> DeviceStatus.Count: {Count}", _userState.UserName, wrapper?.Data.Count);
                 if (wrapper != null && wrapper.IsValid)
                 {
                     _deviceStatusCache[lang] = wrapper;
+                    _logger.LogInformation("Caching device status for lang {Lang}. Count: {Count}", lang, wrapper.Data.Count);
                 }
                 return wrapper ?? new ApiResponse<DeviceStatus> { IsValid = false, Errors = new List<string> { "Empty response from API." } };
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: HTTP Request error during GET to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return new ApiResponse<DeviceStatus> { IsValid = false, Errors = new List<string> { $"Network error: {ex.Message}" } };
             }
             catch (Exception ex)

@@ -207,7 +207,7 @@
                     </DateHeaderTemplate>
                     <ItemTemplate>
                         <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
-                            <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
+                            <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Week" />
                         </div>
                     </ItemTemplate>
                     <SlotTemplate>
@@ -642,9 +642,51 @@
                 isOrderCardOpen = false;
                 DisplayAppointments();
             }
-            else
-            {
-                await apiService.GetActDictionaries(1);
+            else //update activity
+            { //TODO: check permissions for activity edit
+                var ids = editedAppointment.ActPersons.Split('#').Where(id => int.TryParse(id, out _)).Select(int.Parse).ToList();
+                if (ids.Count == 0 || !ids.Contains(UserState.PersonID ?? -1))
+                {
+                    popupMessage = Localizer["NotYourActivity"];
+                    PopupRef?.Show();
+                    return;
+                }
+
+                var categoryId = (await apiService.GetActCategories()).FirstOrDefault(c => c.Name == editedAppointment.ActCategory)?.Id;
+                if (categoryId == null)
+                {
+                    popupMessage = Localizer["Activity_Category_NotFound"];
+                    PopupRef?.Show();
+                    return;
+                }
+                UpdateActivity updActivity = new UpdateActivity
+                    {
+                        ActivityID = editedAppointment.ActivityID,
+                        PersonID = UserState.PersonID ?? -1,
+                        CategoryID = categoryId ?? 0,
+                        Description = editedAppointment.Description,
+                        Cost = editedAppointment.Cost,
+                        ActDate = editedAppointment.Start ?? DateTime.Now,
+                        WorkLoad = editedAppointment.GetWorkLoadHours(),
+                    };
+                var result = await apiService.UpdateActivity(updActivity);
+                if (result.Data)
+                {
+                    var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && !a.IsWorkOrder);
+                    if (index != -1)
+                    {
+                        _allAppointments[index] = editedAppointment;
+                    }
+                    DisplayAppointments();//TODO refresh view acts
+                    SchedulerRef?.Rebind();
+                }
+                else
+                {
+                    popupMessage = Localizer["Scheduler_FailedToUpdateAppointment"] + string.Join(", ", result.Errors);
+                    PopupRef?.Show();
+                    Console.WriteLine($"Failed to update appointment: {string.Join(", ", result.Errors)}");
+                    return; // Exit if update failed
+                }
             }
         }
     }

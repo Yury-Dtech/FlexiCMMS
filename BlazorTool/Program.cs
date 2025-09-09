@@ -64,7 +64,8 @@ builder.Services.AddHttpClient("InternalApiClient", client =>
 
 builder.Services.AddScoped<ApiServiceClient>(sp =>
     new ApiServiceClient(sp.GetRequiredService<IHttpClientFactory>().CreateClient("InternalApiClient"),
-    sp.GetRequiredService<UserState>()));
+    sp.GetRequiredService<UserState>(),
+    sp.GetRequiredService<ILogger<ApiServiceClient>>()));
 
 
 builder.Services.AddRazorComponents()

@@ -1159,6 +1159,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Login error:.
+        /// </summary>
+        public static string Login_AnErrorOccurred {
+            get {
+                return ResourceManager.GetString("Login_AnErrorOccurred", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking....
         /// </summary>
         public static string Login_Checking {
@@ -1407,6 +1416,24 @@ namespace BlazorTool.Client.Resources {
         public static string NoData {
             get {
                 return ResourceManager.GetString("NoData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No permission to edit activity.
+        /// </summary>
+        public static string NoPermissionToEditActivity {
+            get {
+                return ResourceManager.GetString("NoPermissionToEditActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You not in list of axtivity workers.
+        /// </summary>
+        public static string NotYourActivity {
+            get {
+                return ResourceManager.GetString("NotYourActivity", resourceCulture);
             }
         }
         

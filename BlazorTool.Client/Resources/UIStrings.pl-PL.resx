@@ -1094,4 +1094,10 @@
   <data name="Login_AnErrorOccurred" xml:space="preserve">
     <value>Wystąpił błąd:</value>
   </data>
+  <data name="NoPermissionToEditActivity" xml:space="preserve">
+    <value>Brak uprawnień do edycji aktywności.</value>
+  </data>
+  <data name="NotYourActivity" xml:space="preserve">
+    <value>Nie jesteś na liście pracowników aktywności.</value>
+  </data>
 </root>

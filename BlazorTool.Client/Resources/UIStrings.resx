@@ -1101,4 +1101,13 @@
   <data name="OpenActivity" xml:space="preserve">
     <value>Open activity</value>
   </data>
+  <data name="Login_AnErrorOccurred" xml:space="preserve">
+    <value>Login error:</value>
+  </data>
+  <data name="NoPermissionToEditActivity" xml:space="preserve">
+    <value>No permission to edit activity</value>
+  </data>
+  <data name="NotYourActivity" xml:space="preserve">
+    <value>You not in list of axtivity workers</value>
+  </data>
 </root>

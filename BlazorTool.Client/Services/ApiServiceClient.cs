@@ -1,6 +1,7 @@
 ﻿using BlazorTool.Client.Models;
 using System.Diagnostics;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 
 namespace BlazorTool.Client.Services
 
@@ -23,10 +24,12 @@ namespace BlazorTool.Client.Services
 
         // Cache for work orders retrieved with person filter
         private Dictionary<int, List<WorkOrder>> _workOrdersWithPersonCache = new Dictionary<int, List<WorkOrder>>();
-        public ApiServiceClient(HttpClient http, UserState userState)
+        private readonly ILogger<ApiServiceClient> _logger;
+        public ApiServiceClient(HttpClient http, UserState userState, ILogger<ApiServiceClient> logger)
         {
             _http = http;
-            _userState = userState;            
+            _userState = userState;
+            _logger = logger;
         }
 
         #region other functions
@@ -63,28 +66,24 @@ namespace BlazorTool.Client.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var successMessage = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check successful: {successMessage}");
-                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check successful: {successMessage}");
+                    _logger.LogInformation("[{UserName}] ApiServiceClient: SMB credentials check successful: {Message}", _userState.UserName, successMessage);
                     return (true, successMessage);
                 }
                 else
                 {
                     var errorMessage = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check failed. Status: {response.StatusCode}, Details: {errorMessage}");
-                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: SMB credentials check failed. Status: {response.StatusCode}, Details: {errorMessage}");
+                    _logger.LogError("[{UserName}] ApiServiceClient: SMB credentials check failed. Status: {StatusCode}, Details: {ErrorMessage}", _userState.UserName, response.StatusCode, errorMessage);
                     return (false, errorMessage);
                 }
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: HTTP Request error during POST to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return (false, $"Network error: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "[{UserName}] ApiServiceClient: Unexpected error during POST to {Url}: {Message}", _userState.UserName, url, ex.Message);
                 return (false, $"An unexpected error occurred: {ex.Message}");
             }
         }
@@ -100,12 +99,12 @@ namespace BlazorTool.Client.Services
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: HTTP Request error during POST to {Url}: {Message}", url, ex.Message);
                 return new ApiResponse<TResponse> { IsValid = false, Message = $"Network error: {ex.Message}" };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: Unexpected error during POST to {Url}: {Message}", url, ex.Message);
                 return new ApiResponse<TResponse> { IsValid = false, Message = $"An unexpected error occurred: {ex.Message}" };
             }
         }
@@ -123,12 +122,12 @@ namespace BlazorTool.Client.Services
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: HTTP Request error during POST to {Url}: {Message}", url, ex.Message);
                 return new SingleResponse<TResponse> { IsValid = false, Errors = errors ?? new List<string> { $"Network error: {ex.Message}" } };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: Unexpected error during POST to {Url}: {Message}", url, ex.Message);
                 return new SingleResponse<TResponse> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
@@ -172,12 +171,12 @@ namespace BlazorTool.Client.Services
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"ApiServiceClient: HTTP Request error during PUT to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: HTTP Request error during PUT to {Url}: {Message}", url, ex.Message);
                 return new SingleResponse<TResponse> { IsValid = false, Errors = new List<string> { $"Network error: {ex.Message}" } };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ApiServiceClient: Unexpected error during PUT to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: Unexpected error during PUT to {Url}: {Message}", url, ex.Message);
                 return new SingleResponse<TResponse> { IsValid = false, Errors = new List<string> { $"An unexpected error occurred: {ex.Message}" } };
             }
         }
@@ -194,7 +193,7 @@ namespace BlazorTool.Client.Services
                 var response = await _http.PostAsync(url, content);
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine("\n= = = = = = = = = CheckApiAddress error: " + response.ReasonPhrase + "\n");
+                    _logger.LogError("CheckApiAddress error: {ReasonPhrase}", response.ReasonPhrase);
                     return (false, "API address is invalid. " + response.ReasonPhrase);
                 }
                 var wrapper = await response.Content.ReadFromJsonAsync<SimpleResponse>();
@@ -202,12 +201,12 @@ namespace BlazorTool.Client.Services
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"ApiServiceClient: HTTP Request error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: HTTP Request error during POST to {Url}: {Message}", url, ex.Message);
                 return (false, $"Network error: {ex.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ApiServiceClient: Unexpected error during POST to {url}: {ex.Message}");
+                _logger.LogError(ex, "ApiServiceClient: Unexpected error during POST to {Url}: {Message}", url, ex.Message);
                 return (false, $"An unexpected error occurred: {ex.Message}");
             }
         }

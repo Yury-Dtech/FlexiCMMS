@@ -144,5 +144,37 @@ namespace BlazorTool.Controllers
                 });
             }
         }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] UpdateActivity activity)
+        {
+            if (activity == null)
+            {
+                return BadRequest("Activity data is null.");
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient("ExternalApiBearerAuthClient");
+                var jsonContent = JsonConvert.SerializeObject(activity);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var response = await client.PutAsync("act/update", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    return Ok(responseBody);
+                }
+                else
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    return StatusCode((int)response.StatusCode, errorBody);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { errors = new[] { ex.Message } });
+            }
+        }
     }
 }

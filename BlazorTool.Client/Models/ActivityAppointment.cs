@@ -30,6 +30,10 @@ namespace BlazorTool.Client.Models
             IsWorkOrder = false;
             SetCalculatedFields();
         }
+        public decimal GetWorkLoadHours()
+        {
+            return (decimal)(End?.Subtract(Start ?? DateTime.Now).TotalHours ?? 0);
+        }
 
         public WorkOrder GetWorkOrder()
         {

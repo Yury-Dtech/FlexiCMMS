@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Logging;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -53,7 +54,8 @@ builder.Services.AddHttpClient("ServerApi", client =>
 
 builder.Services.AddScoped<ApiServiceClient>(sp =>
     new ApiServiceClient(sp.GetRequiredService<IHttpClientFactory>().CreateClient("ServerApi"), 
-    sp.GetRequiredService<UserState>()));
+    sp.GetRequiredService<UserState>(),
+    sp.GetRequiredService<ILogger<ApiServiceClient>>()));
 
 builder.Services.AddScoped<AppointmentService>();
 

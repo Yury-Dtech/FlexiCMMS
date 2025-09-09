@@ -78,7 +78,7 @@ namespace BlazorTool.Client.Services
 
         public async Task<bool> SaveIdentityDataToCacheAsync(IdentityData identityData)
         {//TODO: make function identityData <==> UserStat
-            _logger.LogInformation("DEBUG: SaveIdentityDataAsync started. LangCode from data: {LangCode}", identityData.LangCode);
+            _logger.LogDebug("DEBUG: SaveIdentityDataAsync started. LangCode from data: {LangCode}", identityData.LangCode);
             UserName = identityData.Name;
             Token = identityData.Token;
             PersonID = identityData.PersonID;
@@ -95,8 +95,12 @@ namespace BlazorTool.Client.Services
             bool isForceReload = identityData.LangCode != CultureInfo.CurrentCulture.Name;
             CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
             CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-            _logger.LogInformation("DEBUG: Culture set to {CultureName} in SaveIdentityDataAsync.", cultureInfo.Name);
+            if (isForceReload || !CultureInfo.CurrentCulture.Name.Equals(cultureInfo.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("DEBUG: Culture set to {CultureName} in SaveIdentityDataAsync.", cultureInfo.Name);
+            }
             await _localStorageService.SetItemAsStringAsync("identityData", JsonConvert.SerializeObject(identityData));
+            _logger.LogInformation("DEBUG: IdentityData saved to local storage. User: {UserName}, Lang: {LangCode}", UserName, LangCode);
             NotifyStateChanged();
             return isForceReload;
         }
@@ -155,7 +159,7 @@ namespace BlazorTool.Client.Services
 
         public async Task<bool> LoadIdentityDataFromCacheAsync()
         {
-            _logger.LogInformation("DEBUG: LoadIdentityDataAsync started.");
+            _logger.LogDebug("DEBUG: LoadIdentityDataFromCacheAsync started.");
             string? identityDataJson = await _localStorageService.GetItemAsStringAsync("identityData");
             if (!string.IsNullOrEmpty(identityDataJson))
             {
@@ -163,7 +167,7 @@ namespace BlazorTool.Client.Services
                 bool isForceReload = false;
                 if (identityData != null)
                 {
-                    _logger.LogInformation("DEBUG: Loaded LangCode from storage: {LangCode}", identityData.LangCode);
+                    _logger.LogDebug("DEBUG: Loaded LangCode from storage: {LangCode}", identityData.LangCode);
                     UserName = identityData.Name;
                     Token = identityData.Token;
                     PersonID = identityData.PersonID;
@@ -180,7 +184,10 @@ namespace BlazorTool.Client.Services
                     var cultureInfo = new CultureInfo(identityData.LangCode);
                     CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
                     CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-                    _logger.LogInformation("DEBUG: Culture set to {CultureName} in LoadIdentityDataAsync.", cultureInfo.Name);
+                    if (isForceReload || !CultureInfo.CurrentCulture.Name.Equals(cultureInfo.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogInformation("DEBUG: Culture set to {CultureName} in LoadIdentityDataFromCacheAsync.", cultureInfo.Name);
+                    }
                 }
                     return isForceReload;
             }
