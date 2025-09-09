@@ -21,6 +21,7 @@ namespace BlazorTool.Client.Services
         private Dictionary<string, ApiResponse<DeviceStatus>> _deviceStatusCache = new Dictionary<string, ApiResponse<DeviceStatus>>();
         private Dictionary<string, SingleResponse<DeviceImage>> _deviceImageCache = new Dictionary<string, SingleResponse<DeviceImage>>();
         private Dictionary<string, ApiResponse<DeviceDict>> _deviceDictCache = new Dictionary<string, ApiResponse<DeviceDict>>();
+        private List<UserInfo> _usersInfoCache = new List<UserInfo>();
 
         // Cache for work orders retrieved with person filter
         private Dictionary<int, List<WorkOrder>> _workOrdersWithPersonCache = new Dictionary<int, List<WorkOrder>>();

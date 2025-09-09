@@ -31,10 +31,10 @@
             <div style="max-width: 400px;">
                 <label>@Localizer["TakePersons"] </label>
                 <TelerikMultiSelect
-                    Data="@allPersons"
+                    Data="@allUsers"
                     @bind-Value="@selectedPersonIDs"
-                    ValueField="@nameof(Person.PersonId)"
-                    TextField="@nameof(Person.Name)"
+                    ValueField="@nameof(UserInfo.PersonID)"
+                    TextField="@nameof(UserInfo.Name)"
                     Placeholder="@Localizer["Scheduler_SelectAssignedPersons"]"
                     Filterable="true"
                     FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
@@ -303,6 +303,7 @@
 </TelerikPopup>
 
 @code {
+
     #region fields and properties
     private string ActivitiesSettingsKey = ViewSettingsService.SettingsKeys["ActivitiesPage"];
     private List<ActivityAppointment> Appointments { get; set; } = new();
@@ -325,8 +326,8 @@
     private ActivityAppointment? CurrentAppointment { get; set; } = new ActivityAppointment(); //Selected appointment for edit/view
     private NewActivityFormModel CurrentActivityFormModel = new NewActivityFormModel(); // For new activity form and Edit activity
     private List<Models.Activity> activities = new();
-    private List<Person> allPersons = new();
-    private List<Person> PersonResources { get; set; } = new();
+    private List<UserInfo> allUsers = new();
+    private List<UserInfo> PersonResources { get; set; } = new();
     private List<int> selectedPersonIDs = new();
     // private Person selectedPerson = new Person();
     private List<string> PersonsNames = new();
@@ -391,7 +392,7 @@
             RestoreCustomFilterState();
             if (!UserState.HasPermission(PermissionType.ADMIN))
             {
-                selectedDepartments = new List<string>();
+                if (selectedPersonIDs.Count == 0)
                 selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
             }
         }
@@ -421,9 +422,9 @@
             Navigation.NavigateTo("/login");
         }
         StateHasChanged();
-        allPersons = await apiService.GetAllPersons();
-        Console.WriteLine($"--- HardLoadData: allPersons loaded. Count: {allPersons.Count}");
-        PersonsNames = allPersons.Select(c => c.Name).ToList();
+        allUsers = await apiService.GetUsersInfoList();
+        Console.WriteLine($"--- HardLoadData: allUsers loaded. Count: {allUsers.Count}");
+        PersonsNames = allUsers.Select(c => c.Name).ToList();
         PersonsNames.Insert(0, Person.NotAssigned.Name);
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
@@ -456,6 +457,7 @@
         Console.WriteLine("--- LoadData started.");
         isLoading = true;
         StateHasChanged();
+        _allOrders.Clear();
         foreach(var personId in selectedPersonIDs)
         {
             var ordersForPerson = (await apiService.GetWorkOrdersWithPersonCachedAsync(personId)).Where(w => w.CloseDate == null).ToList();
@@ -487,11 +489,11 @@
         // Filtering by selectedAssignedPersons is handled in FilterAppointments().
         if (selectedPersonIDs == null || selectedPersonIDs.Count == 0) //show all persons
         {
-            PersonResources = new List<Person>(allPersons);
+            PersonResources = new List<UserInfo>(allUsers);
         }
         else
         {
-            PersonResources = allPersons.Where(p => selectedPersonIDs.Contains(p.PersonId)).ToList();
+            PersonResources = allUsers.Where(p => selectedPersonIDs.Contains(p.PersonID)).ToList();
         }
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
@@ -511,23 +513,21 @@
     #region filters
 
     private async Task OnMultiDepartmentsClosed()
-    {
+    { 
+        if (selectedDepartments == null || selectedDepartments.Count == 0) //
+        {
+            selectedPersonIDs = new() { UserState.PersonID ?? -1 };
+            SaveFilterStateToCacheAsync();
+            await HardLoadData();
+            return;
+        }
         DepartmentSelectionOpen = false;
-        return; //wait for API modification
-        // Filter appointments based on the selected department. Take Workorders for selected departments and take activities for these workorders
         var listDepIDs = apiService.GetWODepartments().Where(d => selectedDepartments.Contains(d.Name)).Select(d => d.Id).ToList();
-        // var personsInDepartments = allPersons.Where(p => p != null && selectedDepartments.Contains(p.DepartmentID)).Select(p => p.PersonId).ToList();
-        // foreach (var personId in personsInDepartments)
-        // {
-        //     var ordersForPerson = await apiService.GetWorkOrdersWithPerson(personId).Where(w=>w.CloseDate == null).ToList();
-        //     _allOrders.AddRange(ordersForPerson.Where(x=>_allOrders.All(o=>o.WorkOrderID != x.WorkOrderID)));
-        // }
-        //TODO: change selectedPersonID to List<int> selectedPersonIDs
-        activities = await apiService.GetActivitiesByWO(_allOrders);
-        _allAppointments = ConvertAppointmentsFromActivities(activities);
-        _allAppointments.AddRange(ConvertAppointmentsFromWorkOrders(_allOrders));
+        var personsInDepartments = apiService.GetUsersInfoByDepartmentIdCached(listDepIDs).Select(p => p.PersonID).ToList();
+        if (selectedPersonIDs.Count == personsInDepartments.Count && selectedPersonIDs.All(id => personsInDepartments.Contains(id))) return; //no changes
+        selectedPersonIDs = new(personsInDepartments);
         SaveFilterStateToCacheAsync();
-        DisplayAppointments();
+        await HardLoadData();
     }
 
     private async Task OnAssetNoClosed()
@@ -539,7 +539,6 @@
     private async Task OnPersonSelectChanged()
     {
         UserSelectionOpen= false;
-        // selectedPerson = allPersons.FirstOrDefault(p => p.PersonId == selectedPersonID) ?? Person.NotAssigned;
         await HardLoadData();
         SaveFilterStateToCacheAsync();
         DisplayAppointments();
