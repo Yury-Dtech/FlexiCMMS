@@ -126,6 +126,10 @@
                         <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(10))" Selected="@(numberOfWorkDays == 10)">10 </ButtonGroupToggleButton>
                         <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(14))" Selected="@(numberOfWorkDays == 14)">14 </ButtonGroupToggleButton>
                     </TelerikButtonGroup>
+                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <label>@Localizer["Scheduler_SlotDuration"]</label>
+                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
                 </div>
             }
             else
@@ -192,7 +196,7 @@
                         }
                     </SlotTemplate>
                 </SchedulerWeekView>
-                <SchedulerMultiDayView NumberOfDays="@(CalculateNumberOfDays(numberOfWorkDays ?? 10))" StartTime="@DayStart" EndTime="@DayEnd">
+                <SchedulerMultiDayView NumberOfDays="@(CalculateNumberOfDays(numberOfWorkDays ?? 10))" StartTime="@DayStart" EndTime="@DayEnd" SlotDivisions="@(multiDaySlotDivisions ?? 1)" SlotDuration="@(multiDaySlotDuration ?? 60)">
                     <DateHeaderTemplate>
                         <div>
                             @if(context.DayOfWeek == DayOfWeek.Saturday || context.DayOfWeek == DayOfWeek.Sunday)
@@ -345,6 +349,8 @@
     private int? weekSlotDivisions = 1;
     private int? numberOfDays = 5; //for TimelineView alt=3
     private int? numberOfWorkDays = 10; // for MultiDayView
+    private int? multiDaySlotDuration = 60; //minutes for MultiDay view
+    private int? multiDaySlotDivisions = 1;
     private string selectedTimelineOption = "5";
     private bool showCustomTimelineInputs = false;
     private List<Resource> statuses = new List<Resource>();
@@ -579,6 +585,8 @@
         _viewSettings.SetCustomFilter("weekSlotDuration", weekSlotDuration);
         _viewSettings.SetCustomFilter("timelineSlotDivisions", slotDivisions);
         _viewSettings.SetCustomFilter("timelineSlotDuration", slotDuration);
+        _viewSettings.SetCustomFilter("multiDaySlotDivisions", multiDaySlotDivisions);
+        _viewSettings.SetCustomFilter("multiDaySlotDuration", multiDaySlotDuration);
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);       
     }
 
@@ -596,6 +604,8 @@
         weekSlotDuration = _viewSettings.GetCustomFilter("weekSlotDuration", weekSlotDuration);
         slotDivisions = _viewSettings.GetCustomFilter("timelineSlotDivisions", slotDivisions);
         slotDuration = _viewSettings.GetCustomFilter("timelineSlotDuration", slotDuration);
+        multiDaySlotDivisions = _viewSettings.GetCustomFilter("multiDaySlotDivisions", multiDaySlotDivisions);
+        multiDaySlotDuration = _viewSettings.GetCustomFilter("multiDaySlotDuration", multiDaySlotDuration);
 
     }
     #endregion
