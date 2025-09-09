@@ -222,7 +222,9 @@ else
             StateHasChanged();
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allPersons = await apiService.GetAllPersons();
-        OrdersForGrid = await apiService.GetWorkOrdersAsync(lang: UserState.LangCode);
+
+        OrdersForGrid = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode)).OrderByDescending(o => o.WorkOrderID).ToList();
+
         devices = await apiService.GetAllDevicesAsync();
         allDepartments = apiService.GetWODepartments().Select(x=>x.Name).ToList();
         personNames = allPersons.Select(p => p.Name).ToList();
