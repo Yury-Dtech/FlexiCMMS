@@ -27,7 +27,10 @@
         <CheckSession apiService="@ApiClient" UserState="@UserState" />
         <div class="page">
             <div class="sidebar">
-                <NavMenu />
+                @if (UserState.IsAuthenticated)
+                {
+                    <NavMenu />
+                }
             </div>
 
             <main>

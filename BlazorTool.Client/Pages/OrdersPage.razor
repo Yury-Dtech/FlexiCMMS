@@ -162,6 +162,12 @@ else
     private WorkOrder? selectedWorkOrder = new WorkOrder();
     private bool IsAddActivityWindowVisible { get; set; } = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"[NAV] OrdersPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        await base.OnInitializedAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !hasInitialized)

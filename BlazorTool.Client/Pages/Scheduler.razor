@@ -158,25 +158,27 @@
         Console.WriteLine("--- HardLoadData started.");
         isLoading = true;
         StateHasChanged();
-        allPersons = await apiService.GetAllPersons();
+        if (!UserState.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+        // Используем кеш, если он есть
+        allPersons = apiService.GetAllPersonsCached();
+        if (allPersons == null || allPersons.Count == 0)
+            allPersons = await apiService.GetAllPersons();
         Console.WriteLine($"--- HardLoadData: allPersons loaded. Count: {allPersons.Count}");
         PersonsNames = allPersons.Select(c => c.Name).ToList();
         PersonsNames.Insert(0, Person.NotAssigned.Name);
         _allOrders = await apiService.GetWorkOrdersAsync(); //from API, not cache
         cellStyles = RenderStatesStyle(_allOrders);
         ApptService.ClearAppointments(); //clear cache
-        if (!UserState.IsAuthenticated)
-        {
-            Navigation.NavigateTo("/login");
-        }
-
         await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         WOCategories = apiService.GetWOCategories().Select(c => c.Name).ToList();
         WOStates = apiService.GetWOStates().Select(c => c.Name).ToList();
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
         await LoadData();
-
         Console.WriteLine($"--- HardLoadData completed. UntakenOrders count: {UntakenOrders.Count}, Appointments count: {Appointments.Count}");
     }
 

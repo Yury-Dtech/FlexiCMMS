@@ -386,6 +386,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"[NAV] ActivitiesPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
         _viewSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(ActivitiesSettingsKey);
         if (_viewSettings != null)
         {

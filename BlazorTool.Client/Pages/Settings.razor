@@ -163,6 +163,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"[NAV] Settings.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+
         if (!UserState.IsAuthenticated)
         {
             Logger.LogWarning("User is not authenticated, redirecting to login page.");

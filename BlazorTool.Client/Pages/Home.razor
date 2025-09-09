@@ -468,6 +468,16 @@
         }
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserState == null || !UserState.IsAuthenticated)
+        {
+            return;
+        }
+        Console.WriteLine($"[NAV] Home.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        await base.OnInitializedAsync();
+    }
+
     private async Task LoadGridSettings()
     {
         _assignedGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(AssignedGridSettingsKey);

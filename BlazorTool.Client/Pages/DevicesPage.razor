@@ -152,6 +152,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"[NAV] DevicesPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
         _devices = await ApiService.GetAllDevicesAsync();
         fullDeviceInfos = await ApiService.GetListDeviceInfoForGrid(_devices);
         _allStates = fullDeviceInfos?.Select(x=>x?.StateName).Distinct().ToList() ?? new List<string?>();
