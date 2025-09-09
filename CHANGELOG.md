@@ -1,5 +1,9 @@
 ## 2025-09-08
 
+### Features
+- Added MultiDay mode to the activities page.
+- Implemented methods and controllers for editing activities.
+
 ### Fixed
 - Fixed drag-and-drop functionality for calendar entries by refactoring the `ActivityAppointment` class.
 

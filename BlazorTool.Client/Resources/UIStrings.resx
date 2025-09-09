@@ -1110,4 +1110,7 @@
   <data name="NotYourActivity" xml:space="preserve">
     <value>You not in list of axtivity workers</value>
   </data>
+  <data name="EditActivity" xml:space="preserve">
+    <value>Edit activity</value>
+  </data>
 </root>

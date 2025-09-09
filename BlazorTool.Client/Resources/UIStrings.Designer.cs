@@ -1051,6 +1051,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit activity.
+        /// </summary>
+        public static string EditActivity {
+            get {
+                return ResourceManager.GetString("EditActivity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to End date.
         /// </summary>
         public static string EndDate {

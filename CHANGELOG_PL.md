@@ -1,5 +1,9 @@
 ## 2025-09-08
 
+### Funkcje
+- Dodano tryb MultiDay na stronie aktywności.
+- Zaimplementowano metody i kontrolery do edycji aktywności.
+
 ### Naprawiono
 - Naprawiono funkcjonalność przeciągania i upuszczania wpisów w kalendarzu poprzez refaktoryzację klasy `ActivityAppointment`.
 

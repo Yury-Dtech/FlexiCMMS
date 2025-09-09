@@ -43,7 +43,6 @@ namespace BlazorTool.Client.Models
             WorkOrder.WorkOrderID = WorkOrderID;
             WorkOrder.StartDate = Start;
             WorkOrder.EndDate = End;
-            WorkOrder.WODesc = Description;
             return WorkOrder;
         }
         public ActivityAppointment(Activity act, WorkOrder wo) : this(act)

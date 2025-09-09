@@ -1,1 +1,36 @@
-using System;using System.ComponentModel.DataAnnotations;using BlazorTool.Client.Resources;namespace BlazorTool.Client.Models{    public class NewActivityFormModel    {        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Device_Required")]        [Range(1, int.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Device_MustBeSelected")]        public int DeviceID { get; set; }        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "WorkOrder_Required")]        [Range(1, int.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "WorkOrder_MustBeSelected")]        public int WorkOrderID { get; set; }        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Category_Required")]        [Range(1, int.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Category_MustBeSelected")]        public int ActivityCategoryID { get; set; }        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Description_Required")]        public string Description { get; set; } = string.Empty;        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "ActDate_Required")]        public DateTime ActDate { get; set; }        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "EndDate_Required")]        [DateGreaterThan("ActDate", ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "EndDate_MustBeGreaterThanActDate")]        public DateTime EndDate { get; set; }        [Range(0, double.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Cost_Positive")]        public decimal? Cost { get; set; }        public int PersonID { get; set; }    }    public class DateGreaterThanAttribute : ValidationAttribute    {        private readonly string _comparisonProperty;        public DateGreaterThanAttribute(string comparisonProperty)        {            _comparisonProperty = comparisonProperty;        }        protected override ValidationResult IsValid(object value, ValidationContext validationContext)        {            var currentValue = (DateTime)value;            var property = validationContext.ObjectType.GetProperty(_comparisonProperty);            if (property == null)                throw new ArgumentException("Property with this name not found.");            var comparisonValue = (DateTime)property.GetValue(validationContext.ObjectInstance);            if (currentValue <= comparisonValue)            {                return new ValidationResult(ErrorMessage);            }            return ValidationResult.Success;        }    }}
+using BlazorTool.Client.Resources;
+using System.ComponentModel.DataAnnotations;
+namespace BlazorTool.Client.Models
+{
+    public class NewActivityFormModel {
+        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Device_Required")]
+        [Range(1, int.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Device_MustBeSelected")]
+        public int DeviceID { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "WorkOrder_Required")]
+        [Range(1, int.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "WorkOrder_MustBeSelected")] 
+        public int WorkOrderID { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Category_Required")]
+        [Range(1, int.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Category_MustBeSelected")] 
+        public int ActivityCategoryID { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Description_Required")] 
+        public string Description { get; set; } = string.Empty; 
+        
+        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "ActDate_Required")] 
+        public DateTime ActDate { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "EndDate_Required")]
+        [DateGreaterThan("ActDate", ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "EndDate_MustBeGreaterThanActDate")] 
+        public DateTime EndDate { get; set; }
+
+        [Range(0, double.MaxValue, ErrorMessageResourceType = typeof(UIStrings), ErrorMessageResourceName = "Cost_Positive")] 
+        public decimal? Cost { get; set; }
+
+        public int PersonID { get; set; }
+
+        public int ActivityID { get; set; } = 0;
+    }
+    public class DateGreaterThanAttribute : ValidationAttribute { private readonly string _comparisonProperty; public DateGreaterThanAttribute(string comparisonProperty) { _comparisonProperty = comparisonProperty; } protected override ValidationResult IsValid(object value, ValidationContext validationContext) { var currentValue = (DateTime)value; var property = validationContext.ObjectType.GetProperty(_comparisonProperty); if (property == null) throw new ArgumentException("Property with this name not found."); var comparisonValue = (DateTime)property.GetValue(validationContext.ObjectInstance); if (currentValue <= comparisonValue) { return new ValidationResult(ErrorMessage); } return ValidationResult.Success; } }
+}

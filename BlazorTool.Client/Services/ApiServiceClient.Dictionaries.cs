@@ -204,7 +204,25 @@ namespace BlazorTool.Client.Services
         {
             return _actDictCache;
         }
+        public List<WODict> GetActCategoriesCached()
+        {
+            if (_actDictCache == null || _actDictCache.Count == 0)
+            {
+                return new List<WODict>();
+            }
+            return (GetActDictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Category)
+                .Distinct()
+                .ToList();
+        }
 
+        public int GetActCategoryIDCached(string? name)
+        {
+            if (_actDictCache == null || _actDictCache.Count == 0)
+            {
+                return 0;
+            }
+            return (GetActDictionariesCached()).FirstOrDefault(d => d.ListType == (int)WOListTypeEnum.Category && d.Name == name)?.Id ?? 0;
+        }
         public async Task<List<WODict>> GetActCategories()
         {
             if (_actDictCache == null || _actDictCache.Count == 0)

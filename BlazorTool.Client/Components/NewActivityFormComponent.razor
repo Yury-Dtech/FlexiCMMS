@@ -135,18 +135,9 @@
 
 @code {
     [Parameter]
-    public DateTime InitialStartDate { get; set; }
-
-    [Parameter]
-    public DateTime InitialEndDate { get; set; }
-
-    [Parameter]
-    public int? WorkOrderID { get; set; }
-
-    [Parameter]
     public EventCallback<Activity?> OnActivityAdded { get; set; }
-
-    private NewActivityFormModel ActivityFormModel { get; set; } = new NewActivityFormModel();
+    [Parameter]
+    public NewActivityFormModel ActivityFormModel { get; set; } = new NewActivityFormModel();
     private List<Device> Devices { get; set; } = new List<Device>();
     private List<WorkOrder> WorkOrders { get; set; } = new List<WorkOrder>();
     private List<WODict> ActivityCategories { get; set; } = new List<WODict>();
@@ -155,21 +146,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ActivityFormModel.PersonID = UserState.PersonID ?? 0;
-        ActivityFormModel.ActDate = InitialStartDate;
-        ActivityFormModel.EndDate = InitialEndDate;
-        ActivityFormModel.Cost = 0;
-        ActivityFormModel.WorkOrderID = WorkOrderID ?? 0;
         Devices = await ApiClient.GetAllDevicesAsync();
-        // Initially load all work orders, or none, depending on desired behavior
-        // For now, let's load all work orders if no device is selected initially
         WorkOrders = await ApiClient.GetWorkOrdersCachedAsync();
         var wo = WorkOrders.FirstOrDefault(w => w.WorkOrderID == ActivityFormModel.WorkOrderID);
-        ActivityFormModel.DeviceID = Devices.FirstOrDefault(d=>d.MachineID == wo?.MachineID)?.MachineID ?? 0;
+        // ActivityFormModel.DeviceID = Devices.FirstOrDefault(d=>d.MachineID == wo?.MachineID)?.MachineID ?? 0;
         ActivityCategories = await ApiClient.GetActCategoriesByDeviceCategory(wo?.DeviceCategoryID ?? 0);
-        // If an initial device is set (e.g., from a context menu on a device-specific scheduler)
-        // you might want to pre-filter WorkOrders here.
-        // For now, categories will be loaded when a WorkOrder is selected.
     }
 
     private async Task OnDeviceChanged(object value)
@@ -191,7 +172,7 @@
 
     private void OnWorkOrderChanged(object value)
     {
-        
+
     }
 
     private void OnDateChanged(object value)
@@ -206,50 +187,68 @@
         decimal workLoad = (decimal)(ActivityFormModel.EndDate - ActivityFormModel.ActDate).TotalHours;
         if (workLoad < 0) workLoad = 0; // Ensure non-negative workload
 
-        var addActivity = new AddActivity
+        if (ActivityFormModel.ActivityID == 0) //NEW activity
         {
-            WorkOrderID = ActivityFormModel.WorkOrderID,
-            PersonID = ActivityFormModel.PersonID,
-            CategoryID = ActivityFormModel.ActivityCategoryID,
-            WorkLoad = workLoad,
-            Description = ActivityFormModel.Description,
-            Cost = ActivityFormModel.Cost,
-            ActDate = ActivityFormModel.ActDate
-        };
-
-        var response = await ApiClient.CreateActivityAsync(addActivity);
-        if (response.IsValid)
-        {
-            // Reset model for next entry
-            ActivityFormModel = new NewActivityFormModel
+            var addActivity = new AddActivity
             {
-                PersonID = UserState.PersonID ?? 0,
-                ActDate = InitialStartDate,
-                EndDate = InitialEndDate,
-                Cost = 0
+                WorkOrderID = ActivityFormModel.WorkOrderID,
+                PersonID = ActivityFormModel.PersonID,
+                CategoryID = ActivityFormModel.ActivityCategoryID,
+                WorkLoad = workLoad,
+                Description = ActivityFormModel.Description,
+                Cost = ActivityFormModel.Cost,
+                ActDate = ActivityFormModel.ActDate
             };
-            var acts = await ApiClient.GetActivitiesByWO(addActivity.WorkOrderID);
-            var newActivity = acts.FirstOrDefault(a => a.ActivityID == response.Data.ActivityID);
-            await OnActivityAdded.InvokeAsync(newActivity);
-            StateHasChanged();
+
+            var response = await ApiClient.CreateActivityAsync(addActivity);
+            if (response.IsValid)
+            {
+                // Reset model for next entry
+                var acts = await ApiClient.GetActivitiesByWO(addActivity.WorkOrderID);
+                var newActivity = acts.FirstOrDefault(a => a.ActivityID == response.Data.ActivityID);
+                await OnActivityAdded.InvokeAsync(newActivity);
+                return;
+            }
+            else
+            {
+                Console.WriteLine($"Error creating activity: {string.Join(", ", response.Errors)}");
+                ErrorMessage = $"Error creating activity: {string.Join(", ", response.Errors)}";
+                await OnActivityAdded.InvokeAsync(null);
+                return;
+            }
         }
-        else
+        else //editing existing activity
         {
-            Console.WriteLine($"Error creating activity: {string.Join(", ", response.Errors)}");
-            ErrorMessage = $"Error creating activity: {string.Join(", ", response.Errors)}";
-            await OnActivityAdded.InvokeAsync(null);
+            UpdateActivity updActivity = new UpdateActivity
+                    {
+                        ActivityID = ActivityFormModel.ActivityID,
+                        PersonID = ActivityFormModel.PersonID,
+                        CategoryID = ActivityFormModel.ActivityCategoryID,
+                        Description = ActivityFormModel.Description,                        
+                        Cost = ActivityFormModel.Cost,
+                        ActDate = ActivityFormModel.ActDate,
+                        WorkLoad = workLoad
+                    };
+                var result = await ApiClient.UpdateActivity(updActivity);
+                if (result.Data)
+                {
+                    var acts = await ApiClient.GetActivitiesByWO(ActivityFormModel.WorkOrderID);
+                    var newActivity = acts.FirstOrDefault(a => a.ActivityID == ActivityFormModel.ActivityID);
+                    await OnActivityAdded.InvokeAsync(newActivity);
+                    return;
+                }
+                else                
+                {
+                    Console.WriteLine($"Failed to change activity: {string.Join(", ", result.Errors)}");
+                    return; // Exit if update failed
+                }
         }
+        
     }
 
     private void OnCancelhandler()
     {
-        ActivityFormModel = new NewActivityFormModel
-        {
-            PersonID = UserState.PersonID ?? 0,
-            ActDate = InitialStartDate,
-            EndDate = InitialEndDate,
-            Cost = 0
-        };
+        ActivityFormModel = new NewActivityFormModel();
         ErrorMessage = string.Empty;
         OnActivityAdded.InvokeAsync(null);
     }

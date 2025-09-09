@@ -228,6 +228,7 @@
     <TelerikContextMenu TItem="ContextMenuItem" @ref="@ContextMenuRef" Data="@MenuItems" OnClick="@OnMenuItemClick" Class="custom-context-menu" />
 </div>
 
+    @* WorkOrder full edit form *@
 <TelerikWindow Modal="false" MinWidth="1200px" MaxHeight="95vh" Visible="@WOEditFormShown" ThemeColor="@ThemeConstants.Window.ThemeColor.Dark">
     <WindowTitle>@Localizer["WorkOrder_OrderNo"]@CurrentAppointment?.WorkOrderID</WindowTitle>
     <WindowActions>
@@ -243,19 +244,19 @@
     </WindowContent>
 </TelerikWindow>
 
+    @* New Activity full *@
 <TelerikWindow Modal="true" MinWidth="800px" MaxHeight="95vh" Visible="@showNewActivityForm" ThemeColor="@ThemeConstants.Window.ThemeColor.Dark">
     <WindowTitle>@Localizer["Add_New_Activity"]</WindowTitle>
     <WindowActions>
         <WindowAction Name="Close" OnClick="@CancelNewActivityForm" />
     </WindowActions>
     <WindowContent>
-        <NewActivityFormComponent InitialStartDate="@newActivityInitialStartDate"
-                                  InitialEndDate="@newActivityInitialEndDate"
-                                  OnActivityAdded="@OnNewActivityAdded"
-                                  WorkOrderID = "@CurrentAppointment?.WorkOrderID"/>
+        <NewActivityFormComponent OnActivityAdded="@OnNewActivityAdded"
+                                  ActivityFormModel="@CurrentActivityFormModel"/>
     </WindowContent>
 </TelerikWindow>
 
+    @* Add Activity compact *@
     <TelerikWindow @bind-Visible="ShowAddActivityForOrderForm" Modal="true" Width="500px">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_AddActivity"]</strong>
@@ -268,6 +269,7 @@
         </WindowContent>
     </TelerikWindow>
 
+    @* View only Activity *@
     <TelerikWindow @bind-Visible="ShowActivityCard" Modal="true"  CloseOnOverlayClick="true">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_Action"]</strong>
@@ -316,7 +318,8 @@
     private bool isOrderCardOpen = false;
     private bool ShowAddActivityForOrderForm { get; set; } = false;
     private bool ShowActivityCard { get; set; } = false;
-    private ActivityAppointment? CurrentAppointment { get; set; } = new ActivityAppointment();
+    private ActivityAppointment? CurrentAppointment { get; set; } = new ActivityAppointment(); //Selected appointment for edit/view
+    private NewActivityFormModel CurrentActivityFormModel = new NewActivityFormModel(); // For new activity form and Edit activity
     private List<Models.Activity> activities = new();
     private List<Person> allPersons = new();
     private List<Person> PersonResources { get; set; } = new();
@@ -807,7 +810,7 @@
             }          
             showNewActivityForm = true;
             StateHasChanged();        
-            
+
         }
         // if(item.WorkOrderID == 0)
         // showNewActivityForm = true;
@@ -928,7 +931,7 @@
     private SchedulerSlotTemplateContext? _clickedSlotContext;
 
     private async Task ShowContextMenuFromEmptySlot(MouseEventArgs e, SchedulerSlotTemplateContext slotContext)
-    {
+    {   //from empty slot
         _clickedSlotContext = slotContext;
         CurrentAppointment = null;
         MenuItems = new List<ContextMenuItem>();
@@ -948,16 +951,17 @@
         CurrentAppointment.WorkOrder = workOrder;
         _clickedSlotContext = null;
         MenuItems = new List<ContextMenuItem>();
-        if(appointment.IsWorkOrder)
+        if(appointment.IsWorkOrder) //FROM WorkOrder
         {
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["WorkOrder_AddActivity"], CommandName = "AddActivity", Icon = SvgIcon.Plus });
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["OpenOrder"], CommandName = "OpenOrder", Icon = SvgIcon.FolderOpen }); 
         }
-        else
+        else //FROM Activity
         {
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["OpenActivity"], CommandName = "OpenActivity", Icon = SvgIcon.FolderOpen });
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["OpenOrder"], CommandName = "OpenOrder", Icon = SvgIcon.FolderOpen });
-        }   
+            MenuItems.Add(new ContextMenuItem { Text = @Localizer["EditActivity"], CommandName = "EditActivity", Icon = SvgIcon.EditTools });
+        }
         await ContextMenuRef?.ShowAsync(e.ClientX, e.ClientY)!;
     }
 
@@ -977,6 +981,9 @@
             case "OpenActivity":
                 OpenActivity();
                 break;
+            case "EditActivity":
+                OnEditActivity();
+                break;
         }
     }
     #endregion
@@ -987,11 +994,22 @@
         {
             newActivityInitialStartDate = _clickedSlotContext.Start;
             newActivityInitialEndDate = _clickedSlotContext.End;
+            CurrentActivityFormModel = new NewActivityFormModel
+            {
+                ActDate = newActivityInitialStartDate,
+                EndDate = newActivityInitialEndDate,
+                ActivityCategoryID = apiService.GetActCategoryIDCached(CurrentAppointment?.ActCategory ?? ""),
+                Description = CurrentAppointment?.Description ?? string.Empty,
+                PersonID = UserState.PersonID ?? 0,
+                Cost = CurrentAppointment?.Cost
+            };
             //try to find WorkOrder in this slot
             var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, _clickedSlotContext.Start, _clickedSlotContext.End))?.WorkOrderID;
             if (WO_ID_InSlot != null && WO_ID_InSlot != 0)
             {
                 CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
+                CurrentActivityFormModel.WorkOrderID = WO_ID_InSlot ?? 0;
+                CurrentActivityFormModel.DeviceID = CurrentAppointment?.GetWorkOrder()?.MachineID ?? 0;                
             }            
             showNewActivityForm = true;
             StateHasChanged();
@@ -1011,6 +1029,27 @@
 
             ShowAddActivityForOrderForm = true;
         }
+    }
+    private void OnEditActivity()
+    {
+        if (CurrentAppointment == null || CurrentAppointment.IsWorkOrder) return; //clicked from activity item
+        
+        Console.WriteLine($"[{currentUser.Name}]:  Editing activity #{CurrentAppointment.ActivityID} in WO#{CurrentAppointment.WorkOrderID}" );
+        CurrentActivityFormModel = new NewActivityFormModel
+            {
+                ActDate = CurrentAppointment.Start ?? DateTime.Now,
+                EndDate = CurrentAppointment.End ?? DateTime.Now,
+                ActivityCategoryID = apiService.GetActCategoryIDCached(CurrentAppointment?.ActCategory ?? ""),
+                Description = CurrentAppointment?.Description ?? string.Empty,
+                PersonID = UserState.PersonID ?? 0,
+                Cost = CurrentAppointment?.Cost,
+                ActivityID = CurrentAppointment?.ActivityID ?? 0
+            };
+                var order = _allOrders.FirstOrDefault(a => a.WorkOrderID == CurrentAppointment?.WorkOrderID);
+                CurrentActivityFormModel.WorkOrderID = CurrentAppointment?.WorkOrderID ?? 0;
+                CurrentActivityFormModel.DeviceID = order?.MachineID ?? 0;
+            showNewActivityForm = true;
+            StateHasChanged();
     }
 
     private void OpenOrder()
@@ -1091,13 +1130,30 @@
         ShowAddActivityForOrderForm = false;
         if (newActivity != null)
         {
-            activities.Add(newActivity);
-            _allAppointments.Add(new ActivityAppointment(newActivity));
+            var index = activities.FindIndex(a => a.ActivityID == newActivity.ActivityID);
+            var newApptIndex = _allAppointments.FindIndex(a => a.ActivityID == newActivity.ActivityID && !a.IsWorkOrder);
+            if (index != -1)
+            {
+                activities[index] = newActivity;
+            }
+            else
+            {
+                activities.Add(newActivity);
+            }
+
+            if (newApptIndex != -1)
+            {
+                _allAppointments[newApptIndex] = new ActivityAppointment(newActivity);
+            }
+            else
+            {
+                _allAppointments.Add(new ActivityAppointment(newActivity));
+            }
             DisplayAppointments();
         }
         else
         {
-            //provide error message?
+            //TODO: popup provide error message?
         }
         StateHasChanged();
     }
