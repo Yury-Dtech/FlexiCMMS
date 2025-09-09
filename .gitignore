@@ -387,3 +387,5 @@ gha-creds-*.json
 
 /temp_CheckSmbCredentialsAsync.txt
 /updates.md
+/updActivities.md
+/Output-Debug.txt
