@@ -1103,4 +1103,7 @@
   <data name="EditActivity" xml:space="preserve">
     <value>Edytuj aktywność</value>
   </data>
+  <data name="SchedulerRowHeight" xml:space="preserve">
+    <value>Wysokość wiersza</value>
+  </data>
 </root>

@@ -2,7 +2,7 @@
 .scheduler-item-wrapper {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     color: #212529; /* Dark color for good contrast on light backgrounds */
-    line-height: 1.4;
+    line-height: 1.2;
     height: 100%;
     display: flex;
     flex-direction: column;

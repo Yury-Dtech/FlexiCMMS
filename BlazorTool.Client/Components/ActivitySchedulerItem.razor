@@ -24,7 +24,7 @@
                 <div class="item-body">
                     <span>@Item.GetWorkOrder().AssetNo</span>
                 </div>
-                <div class="item-description">@Item.Description</div>
+                <div class="item-description">@((MarkupString)Markdig.Markdown.ToHtml(Item.Description ?? ""))</div>
             </div>
         }
         else //activity
@@ -34,7 +34,7 @@
                 <div class="item-body">
                     <span>@Item.ActPersonsName.Replace("#",", ")</span>
                 </div>
-                <div class="item-description">@Item.Description</div>
+                <div class="item-description">@((MarkupString)Markdig.Markdown.ToHtml(Item.Description ?? ""))</div>
             </div>
         }
     }

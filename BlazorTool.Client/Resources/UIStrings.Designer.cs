@@ -2086,6 +2086,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Row height.
+        /// </summary>
+        public static string SchedulerRowHeight {
+            get {
+                return ResourceManager.GetString("SchedulerRowHeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not assigned.
         /// </summary>
         public static string SchedulerSummary_NotAssigned {

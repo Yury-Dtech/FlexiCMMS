@@ -20,6 +20,10 @@
 @inject ViewSettingsService ViewSettingsService
 
 @cellStyles
+<style>    .k-scheduler-layout-flex .k-scheduler-cell.k-side-cell:not(.k-scheduler-times-all-day) {
+    padding-block: @(rowHeight+"px") !important;
+}
+</style>
 <CheckSession apiService="@apiService" UserState="@UserState" />
 <TelerikNotification @ref="@NotificationReference" Class="MyTelerikNotification"
                      HorizontalPosition="@NotificationHorizontalPosition.Center"
@@ -43,7 +47,7 @@
                     OnClose="@OnPersonSelectChanged"
                     OnChange="@(async () => { if (!UserSelectionOpen) await OnPersonSelectChanged(); })"
                     ShowClearButton="true"
-                    Size="sm">
+                    Size="@_multiSelectSize">
                 </TelerikMultiSelect>
             </div>
             <div>
@@ -59,7 +63,7 @@
                                  Filterable="true"
                                  FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
                                  ShowClearButton="true"
-                                 Size="sm">
+                                 Size="@_multiSelectSize">
                 </TelerikMultiSelect>
             </div>
         }
@@ -72,7 +76,7 @@
                              AutoClose="false"
                              @bind-Value="@selectedDevices"
                              OnChange="@OnAssetNoClosed"
-                             Size="sm"
+                             Size="@_multiSelectSize"
                              class=@(WOEditFormShown ? "" : "popup-target")>
             </TelerikMultiSelect>
         </div>
@@ -86,34 +90,42 @@
 </div>
 <div class="scheduler-page-container">
     <div class="scheduler-container">
-        <div style="display:flex; flex-direction: row; gap:10px">
+        <div style="display:flex; flex-direction: row; gap:10px; align-items: baseline;">
             <div><p>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</p></div>
             <div><TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
             @if (CurrentView == SchedulerView.Timeline)
             {
                 <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
                     <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@slotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@slotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
                     <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@slotDuration" Width="110px" Min="15" Max="1440" Step="15" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@slotDuration" Width="100px" Min="15" Max="1440" Step="15" Size="@_numericTextBoxSize" />
                 </div>
             }
             else if (CurrentView == SchedulerView.Day)
             {
+                <div class="timeline-options">
                 <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
                     <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@daySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@daySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
                     <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@daySlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@daySlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
+                    <label>@Localizer["SchedulerRowHeight"]</label>
+                    <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
+                </div>
                 </div>
             }
             else if (CurrentView == SchedulerView.Week)
             {
+                <div class="timeline-options">
                 <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
                     <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@weekSlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@weekSlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
                     <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@weekSlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@weekSlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
+                    <label>@Localizer["SchedulerRowHeight"]</label>
+                    <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
+                </div>
                 </div>
             }
             else if (CurrentView == SchedulerView.MultiDay)
@@ -127,9 +139,11 @@
                         <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(14))" Selected="@(numberOfWorkDays == 14)">14 </ButtonGroupToggleButton>
                     </TelerikButtonGroup>
                     <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
                     <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDuration" Width="110px" Min="5" Max="1440" Step="5" Size="Small" />
+                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
+                    <label>@Localizer["SchedulerRowHeight"]</label>
+                    <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
                 </div>
             }
             else
@@ -364,6 +378,9 @@
     private DateTime newActivityInitialEndDate;
     private bool UserSelectionOpen = false;
     private bool DepartmentSelectionOpen = false;
+    private int rowHeight = 5;
+    private string _multiSelectSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Medium;
+    private string _numericTextBoxSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Small;
     #endregion 
 
     private int CalculateNumberOfDays(int desiredWorkDays)
@@ -496,7 +513,8 @@
         {
             PersonResources = allUsers.Where(p => selectedPersonIDs.Contains(p.PersonID)).ToList();
         }
-        _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
+
+        SaveFiltersState();
     }
 
     private List<ActivityAppointment> ConvertAppointmentsFromActivities(IEnumerable<Models.Activity> activities)
@@ -518,7 +536,7 @@
         if (selectedDepartments == null || selectedDepartments.Count == 0) //
         {
             selectedPersonIDs = new() { UserState.PersonID ?? -1 };
-            SaveFilterStateToCacheAsync();
+            SaveFiltersState();
             await HardLoadData();
             return;
         }
@@ -527,13 +545,13 @@
         var personsInDepartments = apiService.GetUsersInfoByDepartmentIdCached(listDepIDs).Select(p => p.PersonID).ToList();
         if (selectedPersonIDs.Count == personsInDepartments.Count && selectedPersonIDs.All(id => personsInDepartments.Contains(id))) return; //no changes
         selectedPersonIDs = new(personsInDepartments);
-        SaveFilterStateToCacheAsync();
+        SaveFiltersState();
         await HardLoadData();
     }
 
     private async Task OnAssetNoClosed()
     {
-        SaveFilterStateToCacheAsync();
+        SaveFiltersState();
         DisplayAppointments();
     }
 
@@ -541,7 +559,7 @@
     {
         UserSelectionOpen= false;
         await HardLoadData();
-        SaveFilterStateToCacheAsync();
+        SaveFiltersState();
         DisplayAppointments();
     }
 
@@ -571,7 +589,7 @@
         return filteredAppointments;
     }
 
-    private void SaveFilterStateToCacheAsync()
+    private void SaveFiltersState()
     {
         _viewSettings.SetCustomFilter("selectedPersonIDs", selectedPersonIDs);
         _viewSettings.SetCustomFilter("selectedDevices", selectedDevices);
@@ -587,6 +605,8 @@
         _viewSettings.SetCustomFilter("timelineSlotDuration", slotDuration);
         _viewSettings.SetCustomFilter("multiDaySlotDivisions", multiDaySlotDivisions);
         _viewSettings.SetCustomFilter("multiDaySlotDuration", multiDaySlotDuration);
+        _viewSettings.SetCustomFilter("rowHeight", rowHeight);
+        //timer for delay saving to Server
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);       
     }
 
@@ -606,6 +626,7 @@
         slotDuration = _viewSettings.GetCustomFilter("timelineSlotDuration", slotDuration);
         multiDaySlotDivisions = _viewSettings.GetCustomFilter("multiDaySlotDivisions", multiDaySlotDivisions);
         multiDaySlotDuration = _viewSettings.GetCustomFilter("multiDaySlotDuration", multiDaySlotDuration);
+        rowHeight = _viewSettings.GetCustomFilter("rowHeight", rowHeight);
 
     }
     #endregion
@@ -728,7 +749,7 @@
     private void OnViewChanged(SchedulerView view)
     {
         CurrentView = view;
-        SaveFilterStateToCacheAsync();
+        SaveFiltersState();
     }
     private void OnDateClick(int day)
     {
@@ -739,12 +760,12 @@
         // SelectedDate = navigateDate;
     }
 
-    private void OnClearFilters()
+    private async Task OnClearFilters()
     {
         selectedDepartments = new List<string> ();
         selectedDevices = new List<string> ();
-        selectedPersonIDs = new List<int>();
-        DisplayAppointments();
+        selectedPersonIDs = new List<int>() {UserState.PersonID ?? 0};
+        await LoadData();
     }
 
     //when order window closed
@@ -897,7 +918,6 @@
             sb.AppendLine($"    background-color: {safeName};");
             sb.AppendLine("}");
         }
-        sb.AppendLine("</style>");
 
         return new MarkupString(sb.ToString());
     }
@@ -1156,6 +1176,16 @@
         StateHasChanged();
     }
 
+    private async Task OnRowHeightChange()
+    {
+
+        SaveFiltersState();
+        // refresh view
+        var prevView = CurrentView;
+        CurrentView = SchedulerView.Day;
+        await Task.Delay(10);
+        CurrentView = prevView;
+    }
     public void FillModelForActivityFromActAppointment(ActivityAppointment appointment)
     {
         if (appointment.IsWorkOrder) return; //only for activities
@@ -1244,5 +1274,5 @@
         return $"hsl({hue}, {saturation}%, {lightness}%)";
     }
 
-
+    
 }

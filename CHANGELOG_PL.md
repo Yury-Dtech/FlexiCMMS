@@ -1,3 +1,9 @@
+## 2025-09-10
+
+###	Strona aktywności: 
+	- dodano pole zmiany wysokości wiersza
+	- ulepszono style wyświetlania tekstu wpisów
+	
 ## 2025-09-09
 ### Nowe funkcje
 - Zaimplementowano funkcję edycji aktywności, umożliwiającą użytkownikom modyfikowanie istniejących aktywności.

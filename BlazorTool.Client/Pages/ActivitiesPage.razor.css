@@ -1,4 +1,4 @@
-::deep .month-view-slot {
+﻿::deep .month-view-slot {
     height: 150px;
     /* Use flexbox to control alignment */
     display: flex;
@@ -85,6 +85,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    background-color: antiquewhite;
 }
 
 .scheduler-page-container {
@@ -120,7 +121,7 @@
 
 ::deep .compact-scheduler .k-slot-cell {
     height:auto;
-    line-height: 10px;
+/*    line-height: 10px;*/
     padding-top: 0;
     padding-bottom: 0;
 }
@@ -130,3 +131,13 @@
 .compact-scheduler .k-scheduler-times * {
     line-height: 10px;
 }
+
+/*::deep .k-scheduler-layout-flex .k-scheduler-cell {
+    padding-block: 5px !important;
+}*/
+
+::deep .k-event-actions {
+    margin-left:2px !important;
+    margin-right:2px !important;
+}
+
