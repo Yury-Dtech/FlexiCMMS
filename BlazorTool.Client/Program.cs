@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using Telerik.Blazor.Services;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.Logging;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddTelerikBlazor();
+builder.Services.AddSingleton<ITelerikStringLocalizer, CustomTelerikLocalizer>();
 builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddLocalization();
@@ -74,6 +76,10 @@ var host = builder.Build();
 
 var userState = host.Services.GetRequiredService<UserState>();
 await userState.InitializationTask;
+
+var currentCulture = new CultureInfo(userState.LangCode ?? "en-US");
+CultureInfo.DefaultThreadCurrentCulture = currentCulture;
+CultureInfo.DefaultThreadCurrentUICulture = currentCulture;
 
 await host.RunAsync();
 

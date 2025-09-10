@@ -1,3 +1,10 @@
+## 2025-09-10
+
+### Activity Page:
+- Added row height change field
+- Improved entry text display styles
+- Implemented Telerik Blazor component localization using custom resource files (`TelerikMessages.resx`, `TelerikMessages.pl-PL.resx`) and a custom `ITelerikStringLocalizer` service.
+
 ## 2025-09-09
 
 ### Features
