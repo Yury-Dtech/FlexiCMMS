@@ -24,8 +24,14 @@
 }
 
 .item-header {
-    font-weight: 600;
+    font-weight: 400;
 }
+
+.item-wo-header {
+    font-weight: 600;
+    background-color: #b5b6fc
+}
+
 
 .item-body {
     white-space: collapse;

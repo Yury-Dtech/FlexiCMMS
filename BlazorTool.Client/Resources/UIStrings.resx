@@ -529,7 +529,7 @@
   </data>
   <data name="ActivityList_HoursAbbreviation" xml:space="preserve">
     <value>h</value>
-    <comment>h</comment>
+    <comment>&#x8;</comment>
   </data>
   <data name="ActivityList_LoadingActivities" xml:space="preserve">
     <value>Loading activities...</value>

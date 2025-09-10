@@ -2,7 +2,7 @@
 @using Telerik.Blazor.Components
 @inject IStringLocalizer<Resources.UIStrings> Loc
 
-<div class="scheduler-item-wrapper view-@View.ToString().ToLower()">
+<div class="scheduler-item-wrapper view-@View.ToString().ToLower() @(Item.IsWorkOrder ? "workorder-app" : "")">
     @* @if (View == SchedulerView.Month)
     {
         <div class="scheduler-item-month">
@@ -20,7 +20,7 @@
         @if (Item.IsWorkOrder) //workorder
         {
             <div class="scheduler-workorder-details">
-                <div class="item-header">@Loc["WorkOrder_OrderNo"]@Item.WorkOrderID]</div>
+                <div class="item-wo-header">@Loc["WorkOrder_OrderNo"]@Item.WorkOrderID]</div>
                 <div class="item-body">
                     <span>@Item.GetWorkOrder().AssetNo</span>
                 </div>
