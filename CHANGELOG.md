@@ -1,3 +1,18 @@
+## 2025-09-09
+
+### Features
+- Implemented activity editing functionality, allowing users to modify existing activities.
+- Added MultiDay view to the Scheduler and Activities page, with configurable slot divisions and duration.
+- Enhanced user filtering on the Activities page by Departments.
+- Introduced an 'Edit Activity' option in the Scheduler context menu for seamless editing.
+- Added `UserInfo` model and related API methods for retrieving user information and department-based filtering.
+- Implemented `UserController` with a `GetUsersList` endpoint to fetch user data.
+
+### Fixed / Improvements
+- Refactored `NewActivityFormComponent` to support editing existing activities and improved its initialization logic.
+- Updated `ActivitiesPage.razor` to integrate user filtering, MultiDay view settings, and activity editing features.
+- Enhanced `ApiServiceClient` with `UpdateActivity` method, user info retrieval, and improved logging/caching.
+
 ## 2025-09-08
 
 ### Features

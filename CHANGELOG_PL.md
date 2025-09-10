@@ -1,3 +1,17 @@
+## 2025-09-09
+### Nowe funkcje
+- Zaimplementowano funkcję edycji aktywności, umożliwiającą użytkownikom modyfikowanie istniejących aktywności.
+- Dodano widok MultiDay do harmonogramu i strony Aktywności, z konfigurowalnymi podziałami slotów i czasem trwania.
+- Ulepszono filtrowanie użytkowników na stronie Aktywności według Działów.
+- Wprowadzono opcję "Edytuj aktywność" w menu kontekstowym harmonogramu dla płynnej edycji.
+- Dodano model `UserInfo` i powiązane metody API do pobierania informacji o użytkowniku i filtrowania opartego na działach.
+- Zaimplementowano `UserController` z punktem końcowym `GetUsersList` do pobierania danych użytkowników.
+
+### Naprawione / Ulepszenia
+- Zrefaktoryzowano `NewActivityFormComponent` w celu obsługi edycji istniejących aktywności i poprawiono logikę jego inicjalizacji.
+- Zaktualizowano `ActivitiesPage.razor` w celu integracji filtrowania użytkowników, ustawień widoku MultiDay i funkcji edycji aktywności.
+- Ulepszono `ApiServiceClient` o metodę `UpdateActivity`, pobieranie informacji o użytkowniku oraz ulepszone logowanie/buforowanie.
+
 ## 2025-09-08
 
 ### Funkcje

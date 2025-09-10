@@ -394,7 +394,7 @@
             if (!UserState.HasPermission(PermissionType.ADMIN))
             {
                 if (selectedPersonIDs.Count == 0)
-                selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
+                    selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
             }
         }
 
@@ -774,6 +774,7 @@
     }
 
 
+    //On click empty slot or appointment
     void EditHandler(SchedulerEditEventArgs args)
     {
         args.IsCancelled = true;//prevent built-in edit form from showing up
@@ -813,11 +814,10 @@
         }
         else //Activity NEW
         {
-            var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, newActivityInitialStartDate, newActivityInitialEndDate))?.WorkOrderID;
-            if (WO_ID_InSlot != null && WO_ID_InSlot != 0)
-            {
-                CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
-            }          
+            FillModelForActivityFromActAppointment(CurrentAppointment);
+            var WO_InSlot = _allAppointments.FirstOrDefault(wo => wo.IsWorkOrder && isWOinTimeSlot(wo, newActivityInitialStartDate, newActivityInitialEndDate))?.GetWorkOrder();
+            CurrentActivityFormModel.WorkOrderID = WO_InSlot?.WorkOrderID ?? 0;
+            CurrentActivityFormModel.DeviceID = WO_InSlot?.MachineID ?? 0;
             showNewActivityForm = true;
             StateHasChanged();        
 
@@ -1043,23 +1043,11 @@
     private void OnEditActivity()
     {
         if (CurrentAppointment == null || CurrentAppointment.IsWorkOrder) return; //clicked from activity item
-        
+
         Console.WriteLine($"[{currentUser.Name}]:  Editing activity #{CurrentAppointment.ActivityID} in WO#{CurrentAppointment.WorkOrderID}" );
-        CurrentActivityFormModel = new NewActivityFormModel
-            {
-                ActDate = CurrentAppointment.Start ?? DateTime.Now,
-                EndDate = CurrentAppointment.End ?? DateTime.Now,
-                ActivityCategoryID = apiService.GetActCategoryIDCached(CurrentAppointment?.ActCategory ?? ""),
-                Description = CurrentAppointment?.Description ?? string.Empty,
-                PersonID = UserState.PersonID ?? 0,
-                Cost = CurrentAppointment?.Cost,
-                ActivityID = CurrentAppointment?.ActivityID ?? 0
-            };
-                var order = _allOrders.FirstOrDefault(a => a.WorkOrderID == CurrentAppointment?.WorkOrderID);
-                CurrentActivityFormModel.WorkOrderID = CurrentAppointment?.WorkOrderID ?? 0;
-                CurrentActivityFormModel.DeviceID = order?.MachineID ?? 0;
-            showNewActivityForm = true;
-            StateHasChanged();
+        FillModelForActivityFromActAppointment(CurrentAppointment);
+        showNewActivityForm = true;
+        StateHasChanged();
     }
 
     private void OpenOrder()
@@ -1121,7 +1109,7 @@
             {
                 _allAppointments.RemoveAt(index);
             }
-                _allAppointments.Add(newAppointment);
+            _allAppointments.Add(newAppointment);
         }
         WOEditFormShown = false;
         isOrderCardOpen = false;
@@ -1168,9 +1156,32 @@
         StateHasChanged();
     }
 
+    public void FillModelForActivityFromActAppointment(ActivityAppointment appointment)
+    {
+        if (appointment.IsWorkOrder) return; //only for activities
+        CurrentActivityFormModel = new NewActivityFormModel
+        {
+            ActDate = appointment.Start ?? DateTime.Now,
+            EndDate = appointment.End ?? DateTime.Now,
+            ActivityCategoryID = apiService.GetActCategoryIDCached(appointment?.ActCategory ?? ""),
+            Description = appointment?.Description ?? string.Empty,
+            PersonID = UserState.PersonID ?? 0,
+            Cost = appointment?.Cost,
+            ActivityID = appointment?.ActivityID ?? 0
+        };
+        
+        var order = _allOrders.FirstOrDefault(a => a.WorkOrderID == appointment?.WorkOrderID);
+        CurrentActivityFormModel.WorkOrderID = appointment?.WorkOrderID ?? 0;
+        CurrentActivityFormModel.DeviceID = order?.MachineID ?? 0;
+    }
+
     private bool isWOinTimeSlot(WorkOrder wo, DateTime slotStart, DateTime slotEnd)
     {        
         return (wo.StartDate <= slotEnd && wo.EndDate >= slotStart);
+    }
+    private bool isWOinTimeSlot(ActivityAppointment ap, DateTime slotStart, DateTime slotEnd)
+    {        
+        return (ap.Start <= slotEnd && ap.End >= slotStart);
     }
 
     private async Task OnMultiDayOptionChanged(int days)
