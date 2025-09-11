@@ -10,9 +10,11 @@
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 
 <BlazorTool.Client.Components.CheckSession ApiService="@apiService" UserState="@UserState" />
-<TelerikNotification @ref="@NotificationReference" Class="MyTelerikNotification"
+
+<TelerikNotification @ref="@NotificationReference" Class="my-telerik-notification"
                      HorizontalPosition="@NotificationHorizontalPosition.Center"
-                     VerticalPosition="@NotificationVerticalPosition.Top"/>
+                     VerticalPosition="@NotificationVerticalPosition.Top" />
+
 <TelerikDialog @bind-Visible="isConfirmDialogVisible">
     <DialogTitle>@Localizer["Settings_Confirmation"]</DialogTitle>
     <DialogContent>
@@ -100,17 +102,6 @@
         </div>
     </div>
 
-    @if (!string.IsNullOrEmpty(SmbCheckStatusMessage))
-    {
-        <div class="row mb-3">
-            <div class="col-sm-8 offset-sm-4">
-                <div class="mt-2 @SmbCheckStatusClass">
-                    @SmbCheckStatusMessage
-                </div>
-            </div>
-        </div>
-    }
-
     <div class="row mb-3">
         <div class="col-sm-8 offset-sm-4">
             <div class="form-check">
@@ -154,8 +145,6 @@
     protected string? NetworkShareUsername { get; set; }
     protected string? NetworkSharePassword { get; set; }
     protected string? NetworkShareServer { get; set; }
-    protected string? SmbCheckStatusMessage { get; set; }
-    protected string? SmbCheckStatusClass { get; set; }
     public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
     private bool isConfirmDialogVisible = false;
     private string oldApiAddress = "";
@@ -351,13 +340,13 @@
 
     protected async Task CheckSmbCredentialsAsync()
     {
-        SmbCheckStatusMessage = string.Empty;
         if (string.IsNullOrWhiteSpace(NetworkShareServer) ||
             string.IsNullOrWhiteSpace(NetworkShareUsername) ||
             string.IsNullOrWhiteSpace(NetworkSharePassword))
         {
-            SmbCheckStatusMessage = "All SMB credential fields must be filled.";
-            SmbCheckStatusClass = "text-danger";
+            ShowNotification("All SMB credential fields must be filled.", NotificationTypeEnum.Warning);
+            // SmbCheckStatusMessage = "All SMB credential fields must be filled.";
+            // SmbCheckStatusClass = "text-danger";
             return;
         }
 
@@ -373,13 +362,15 @@
 
         if (isValid)
         {
-            SmbCheckStatusMessage = $"SMB Credentials valid: {message}";
-            SmbCheckStatusClass = "text-success";
+            ShowNotification(message, NotificationTypeEnum.Success);
+            // SmbCheckStatusMessage = $"SMB Credentials valid: {message}";
+            // SmbCheckStatusClass = "text-success";
         }
         else
         {
-            SmbCheckStatusMessage = $"SMB Credentials invalid: {message}";
-            SmbCheckStatusClass = "text-danger";
+            ShowNotification(message, NotificationTypeEnum.Error);
+            // SmbCheckStatusMessage = $"SMB Credentials invalid: {message}";
+            // SmbCheckStatusClass = "text-danger";
         }
     }
 
@@ -403,7 +394,7 @@
                 {
                     Text = message,
                     ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
-                    CloseAfter = 2000,
+                    CloseAfter = 3000,
                     Icon = SvgIcon.CheckCircle
                 });
                 break;

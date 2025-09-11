@@ -1117,4 +1117,13 @@
     <value>Row height</value>
     <comment>Row height</comment>
   </data>
+  <data name="ApplyChangesQuestion" xml:space="preserve">
+    <value>Apply changes ?</value>
+  </data>
+  <data name="Scheduler_ShowWorkOrders" xml:space="preserve">
+    <value>Show workorders</value>
+  </data>
+  <data name="Scheduler_ShowActivities" xml:space="preserve">
+    <value>Show activities</value>
+  </data>
 </root>

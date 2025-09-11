@@ -1112,4 +1112,10 @@
   <data name="ApplyChangesQuestion" xml:space="preserve">
     <value>Czy chcesz zastosować zmiany?</value>
   </data>
+  <data name="Scheduler_ShowWorkOrders" xml:space="preserve">
+    <value> Pokaż zlecenia</value>
+  </data>
+  <data name="Scheduler_ShowActivities" xml:space="preserve">
+    <value> Pokaż aktywności</value>
+  </data>
 </root>

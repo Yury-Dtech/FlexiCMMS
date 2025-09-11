@@ -79,7 +79,6 @@
 .view-day .item-description {
     font-size: 14px;
     white-space: normal; /* Allow description to wrap in day view */
-    overflow: auto;
 }
 
 /* --- Month View Styles --- */

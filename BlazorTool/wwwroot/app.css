@@ -237,3 +237,11 @@ h1:focus {
 .k-event .k-event-template {
     color: darkblue !important;
 }
+
+.my-telerik-notification .k-notification-container .k-notification {
+ 
+    font-size: 1.5em;
+    font-stretch:expanded;
+    text-align: center;
+    align-items: center;
+}

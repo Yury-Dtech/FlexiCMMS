@@ -376,6 +376,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apply changes ?.
+        /// </summary>
+        public static string ApplyChangesQuestion {
+            get {
+                return ResourceManager.GetString("ApplyChangesQuestion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to AssetNo:.
         /// </summary>
         public static string AppointmentEditor_AssetNo {
@@ -2059,11 +2068,29 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show activities.
+        /// </summary>
+        public static string Scheduler_ShowActivities {
+            get {
+                return ResourceManager.GetString("Scheduler_ShowActivities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to show completed orders.
         /// </summary>
         public static string Scheduler_ShowCompletedOrders {
             get {
                 return ResourceManager.GetString("Scheduler_ShowCompletedOrders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show workorders.
+        /// </summary>
+        public static string Scheduler_ShowWorkOrders {
+            get {
+                return ResourceManager.GetString("Scheduler_ShowWorkOrders", resourceCulture);
             }
         }
         
