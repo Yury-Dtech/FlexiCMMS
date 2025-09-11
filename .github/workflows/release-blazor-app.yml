@@ -14,12 +14,21 @@ jobs:
     - name: 🔁 Checkout code
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Нужно для корректного определения тега
+        fetch-depth: 0
 
     - name: ⚙️ Setup .NET 8
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
+
+    # 👇 private NuGet-source Telerik from secrets
+    - name: 🔐 Add Telerik NuGet Feed
+      run: |
+        dotnet nuget add source "${{ secrets.TELERIK_NUGET_URL }}" \
+          --name telerik \
+          --username "api-key-placeholder" \
+          --password "${{ secrets.TELERIK_API_KEY }}" \
+          --store-password-in-clear-text
 
     - name: 📦 Restore solution
       run: dotnet restore
@@ -45,14 +54,13 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: FlexiCMMS-App-linux-x64.zip
-        tag_name: ${{ github.ref_name }}  # Использует имя тега (например, v1.0.0)
+        tag_name: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
         body: |
-          ### Что нового:
-          - Исправлены баги
-          - Добавлены новые фичи
-          - Оптимизирована производительность
+          ### What's new:
+          - Fixed bugs
+          - New futures
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Встроенная переменная — не нужно создавать вручную
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
