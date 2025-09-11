@@ -316,6 +316,17 @@
 
 </TelerikPopup>
 
+<TelerikDialog @bind-Visible="@ShowConfirmUpdateDialog" Width="400px">
+    <DialogTitle>@Localizer["ConfirmUpdate"]</DialogTitle>
+    <DialogContent>
+        <p>@Localizer["ApplyChangesQuestion"]</p>
+    </DialogContent>
+    <DialogButtons>
+        <TelerikButton OnClick="@(() => OnConfirmUpdate(true))" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@Localizer["Yes"]</TelerikButton>
+        <TelerikButton OnClick="@(() => OnConfirmUpdate(false))" ThemeColor="@ThemeConstants.Button.ThemeColor.Secondary">@Localizer["No"]</TelerikButton>
+    </DialogButtons>
+</TelerikDialog>
+
 @code {
 
     #region fields and properties
@@ -381,6 +392,9 @@
     private int rowHeight = 5;
     private string _multiSelectSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Medium;
     private string _numericTextBoxSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Small;
+    private bool ShowConfirmUpdateDialog { get; set; } = false;
+    private ActivityAppointment? AppointmentToUpdate { get; set; }
+    private SchedulerUpdateEventArgs? UpdateEventArgs { get; set; }
     #endregion 
 
     private int CalculateNumberOfDays(int desiredWorkDays)
@@ -657,8 +671,41 @@
     {
         Console.WriteLine("--- OnUpdateAppointment called.");
         if (!UserState.HasPermission(PermissionType.WO_Edit)) return;
-        if (args.Item is ActivityAppointment editedAppointment)
+
+        AppointmentToUpdate = args.Item as ActivityAppointment;
+        UpdateEventArgs = args;
+        ShowConfirmUpdateDialog = true;
+    }
+
+    private async Task OnDeleteAppointment(SchedulerDeleteEventArgs args)
+    {
+
+        // if (args.Item is ActivityAppointment delAppt)
+        // {
+        //     var result = await ApptService.RemoveAppointment(delAppt);
+        //     if (!result.IsValid)
+        //     {
+        //         string errors = string.Join(Environment.NewLine, result.Errors);
+        //         popupMessage = errors ?? Localizer["Scheduler_FailedToCloseAppointment"];
+        //         PopupRef?.Show();
+        //         Console.WriteLine($"Failed to delete appointment: {string.Join(", ", result.Errors)}");
+        //         return; // Exit if deletion failed
+        //     }
+        //     //UntakenOrders.Add(result.Data);
+        //     _allAppointments.RemoveAll(a => a.AppointmentId == delAppt.AppointmentId);
+        //     await LoadData();
+        //     SchedulerRef?.Rebind();
+
+        // }
+    }
+
+    private async Task OnConfirmUpdate(bool confirmed)
+    {
+        ShowConfirmUpdateDialog = false;
+
+        if (confirmed && AppointmentToUpdate != null && UpdateEventArgs != null)
         {
+            var editedAppointment = AppointmentToUpdate;
             if (editedAppointment.IsWorkOrder)
             {
                 var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
@@ -723,28 +770,15 @@
                 }
             }
         }
-    }
+        else if (UpdateEventArgs != null)
+        {
+            // If not confirmed, revert the changes in the scheduler by rebinding
+            SchedulerRef?.Rebind();
+        }
 
-    private async Task OnDeleteAppointment(SchedulerDeleteEventArgs args)
-    {
-
-        // if (args.Item is ActivityAppointment delAppt)
-        // {
-        //     var result = await ApptService.RemoveAppointment(delAppt);
-        //     if (!result.IsValid)
-        //     {
-        //         string errors = string.Join(Environment.NewLine, result.Errors);
-        //         popupMessage = errors ?? Localizer["Scheduler_FailedToCloseAppointment"];
-        //         PopupRef?.Show();
-        //         Console.WriteLine($"Failed to delete appointment: {string.Join(", ", result.Errors)}");
-        //         return; // Exit if deletion failed
-        //     }
-        //     //UntakenOrders.Add(result.Data);
-        //     _allAppointments.RemoveAll(a => a.AppointmentId == delAppt.AppointmentId);
-        //     await LoadData();
-        //     SchedulerRef?.Rebind();
-
-        // }
+        // Clear the stored appointment and event args
+        AppointmentToUpdate = null;
+        UpdateEventArgs = null;
     }
     private void OnViewChanged(SchedulerView view)
     {

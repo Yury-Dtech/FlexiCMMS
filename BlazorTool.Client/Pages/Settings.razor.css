@@ -1,4 +1,4 @@
-﻿/* Styles for Settings.razor */
+/* Styles for Settings.razor */
 
 /* Ensure the container takes up a reasonable width and is centered. */
 /* Using existing .container class from Bootstrap, so no specific style needed here unless overriding */
@@ -94,4 +94,11 @@ h3 {
     text-align: center;
     align-items: center;
 
+}
+
+.divider {
+    border-bottom: 2px solid #ccc; /* Slightly darker gray line */
+    margin-top: 1.5rem; /* Adjust as needed */
+    margin-bottom: 1.5rem; /* Adjust as needed */
+    width: 100%;
 }

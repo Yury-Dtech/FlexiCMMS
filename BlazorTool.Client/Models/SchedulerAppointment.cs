@@ -5,7 +5,7 @@ namespace BlazorTool.Client.Models
     public class SchedulerAppointment : WorkOrder
     {
         public int AppointmentId { get => WorkOrderID; set => WorkOrderID = value; }
-        public string Title { get => AssetNo ?? string.Empty; set => AssetNo = value; }
+        public string Title { get => $"[{WorkOrderID}] {AssetNo} - {WODesc}" ?? string.Empty; set => AssetNo = value; }
         public DateTime? Start { get => StartDate; set => StartDate = value; }
         public DateTime? End { get => EndDate; set => EndDate = value; }
         public bool IsAllDay { get; set; }

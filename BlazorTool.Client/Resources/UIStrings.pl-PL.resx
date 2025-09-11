@@ -1106,4 +1106,10 @@
   <data name="SchedulerRowHeight" xml:space="preserve">
     <value>Wysokość wiersza</value>
   </data>
+  <data name="ConfirmUpdate" xml:space="preserve">
+    <value>Potwierdź aktualizację</value>
+  </data>
+  <data name="ApplyChangesQuestion" xml:space="preserve">
+    <value>Czy chcesz zastosować zmiany?</value>
+  </data>
 </root>

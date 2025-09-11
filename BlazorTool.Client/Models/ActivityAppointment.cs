@@ -70,7 +70,7 @@ namespace BlazorTool.Client.Models
 
             if (IsWorkOrder && WorkOrder != null)
             {
-                Title = $"[{WorkOrder.WorkOrderID}] {WorkOrder.AssetNo}" ?? string.Empty;
+                Title = $"[{WorkOrder.WorkOrderID}] {WorkOrder.AssetNo} - {WorkOrder.WODesc}";
             }
             else if (!string.IsNullOrEmpty(Description))
             {
