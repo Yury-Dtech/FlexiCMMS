@@ -101,6 +101,15 @@
                             } *@
                         </Template>
                     </FormItem>
+                    <FormItem>
+                        <Template>
+                            <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_EndDate"]:</label>
+                                <TelerikDateTimePicker @bind-Value="EndDate"
+                                                       Format="dd MMMM yyyy HH:mm" />
+                            </div>                           
+                        </Template>
+                    </FormItem>
             </div>
         </div>
     </FormItems>
@@ -127,6 +136,8 @@
     [Parameter]
     public DateTime? RecommendedStart { get; set; }
     [Parameter]
+    public DateTime? RecommendedEnd { get; set; }
+    [Parameter]
     public EventCallback<Activity?> OnActivityAdded { get; set; }
 
     private AddActivity ActivityModel { get; set; } = new AddActivity();
@@ -136,6 +147,21 @@
     private string minWidthLabel = "110px";
     private DateTime MaxActDate;
     private DateTime MinActDate;
+    private DateTime EndDate{ 
+        get
+        {
+            return ActivityModel.ActDate?.AddHours((double)ActivityModel.WorkLoad) ?? DateTime.Now.AddHours(1);
+        }
+        set
+        {
+            if (ActivityModel.ActDate != null)
+            {
+                var duration = value - ActivityModel.ActDate.Value;
+                ActivityModel.WorkLoad = (decimal)duration.TotalHours;
+                StateHasChanged();
+            }
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,6 +183,14 @@
         var takePersonsIDs = WO.TakePersons?.Split('#');
         bool isMyOrder = takePersonsIDs?.Any(x => x == UserState.PersonID.ToString()) ?? false;
         ActivityModel.WorkLoad = isMyOrder ? CalculateDecimalHours(WO?.PersonTakeDate ?? WO?.TakeDate) : 0.25m;
+        if (RecommendedEnd != null && RecommendedEnd >= MinActDate && RecommendedEnd <= MaxActDate)
+        {
+            EndDate = RecommendedEnd.Value;
+        }else
+        {
+            EndDate =MaxActDate;
+        }
+        
         People = ApiClient.GetAllPersonsCached(); // From cache
         Categories = await ApiClient.GetActCategoriesByDeviceCategory(WO?.DeviceCategoryID ?? 0); 
     }
