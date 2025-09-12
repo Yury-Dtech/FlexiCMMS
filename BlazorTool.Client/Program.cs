@@ -30,7 +30,7 @@ builder.Services.AddScoped<AuthHeaderHandler>(sp =>
 });
 
 
-var serverBaseUrl = builder.Configuration["InternalApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress;
+var serverBaseUrl = builder.HostEnvironment.BaseAddress;
 
 builder.Services.AddHttpClient("ServerHost", client =>
 {

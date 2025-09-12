@@ -55,7 +55,7 @@ builder.Services.AddScoped<UserState>();
 string? internalApiBaseUrl = null;
 
 internalApiBaseUrl = getLocalServerAddress(builder);
-Console.WriteLine("Internal Api BaseUrl: " + internalApiBaseUrl);
+//Console.WriteLine("Internal Api BaseUrl: " + internalApiBaseUrl);
 //internal controllers Blazor Host
 builder.Services.AddHttpClient("InternalApiClient", client =>
 {
@@ -126,8 +126,9 @@ static string getLocalServerAddress(WebApplicationBuilder builder)
     }
     else //prodaction or other environment
     {
-        internalApiBaseUrl = builder.Configuration["HostAddress"] ?? throw new InvalidOperationException("HostAddress not configured for non-development environment.");
+        internalApiBaseUrl = "http://localhost/api/v1/"; //TODO: set your production URL here
+        //internalApiBaseUrl = builder.Configuration["HostAddress"] ?? throw new InvalidOperationException("HostAddress not configured for non-development environment.");
     }
-    builder.Configuration["InternalApiBaseUrl"] = internalApiBaseUrl; // Store for later use if needed
+    //builder.Configuration["InternalApiBaseUrl"] = internalApiBaseUrl; // Store for later use if needed
     return internalApiBaseUrl;
 }
