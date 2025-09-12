@@ -93,61 +93,103 @@
 </div>
 <div class="scheduler-page-container">
     <div class="scheduler-container">
-        <div style="display:flex; flex-direction: row; gap:10px; align-items: baseline;">
-            <div><p>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</p></div>
-            <div><TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
-                <div class="timeline-options">
-                <div style="display:flex; flex-direction: row; gap:6px; align-items:center; font-stretch: condensed;">
-            @if (CurrentView == SchedulerView.Timeline)
-            {
-                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@slotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@slotDuration" Width="100px" Min="15" Max="1440" Step="15" Size="@_numericTextBoxSize" />
-            }
-            else if (CurrentView == SchedulerView.Day)
-            {
-                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@daySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@daySlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["SchedulerRowHeight"]</label>
-                    <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
-            }
-            else if (CurrentView == SchedulerView.Week)
-            {
-                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@weekSlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@weekSlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["SchedulerRowHeight"]</label>
-                    <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
-            }
-            else if (CurrentView == SchedulerView.MultiDay)
-            {
-                    <label>@Localizer["Scheduler_NumberOfWorkDays"]</label>
-                    <TelerikButtonGroup Class="telerikButtonGroup">
-                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(5))" Selected="@(numberOfWorkDays == 5)">5 </ButtonGroupToggleButton>
-                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(7))" Selected="@(numberOfWorkDays == 7)">7 </ButtonGroupToggleButton>
-                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(10))" Selected="@(numberOfWorkDays == 10)">10 </ButtonGroupToggleButton>
-                        <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(14))" Selected="@(numberOfWorkDays == 14)">14 </ButtonGroupToggleButton>
-                    </TelerikButtonGroup>
-                    <label>@Localizer["Scheduler_SlotDivisions"]</label>
-                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["Scheduler_SlotDuration"]</label>
-                    <TelerikNumericTextBox @bind-Value="@multiDaySlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
-                    <label>@Localizer["SchedulerRowHeight"]</label>
-                    <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
-            }
-            else
-            {
-                <div></div>
-            }
-            <label>@Localizer["Scheduler_ShowWorkOrders"]:</label>
-            <TelerikSwitch Size="sm" @bind-Value="@ShowWorkOrders" OnChange="@OnSwithChanged"/>
-            <label>@Localizer["Scheduler_ShowActivities"]:</label>
-            <TelerikSwitch Size="sm" @bind-Value="@ShowActivities" OnChange="@OnSwithChanged"/>
+        <div class="scheduler-toolbar">
+            <div class="toolbar-left">
+                <span>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</span>
+                <TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
             </div>
+
+            <div class="toolbar-right">
+                <TelerikButton Class="@(showSettings ? "btn btn-inset" : "")" OnClick="@(() => showSettings = !showSettings)">
+                    <TelerikSvgIcon Icon="@SvgIcon.Gear"></TelerikSvgIcon>
+                    @Localizer["Settings"]
+                </TelerikButton>
+
+                @{
+                    // Определяем класс в зависимости от состояния, чтобы плавно скрывать/показывать панель
+                    var settingsMenuClass = showSettings ? "visible" : "";
+                }
+                <div class="settings-menu-container @settingsMenuClass">
+                    @* <div class="settings-header">
+                        <h3>@Localizer["c"]</h3>
+                    </div> *@
+                    <div class="settings-content">
+                        @if (CurrentView == SchedulerView.Timeline)
+                        {
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                                <TelerikNumericTextBox @bind-Value="@slotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDuration"]</label>
+                                <TelerikNumericTextBox @bind-Value="@slotDuration" Width="100px" Min="15" Max="1440" Step="15" Size="@_numericTextBoxSize" />
+                            </div>
+                        }
+                        else if (CurrentView == SchedulerView.Day)
+                        {
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                                <TelerikNumericTextBox @bind-Value="@daySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDuration"]</label>
+                                <TelerikNumericTextBox @bind-Value="@daySlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["SchedulerRowHeight"]</label>
+                                <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                        }
+                        else if (CurrentView == SchedulerView.Week)
+                        {
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                                <TelerikNumericTextBox @bind-Value="@weekSlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDuration"]</label>
+                                <TelerikNumericTextBox @bind-Value="@weekSlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["SchedulerRowHeight"]</label>
+                                <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                        }
+                        else if (CurrentView == SchedulerView.MultiDay)
+                        {
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_NumberOfWorkDays"]</label>
+                                <TelerikButtonGroup Class="telerikButtonGroup">
+                                    <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(5))" Selected="@(numberOfWorkDays == 5)">5</ButtonGroupToggleButton>
+                                    <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(7))" Selected="@(numberOfWorkDays == 7)">7</ButtonGroupToggleButton>
+                                    <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(10))" Selected="@(numberOfWorkDays == 10)">10</ButtonGroupToggleButton>
+                                    <ButtonGroupToggleButton OnClick="@(() => OnMultiDayOptionChanged(14))" Selected="@(numberOfWorkDays == 14)">14</ButtonGroupToggleButton>
+                                </TelerikButtonGroup>
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDivisions"]</label>
+                                <TelerikNumericTextBox @bind-Value="@multiDaySlotDivisions" Width="80px" Min="1" Max="24" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["Scheduler_SlotDuration"]</label>
+                                <TelerikNumericTextBox @bind-Value="@multiDaySlotDuration" Width="100px" Min="5" Max="1440" Step="5" Size="@_numericTextBoxSize" />
+                            </div>
+                            <div class="settings-row">
+                                <label>@Localizer["SchedulerRowHeight"]</label>
+                                <TelerikNumericTextBox @bind-Value="@rowHeight" OnChange="@OnRowHeightChange" Width="80px" Min="1" Max="100" Step="1" Size="@_numericTextBoxSize" />
+                            </div>
+                        }
+
+                        <div class="settings-row">
+                            <label>@Localizer["Scheduler_ShowWorkOrders"]:</label>
+                            <TelerikSwitch Size="sm" @bind-Value="@ShowWorkOrders" OnChange="@OnSwithChanged" />
+                        </div>
+                        <div class="settings-row">
+                            <label>@Localizer["Scheduler_ShowActivities"]:</label>
+                            <TelerikSwitch Size="sm" @bind-Value="@ShowActivities" OnChange="@OnSwithChanged" />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -173,7 +215,7 @@
                           DescriptionField="@nameof(ActivityAppointment.Description)"
                           IsAllDayField="@nameof(ActivityAppointment.IsAllDay)"
                           Class="compact-scheduler"
-                          Height="100%">
+                          Height="97%">
 
             <SchedulerResources>
                 <SchedulerResource Field="WOState" Title="WOState" Data="@statuses" />
@@ -397,11 +439,12 @@
     private bool UserSelectionOpen = false;
     private bool DepartmentSelectionOpen = false;
     private int rowHeight = 5;
-    private string _multiSelectSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Medium;
+    private string _multiSelectSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Small;
     private string _numericTextBoxSize = Telerik.Blazor.ThemeConstants.NumericTextBox.Size.Small;
     private bool ShowConfirmUpdateDialog { get; set; } = false;
     private bool ShowWorkOrders { get; set; } = true;
     private bool ShowActivities { get; set; } = true;
+    private bool showSettings { get; set; } = false;
     private ActivityAppointment? AppointmentToUpdate { get; set; }
     private SchedulerUpdateEventArgs? UpdateEventArgs { get; set; }
     #endregion 

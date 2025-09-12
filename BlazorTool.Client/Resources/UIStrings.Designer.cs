@@ -2167,6 +2167,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string Settings {
+            get {
+                return ResourceManager.GetString("Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred:.
         /// </summary>
         public static string Settings_AnErrorOccurred {
@@ -2590,7 +2599,7 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cost must be a positive number..
+        ///   Looks up a localized string similar to Time must be a positive number between 0 - 24h.
         /// </summary>
         public static string Workload_Positive {
             get {

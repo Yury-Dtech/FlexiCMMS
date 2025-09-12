@@ -1,10 +1,9 @@
 ﻿::deep .month-view-slot {
     height: 150px;
-    /* Use flexbox to control alignment */
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Align children to the top-left */
-    padding: 2px; /* Reduce padding for the entire cell */
+    align-items: flex-start;
+    padding: 2px;
     padding-block: 1px !important;
     padding-inline: 3px !important;
 }
@@ -17,99 +16,164 @@
     background-color: #b4b4b4 !important;
 }
 
-/*::deep .k-nonwork-hour {
-    background-color: #b4b4b4 !important;
-}*/
-
 ::deep .weekend-day-multiday {
-    background-color: #e0e0e0 !important; /* Lighter background for weekend days in MultiDayView */
-/*    max-width: fit-content;*/
+    background-color: #e0e0e0 !important;
 }
 
-/* Target the day number link */
 ::deep .month-view-slot .k-link {
-    /* Ensure it doesn't stretch */
     flex-grow: 0;
     flex-shrink: 0;
     height: auto;
     width: auto;
-    
-    /* Add border and padding */
     padding: 0px 2px;
     border: 2px solid #e0e0e0;
     border-radius: 4px;
-    margin-bottom: 1px; /* Add some space below the date */
+    margin-bottom: 1px;
     transition: background-color 0.2s ease-out, color 0.2s ease-out, border-color 0.2s ease-out;
 }
 
-/* --- Hover Effect for Scheduler Cells --- */
 ::deep .k-slot-cell {
     transition: background-color 0.2s ease-out;
 }
 
     ::deep .k-slot-cell:hover {
         cursor: pointer;
-        background-color: rgba(0, 0, 0, 0.04); /* A subtle, light gray highlight */
+        background-color: rgba(0, 0, 0, 0.04);
     }
 
-    /* Highlight the day number span when hovering the cell */
-    ::deep .k-slot-cell:hover .k-link {
-        background-color: #e3eef4;
-        color: black;
-        border-color: #0056b3;
-    }
+        ::deep .k-slot-cell:hover .k-link {
+            background-color: #e3eef4;
+            color: black;
+            border-color: #0056b3;
+        }
 
 ::deep .k-event-actions {
     color: #ff0000;
+    margin-left: 2px !important;
+    margin-right: 2px !important;
 }
-
 
 ::deep .context-menu-area {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%; 
+    height: 100%;
 }
 
 .ClearFilters-btn {
     display: flex;
     align-items: end;
 }
-    .ClearFilters-btn button{
-       
+
+    .ClearFilters-btn button {
         border-radius: 6px;
     }
 
-.timeline-options {
+/* --- НОВЫЕ СТИЛИ ДЛЯ ПАНЕЛИ НАСТРОЕК --- */
+
+/* Контейнер для всей верхней панели */
+.scheduler-toolbar {
+    display: flex;
+    justify-content: space-between; /* Прижимает левый и правый блоки к краям */
+    align-items: center;
+    padding: 1px 0;
+    margin-bottom: 10px;
+}
+
+.toolbar-left {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background-color: antiquewhite;
+    gap: 15px; /* Расстояние между счетчиком и кнопкой */
 }
+
+.toolbar-right {
+    position: relative; /* Меню настроек будет позиционироваться относительно этого блока */
+}
+
+/* Стили для выпадающего меню настроек */
+.settings-menu-container {
+    position: absolute;
+    top: 100%; /* Расположение под кнопкой настроек */
+    right: 0;
+    margin-top: 8px; /* Отступ от кнопки до меню */
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 15px 20px;
+    z-index: 1000;
+    width: 380px;
+    /* Свойства для анимации */
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    transform-origin: top right;
+    /* Состояние по умолчанию (скрыто) */
+    transform: scale(0.95);
+    opacity: 0;
+    pointer-events: none; /* Блокировка взаимодействий в скрытом состоянии */
+}
+
+    /* Состояние, когда меню видимо */
+    .settings-menu-container.visible {
+        transform: scale(1);
+        opacity: 1;
+        pointer-events: auto; /* Включение взаимодействий */
+    }
+
+.settings-header {
+    margin-bottom: 1px;
+    padding-bottom: 1px;
+    border-bottom: 1px solid #eee;
+}
+
+    .settings-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+.settings-content {
+    display: flex;
+    flex-direction: column; /* Располагает элементы вертикально */
+    gap: 12px; /* Расстояние между рядами настроек */
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between; /* Метка слева, контрол справа */
+    align-items: center;
+    width: 100%;
+}
+
+    .settings-row label {
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+    }
+
+/* --- ОБЩИЕ СТИЛИ СТРАНИЦЫ --- */
 
 .scheduler-page-container {
     display: flex;
     width: 100%;
-    /* Using calc to subtract the height of the top bars, assuming around 150px total */
     height: calc(95vh - 120px);
     gap: 1rem;
 }
 
 .scheduler-container {
-    flex: 2; /* Takes ~66% of the space */
+    flex: 2;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Important fix for flexbox overflow */
+    min-width: 0;
 }
 
 .orders-grid-container {
-    margin-top:37px;
+    margin-top: 37px;
     padding-top: 5px;
-    flex: 1; /* Takes ~33% of the space */
+    flex: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Important fix for flexbox overflow */
+    min-width: 0;
 }
 
 .wo-background {
@@ -118,26 +182,37 @@
     box-sizing: border-box;
 }
 
-
 ::deep .compact-scheduler .k-slot-cell {
-    height:auto;
-/*    line-height: 10px;*/
+    height: auto;
     padding-top: 0;
     padding-bottom: 0;
 }
 
- 
 ::deep .compact-scheduler .k-scheduler-times,
 .compact-scheduler .k-scheduler-times * {
     line-height: 10px;
 }
 
-/*::deep .k-scheduler-layout-flex .k-scheduler-cell {
-    padding-block: 5px !important;
-}*/
-
-::deep .k-event-actions {
-    margin-left:2px !important;
-    margin-right:2px !important;
+::deep .btn-inset {
+    border-radius: 8px!important;
+    color: white!important;
+    background-color: #007bff!important;
+    cursor: pointer!important;
+    /* Внешняя тень для "приподнятого" вида */
+/*    box-shadow: 0 8px 10px rgba(0, 0, 0, 0.15)!important;*/
+    /* Плавный переход для всех свойств */
+    transition: all 0.2s ease-out!important;
 }
 
+.btn-inset:hover {
+    filter: brightness(1.1);
+}
+
+.btn-inset:active {
+    /* Убираем внешнюю тень */
+    box-shadow: none;
+    /* Добавляем внутреннюю тень */
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.25);
+    /* Можно немного уменьшить яркость для реалистичности */
+    filter: brightness(0.95);
+}
