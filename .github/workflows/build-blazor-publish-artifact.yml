@@ -1,0 +1,47 @@
+name: Publish Blazor WASM Hosted App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🔁 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: 📦 Restore solution
+      run: dotnet restore
+
+    - name: 🏗️ Build solution (Release)
+      run: dotnet build --configuration Release --no-restore
+
+    - name: 🚀 Publish Server project (включает Client автоматически)
+      # Публикуем SERVER проект — он включает в себя публикацию Client
+      run: |
+        dotnet publish ./BlazorTool/BlazorTool.csproj \
+          --configuration Release \
+          --output ./publish \
+          --runtime linux-x64 \
+          --self-contained false \
+          --no-build
+
+    - name: 🗜️ Create ZIP Archive
+      run: |
+        cd publish
+        zip -r ../BlazorApp-Hosted-linux-x64.zip .
+
+    - name: 📤 Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BlazorApp-Hosted-Publish
+        path: BlazorApp-Hosted-linux-x64.zip
+        retention-days: 5

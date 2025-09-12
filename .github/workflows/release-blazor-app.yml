@@ -1,0 +1,66 @@
+name: Release Blazor App
+
+# Запускается при создании нового тега (например, v1.0.0)
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Соответствует тегам вида v1.0.0, v2.1.3 и т.д.
+
+jobs:
+  publish-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🔁 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: ⚙️ Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    # 👇 private NuGet-source Telerik from secrets
+    - name: 🔐 Add Telerik NuGet Feed
+      run: |
+        dotnet nuget add source "${{ secrets.TELERIK_NUGET_URL }}" \
+          --name telerik \
+          --username "api-key-placeholder" \
+          --password "${{ secrets.TELERIK_API_KEY }}" \
+          --store-password-in-clear-text
+
+    - name: 📦 Restore solution
+      run: dotnet restore
+
+    - name: 🏗️ Build (Release)
+      run: dotnet build --configuration Release --no-restore
+
+    - name: 🚀 Publish Server project (Hosted Blazor WASM)
+      run: |
+        dotnet publish ./BlazorTool/BlazorTool.csproj \
+          --configuration Release \
+          --output ./publish \
+          --runtime linux-x64 \
+          --self-contained false \
+          --no-build
+
+    - name: 🗜️ Create ZIP Archive
+      run: |
+        cd publish
+        zip -r ../FlexiCMMS-App-linux-x64.zip .
+
+    - name: 🏷️ Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: FlexiCMMS-App-linux-x64.zip
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          ### What's new:
+          - Fixed bugs
+          - New futures
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
