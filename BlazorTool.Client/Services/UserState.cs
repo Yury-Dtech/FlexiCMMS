@@ -19,7 +19,7 @@ namespace BlazorTool.Client.Services
         {
             _localStorageService = localStorageService;
             _logger = logger;
-            InitializationTask = LoadIdentityDataFromCacheAsync();
+            InitializationTask = LoadUserStateFromCache();
         }
 
 
@@ -76,21 +76,10 @@ namespace BlazorTool.Client.Services
             };
         }
 
-        public async Task<bool> SaveIdentityDataToCacheAsync(IdentityData identityData)
-        {//TODO: make function identityData <==> UserStat
+        public async Task<bool> SaveIdentityDataToLocalStorage(IdentityData identityData)
+        {
             _logger.LogDebug("DEBUG: SaveIdentityDataAsync started. LangCode from data: {LangCode}", identityData.LangCode);
-            UserName = identityData.Name;
-            Token = identityData.Token;
-            PersonID = identityData.PersonID;
-            LangCode = identityData.LangCode;
-            RightMatrix = identityData.RigthMatrix;
-            RightMatrixID = identityData.RigthMatrixID;
-            DepartmentID = identityData.DepartmentID;
-            UseOriginalColors = identityData.UseOriginalColors;
-            CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
-            NetworkShareUsername = identityData.NetworkShareUsername;
-            NetworkSharePassword = identityData.NetworkSharePassword;
-            NetworkShareServer = identityData.NetworkShareServer;
+            SetUserStateFromIdentityData(identityData);
             var cultureInfo = new CultureInfo(identityData.LangCode);
             bool isForceReload = identityData.LangCode != CultureInfo.CurrentCulture.Name;
             CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -105,61 +94,15 @@ namespace BlazorTool.Client.Services
             return isForceReload;
         }
 
-        public async Task<bool> SwitchLanguage(string langCode)
+        public async Task SaveCurrentUserStateToLocalStorage()
         {
-            bool isForceReload = langCode != CultureInfo.CurrentCulture.Name;
-            LangCode = langCode;
-            await SaveToLocalStorage();
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(langCode);
-            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo(langCode);
-            OnChange?.Invoke();
-            return isForceReload;
+            IdentityData identityData = GetIdentityFromUserState();
+            await SaveIdentityDataToLocalStorage(identityData);
         }
 
-        public async Task SaveToLocalStorage()
+        public async Task<bool> LoadUserStateFromCache()
         {
-            IdentityData data = new IdentityData
-            {
-                Name = this.UserName,
-                Token = this.Token,
-                PersonID = this.PersonID ?? 0,
-                LangCode = this.LangCode,
-                RigthMatrix = this.RightMatrix,
-                RigthMatrixID = this.RightMatrixID,
-                DepartmentID = this.DepartmentID,
-                UseOriginalColors = this.UseOriginalColors,
-                NetworkShareUsername = this.NetworkShareUsername,
-                NetworkSharePassword = this.NetworkSharePassword,
-                NetworkShareServer = this.NetworkShareServer
-            };
-            await _localStorageService.SetItemAsStringAsync("identityData", JsonConvert.SerializeObject(data));
-        }
-        public async Task LoadFromIdentityData(IdentityData? identityData)
-        {
-            if (identityData != null)
-            {
-                UserName = identityData.Name;
-                Token = identityData.Token;
-                PersonID = identityData.PersonID;
-                LangCode = identityData.LangCode;
-                RightMatrix = identityData.RigthMatrix;
-                RightMatrixID = identityData.RigthMatrixID;
-                DepartmentID = identityData.DepartmentID;
-                UseOriginalColors = identityData.UseOriginalColors;
-                CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
-                NetworkShareUsername = identityData.NetworkShareUsername;
-                NetworkSharePassword = identityData.NetworkSharePassword;
-                NetworkShareServer = identityData.NetworkShareServer;
-                var cultureInfo = new CultureInfo(identityData.LangCode);
-                CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-                CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-                await SaveIdentityDataToCacheAsync(identityData);
-            }
-        }
-
-        public async Task<bool> LoadIdentityDataFromCacheAsync()
-        {
-            _logger.LogDebug("DEBUG: LoadIdentityDataFromCacheAsync started.");
+            _logger.LogDebug("DEBUG: LoadUserStateFromCacheAsync started.");
             string? identityDataJson = await _localStorageService.GetItemAsStringAsync("identityData");
             if (!string.IsNullOrEmpty(identityDataJson))
             {
@@ -168,18 +111,7 @@ namespace BlazorTool.Client.Services
                 if (identityData != null)
                 {
                     _logger.LogDebug("DEBUG: Loaded LangCode from storage: {LangCode}", identityData.LangCode);
-                    UserName = identityData.Name;
-                    Token = identityData.Token;
-                    PersonID = identityData.PersonID;
-                    LangCode = identityData.LangCode;
-                    RightMatrix = identityData.RigthMatrix;
-                    RightMatrixID = identityData.RigthMatrixID;
-                    DepartmentID = identityData.DepartmentID;
-                    UseOriginalColors = identityData.UseOriginalColors;
-                    CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
-                    NetworkShareUsername = identityData.NetworkShareUsername;
-                    NetworkSharePassword = identityData.NetworkSharePassword;
-                    NetworkShareServer = identityData.NetworkShareServer;
+                    SetUserStateFromIdentityData(identityData);
                     isForceReload = identityData.LangCode != CultureInfo.CurrentCulture.Name;
                     var cultureInfo = new CultureInfo(identityData.LangCode);
                     CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
@@ -196,6 +128,17 @@ namespace BlazorTool.Client.Services
                 _logger.LogWarning("DEBUG: No identityData found in local storage.");
                 return false; 
             }
+        }
+
+        public async Task<bool> SwitchLanguage(string langCode)
+        {
+            bool isForceReload = langCode != CultureInfo.CurrentCulture.Name;
+            LangCode = langCode;
+            await SaveCurrentUserStateToLocalStorage();
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(langCode);
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo(langCode);
+            OnChange?.Invoke();
+            return isForceReload;
         }
 
         public async Task ClearAsync()
@@ -221,5 +164,40 @@ namespace BlazorTool.Client.Services
         }
 
         private void NotifyStateChanged() => OnChange?.Invoke();
+        private void SetUserStateFromIdentityData(IdentityData identityData)
+        {
+            UserName = identityData.Name;
+            Token = identityData.Token;
+            PersonID = identityData.PersonID;
+            LangCode = identityData.LangCode;
+            RightMatrix = identityData.RigthMatrix;
+            RightMatrixID = identityData.RigthMatrixID;
+            DepartmentID = identityData.DepartmentID;
+            UseOriginalColors = identityData.UseOriginalColors;
+            CanHaveManyActiveTake = identityData.CanHaveManyActiveTake;
+            NetworkShareUsername = identityData.NetworkShareUsername;
+            NetworkSharePassword = identityData.NetworkSharePassword;
+            NetworkShareServer = identityData.NetworkShareServer;
+        }
+
+        private IdentityData GetIdentityFromUserState()
+        {
+                        return new IdentityData
+            {
+                Name = this.UserName ?? string.Empty,
+                Token = this.Token ?? string.Empty,
+                PersonID = this.PersonID ?? 0,
+                LangCode = this.LangCode,
+                RigthMatrix = this.RightMatrix,
+                RigthMatrixID = this.RightMatrixID ?? 0,
+                DepartmentID = this.DepartmentID ?? 0,
+                UseOriginalColors = this.UseOriginalColors,
+                CanHaveManyActiveTake = this.CanHaveManyActiveTake,
+                NetworkShareUsername = this.NetworkShareUsername,
+                NetworkSharePassword = this.NetworkSharePassword,
+                NetworkShareServer = this.NetworkShareServer
+            };
+        }
+
     }
 } 

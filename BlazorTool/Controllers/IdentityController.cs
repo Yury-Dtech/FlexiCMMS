@@ -57,12 +57,16 @@ namespace BlazorTool.Controllers
                 {
                     // Cache the IdentityData for the user
                     _cache.Set($"IdentityData_{apiResponse.Data.PersonID}", apiResponse.Data, TimeSpan.FromHours(5));
+                    Console.WriteLine();
                     Console.WriteLine($"==========>  User {apiResponse.Data.Name} logged in successfully <==============");
+                    Console.WriteLine();
                 }
             }
             else
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"==========>  Login failed with status code {statusCode}: {content} <==============");
+                    Console.WriteLine();
                 }
             foreach (var header in response.Content.Headers)
             {

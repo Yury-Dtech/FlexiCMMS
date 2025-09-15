@@ -61,7 +61,7 @@
         await AppState.InitializeAsync();
         await UserState.InitializationTask;
 
-        await UserState.LoadIdentityDataFromCacheAsync();
+        await UserState.LoadUserStateFromCache();
         formattedVersion = Localizer["MainLayout_Version"];
         // Now that settings are loaded, we can proceed with other initializations
         try

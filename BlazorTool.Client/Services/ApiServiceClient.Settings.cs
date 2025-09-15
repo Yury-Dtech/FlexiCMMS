@@ -98,7 +98,7 @@ namespace BlazorTool.Client.Services
                 identityData.NetworkSharePassword = _userState.NetworkSharePassword;
                 identityData.NetworkShareUsername = _userState.NetworkShareUsername;
                 identityData.UseOriginalColors = _userState.UseOriginalColors;
-                bool isForceReload = await _userState.SaveIdentityDataToCacheAsync(identityData); // Save identityData to local storage
+                bool isForceReload = await _userState.SaveIdentityDataToLocalStorage(identityData); // Save identityData to local storage
                 return (isForceReload, null);
             }
             else
