@@ -43,6 +43,8 @@ namespace BlazorTool.Client.Services
         public string? NetworkShareUsername { get; set; }
         public string? NetworkSharePassword { get; set; }
         public string? NetworkShareServer { get; set; }
+        public DateTime? WorkDayStart { get; set; }
+        public DateTime? WorkDayEnd { get; set; }
 
         public bool HasPermission(PermissionType permission)
         {
@@ -178,6 +180,8 @@ namespace BlazorTool.Client.Services
             NetworkShareUsername = identityData.NetworkShareUsername;
             NetworkSharePassword = identityData.NetworkSharePassword;
             NetworkShareServer = identityData.NetworkShareServer;
+            WorkDayStart = identityData.WorkDayStart;
+            WorkDayEnd = identityData.WorkDayEnd;
         }
 
         private IdentityData GetIdentityFromUserState()
@@ -195,7 +199,9 @@ namespace BlazorTool.Client.Services
                 CanHaveManyActiveTake = this.CanHaveManyActiveTake,
                 NetworkShareUsername = this.NetworkShareUsername,
                 NetworkSharePassword = this.NetworkSharePassword,
-                NetworkShareServer = this.NetworkShareServer
+                NetworkShareServer = this.NetworkShareServer,
+                WorkDayStart = this.WorkDayStart,
+                WorkDayEnd = this.WorkDayEnd
             };
         }
 

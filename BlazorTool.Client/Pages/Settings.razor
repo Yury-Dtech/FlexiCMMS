@@ -50,13 +50,27 @@
     }
 
     <div class="row mb-3">
-        <label for="language" class="col-sm-4 col-form-label">Language</label>
+        <label for="language" class="col-sm-4 col-form-label">@Localizer["Settings_Language"]</label>
         <div class="col-sm-8">
             <select id="language" class="form-select settings-input-width" @bind="@SelectedLanguage">
                 <option value="pl-PL">Polski</option>
                 <option value="en-US">English</option>
                 @* Add more languages as needed *@
             </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="language" class="col-sm-4 col-form-label">@Localizer["WorkDayStart"]</label>
+        <div class="col-sm-8">
+           <TelerikTimePicker @bind-Value="@WorkDayStart"></TelerikTimePicker>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="workDayEnd" class="col-sm-4 col-form-label">@Localizer["WorkDayEnd"]</label>
+        <div class="col-sm-8">
+           <TelerikTimePicker @bind-Value="@WorkDayEnd"></TelerikTimePicker>
         </div>
     </div>
 
@@ -149,7 +163,8 @@
     private bool isConfirmDialogVisible = false;
     private string oldApiAddress = "";
     private bool needRestart = false;
-
+    private DateTime? WorkDayStart { get; set; } = new DateTime(1, 1, 1, 8, 0, 0);
+    private DateTime? WorkDayEnd { get; set; } = new DateTime(1, 1, 1, 16, 0, 0);
     private Dictionary<string, string> UserProfileDisplayNames = new Dictionary<string, string>();
 
     protected override async Task OnInitializedAsync()
@@ -210,6 +225,8 @@
         NetworkShareUsername = UserState.NetworkShareUsername;
         NetworkSharePassword = UserState.NetworkSharePassword;
         NetworkShareServer = UserState.NetworkShareServer;
+        WorkDayStart = UserState.WorkDayStart ?? new DateTime(1, 1, 1, 8, 0, 0);
+        WorkDayEnd = UserState.WorkDayEnd ?? new DateTime(1, 1, 1, 16, 0, 0);
     }
 
     protected async Task<string?> LoadSettingAsync(string key)
@@ -297,24 +314,40 @@
         bool needReload = false;
         try
         {
-            var s1 = await SaveSettingAsync("selectedLanguage", SelectedLanguage, currentUser);
-            var s2 = await SaveSettingAsync("useOriginalColors", UseOriginalColors.ToString(), currentUser);
-            var s3 = await SaveSettingAsync("NetworkShareUsername", NetworkShareUsername, currentUser);
-            var s4 = await SaveSettingAsync("NetworkSharePassword", NetworkSharePassword, currentUser);
-            var s5 = await SaveSettingAsync("NetworkShareServer", NetworkShareServer, currentUser);
-            if (s1 && s2 && s3 && s4 && s5)
+            Dictionary<(string, string), bool> keys = new Dictionary<(string, string), bool>
+            {
+                { ("selectedLanguage", SelectedLanguage ?? "pl-Pl"), false },
+                { ("useOriginalColors", UseOriginalColors.ToString()), false },
+                { ("NetworkShareUsername", NetworkShareUsername ?? string.Empty), false },
+                { ("NetworkSharePassword", NetworkSharePassword ?? string.Empty), false },
+                { ("NetworkShareServer", NetworkShareServer ?? string.Empty), false },
+                { ("WorkDayStart", WorkDayStart?.ToShortTimeString() ?? string.Empty), false },
+                { ("WorkDayEnd", WorkDayEnd?.ToShortTimeString() ?? string.Empty), false }
+            };
+            foreach(var key in keys.Keys)
+            {
+                keys[key] = await SaveSettingAsync(key.Item1, key.Item2, currentUser);
+            }
+
+            if (keys.All(r => r.Value))
             {
                 UserState.UseOriginalColors = UseOriginalColors;
                 UserState.LangCode = SelectedLanguage;
                 UserState.NetworkSharePassword = NetworkSharePassword;
                 UserState.NetworkShareUsername = NetworkShareUsername;
                 UserState.NetworkShareServer = NetworkShareServer;
+                UserState.WorkDayStart = WorkDayStart;
+                UserState.WorkDayEnd = WorkDayEnd;
                 needReload = await UserState.SwitchLanguage(SelectedLanguage);
                 ShowNotification(Localizer["Settings_SettingsSaved"], NotificationTypeEnum.Success);
             }
             else
             {
-                ShowNotification(Localizer["Settings_SaveFailed"], NotificationTypeEnum.Error);
+                foreach(var key in keys.Where(k => !k.Value).Select(k => k.Key))
+                {
+                    Logger.LogError($"Failed to save setting: {key}");
+                    ShowNotification(Localizer[$"Settings_SaveFailed ({key})"], NotificationTypeEnum.Error);
+                }
             }
 
             if (needRestart)

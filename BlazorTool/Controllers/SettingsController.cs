@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
+using System.Threading;
 using static System.Net.WebRequestMethods;
 
 namespace BlazorTool.Controllers
@@ -20,7 +21,7 @@ namespace BlazorTool.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _configuration;
         private readonly IHostApplicationLifetime _lifetime;
-
+        private static readonly SemaphoreSlim _fileLock = new SemaphoreSlim(1, 1);
         public SettingsController(ApiServiceClient apiServiceClient, IWebHostEnvironment env, IConfiguration configuration, IHostApplicationLifetime lifetime)
         {
             _apiServiceClient = apiServiceClient;
@@ -50,12 +51,13 @@ namespace BlazorTool.Controllers
 
         
         [HttpPost("set")]
-        public bool Save([FromForm] string key, [FromForm] string value, [FromForm] string user)
+        public async Task<bool> Save([FromForm] string key, [FromForm] string value, [FromForm] string user)
         {
             try
             {
                 if (key == "apiAddress")
                 {
+                    await _fileLock.WaitAsync();
                     var appSettingsPath = Path.Combine(_env.ContentRootPath, "appsettings.json");
                     var json = System.IO.File.ReadAllText(appSettingsPath);
                     var jsonObj = System.Text.Json.Nodes.JsonNode.Parse(json).AsObject();
@@ -71,7 +73,7 @@ namespace BlazorTool.Controllers
                     System.IO.File.WriteAllText(appSettingsPath, jsonObj.ToJsonString(options));
                     Console.WriteLine($"API address saved to appsettings.json: {value}");
                     Console.WriteLine("Application will now shut down to apply changes.");
-                    
+                    _fileLock.Release();
                     _lifetime.StopApplication();
 
                     return true; 
@@ -79,7 +81,7 @@ namespace BlazorTool.Controllers
 
                 string file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SettingsDirectory, user + ".json");
                 var settings = new UserSettings(file);
-                settings.SetSetting(user, key, value);
+                await settings.SetSetting(user, key, value);
                 Console.WriteLine($"Setting saved: {user} - {key} = {value}");
                 return true;
             }

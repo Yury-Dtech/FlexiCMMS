@@ -42,5 +42,11 @@ namespace BlazorTool.Client.Models
 
         [JsonPropertyName("networkShareServer")]
         public string? NetworkShareServer { get; set; }
+
+        [JsonPropertyName("workDayStart")]
+        public DateTime? WorkDayStart { get; set; }
+
+        [JsonPropertyName("workDayEnd")]
+        public DateTime? WorkDayEnd { get; set; }
     }
 }

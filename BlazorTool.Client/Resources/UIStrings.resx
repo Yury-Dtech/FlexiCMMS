@@ -1129,4 +1129,13 @@
   <data name="Scheduler_ShowActivities" xml:space="preserve">
     <value>Show activities</value>
   </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>Interface language</value>
+  </data>
+  <data name="WorkDayStart" xml:space="preserve">
+    <value>Work day end</value>
+  </data>
+  <data name="WorkDayEnd" xml:space="preserve">
+    <value>Work day start</value>
+  </data>
 </root>

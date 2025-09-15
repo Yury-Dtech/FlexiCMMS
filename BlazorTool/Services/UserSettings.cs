@@ -1,10 +1,12 @@
 ﻿using System.Text.Json;
+using System.Threading;
 
 namespace BlazorTool.Services
 {
     public class UserSettings
     {
         private readonly string _filePath;
+        private static readonly SemaphoreSlim _fileLock = new SemaphoreSlim(1, 1);
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true, // For human-readable JSON
@@ -77,7 +79,7 @@ namespace BlazorTool.Services
             return default(T);
         }
 
-        public void SetSetting<T>(string login, string key, T value)
+        public async Task SetSetting<T>(string login, string key, T value)
         {
             if (string.IsNullOrWhiteSpace(login)) throw new ArgumentNullException(nameof(login));
             if (string.IsNullOrWhiteSpace(key)) throw new ArgumentNullException(nameof(key));
@@ -130,7 +132,7 @@ namespace BlazorTool.Services
             }
 
             userSettings[key] = value;
-
+            await _fileLock.WaitAsync();
             try
             {
                 var updatedJson = JsonSerializer.Serialize(allSettings, _jsonOptions);
@@ -142,6 +144,10 @@ namespace BlazorTool.Services
                 // Consider logging this error: Console.WriteLine($"Error writing settings: {ex.Message}");
                 // Depending on desired behavior, you might re-throw or have a retry mechanism.
                 throw ex; // Re-throw for now so the caller is aware of the failure.
+            }
+            finally
+            {
+                _fileLock.Release();
             }
         }
 

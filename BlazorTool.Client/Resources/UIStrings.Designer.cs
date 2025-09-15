@@ -2275,6 +2275,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Interface language.
+        /// </summary>
+        public static string Settings_Language {
+            get {
+                return ResourceManager.GetString("Settings_Language", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Network Share Password.
         /// </summary>
         public static string Settings_NetworkSharePassword {
@@ -2586,6 +2595,24 @@ namespace BlazorTool.Client.Resources {
         public static string WOReason {
             get {
                 return ResourceManager.GetString("WOReason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work day start.
+        /// </summary>
+        public static string WorkDayEnd {
+            get {
+                return ResourceManager.GetString("WorkDayEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Work day end.
+        /// </summary>
+        public static string WorkDayStart {
+            get {
+                return ResourceManager.GetString("WorkDayStart", resourceCulture);
             }
         }
         

@@ -94,6 +94,12 @@ namespace BlazorTool.Client.Services
                 _userState.NetworkShareUsername = await LoadSettingAsync("NetworkShareUsername", loginRequest.Username);
                 _userState.NetworkSharePassword = await LoadSettingAsync("NetworkSharePassword", loginRequest.Username);
                 _userState.NetworkShareServer = await LoadSettingAsync("NetworkShareServer", loginRequest.Username);
+                var workDayStartStr = await LoadSettingAsync("WorkDayStart", loginRequest.Username);
+                var workDayEndStr = await LoadSettingAsync("WorkDayEnd", loginRequest.Username);
+                _userState.WorkDayStart = DateTime.TryParse(workDayStartStr, out DateTime workdatStart) ? workdatStart : null;
+                _userState.WorkDayEnd = DateTime.TryParse(workDayEndStr, out DateTime workorderEnd) ? workorderEnd : null;
+                identityData.WorkDayStart = _userState.WorkDayStart;
+                identityData.WorkDayEnd = _userState.WorkDayEnd;
                 identityData.NetworkShareServer = _userState.NetworkShareServer;
                 identityData.NetworkSharePassword = _userState.NetworkSharePassword;
                 identityData.NetworkShareUsername = _userState.NetworkShareUsername;
