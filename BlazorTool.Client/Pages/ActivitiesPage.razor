@@ -29,7 +29,7 @@
                      HorizontalPosition="@NotificationHorizontalPosition.Center"
                      VerticalPosition="@NotificationVerticalPosition.Top"/>
 
-<TelerikTooltip TargetSelector=".tooltip-target" />
+<TelerikTooltip ShowDelay="200" Width="30vh" TargetSelector=".tooltip-target" />
 
 <div class="filter-controls-row">
     <div style="flex-basis: 66%; flex-shrink:1; flex-grow:0; display: flex; gap: 1rem;">
@@ -221,7 +221,11 @@
                 <SchedulerResource Field="WOState" Title="WOState" Data="@statuses" />
             </SchedulerResources>
             <SchedulerViews>
-                <SchedulerDayView SlotDivisions="@(daySlotDivisions ?? 1)" SlotDuration="@(daySlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
+                <SchedulerDayView 
+                    SlotDivisions="@(daySlotDivisions ?? 1)" 
+                    SlotDuration="@(daySlotDuration ?? 60)" 
+                    StartTime="@DayStart" EndTime="@DayEnd" 
+                    WorkDayStart="@WorkDayStart" WorkDayEnd="@WorkDayEnd">
                     <ItemTemplate>
                         @{
                             var item = context as ActivityAppointment;
@@ -238,7 +242,11 @@
                         }
                     </SlotTemplate>
                 </SchedulerDayView>
-                <SchedulerWeekView SlotDivisions="@(weekSlotDivisions ?? 1)" SlotDuration="@(weekSlotDuration ?? 60)" StartTime="@DayStart" EndTime="@DayEnd">
+                <SchedulerWeekView 
+                    SlotDivisions="@(weekSlotDivisions ?? 1)" 
+                    SlotDuration="@(weekSlotDuration ?? 60)" 
+                    StartTime="@DayStart" EndTime="@DayEnd"
+                    WorkDayStart="@WorkDayStart" WorkDayEnd="@WorkDayEnd">
                     <ItemTemplate>
                         @{
                             var item = context as ActivityAppointment;
@@ -257,7 +265,12 @@
                         }
                     </SlotTemplate>
                 </SchedulerWeekView>
-                <SchedulerMultiDayView NumberOfDays="@(CalculateNumberOfDays(numberOfWorkDays ?? 10))" StartTime="@DayStart" EndTime="@DayEnd" SlotDivisions="@(multiDaySlotDivisions ?? 1)" SlotDuration="@(multiDaySlotDuration ?? 60)">
+                <SchedulerMultiDayView 
+                    NumberOfDays="@(CalculateNumberOfDays(numberOfWorkDays ?? 10))" 
+                    SlotDivisions="@(multiDaySlotDivisions ?? 1)" 
+                    SlotDuration="@(multiDaySlotDuration ?? 60)"
+                    StartTime="@DayStart" EndTime="@DayEnd" 
+                    WorkDayStart="@WorkDayStart" WorkDayEnd="@WorkDayEnd">
                     <DateHeaderTemplate>
                         <div>
                             @if(context.DayOfWeek == DayOfWeek.Saturday || context.DayOfWeek == DayOfWeek.Sunday)
@@ -389,6 +402,8 @@
     private SchedulerView CurrentView { get; set; } = SchedulerView.Month;
     private DateTime DayStart => new DateTime(2000, 1, 1, 7, 0, 0);
     private DateTime DayEnd => new DateTime(2000, 1, 1, 19, 0, 0);
+    private DateTime WorkDayStart => new DateTime(2000, 1, 1, 8, 0, 0);
+    private DateTime WorkDayEnd => new DateTime(2000, 1, 1, 16, 0, 0);
     private MarkupString cellStyles = new MarkupString(); //for rows colors
     private List<WorkOrder> TakenOrders { get; set; } = new();
     private List<WorkOrder> _allOrders = new();
@@ -916,9 +931,10 @@
         {
             CurrentAppointment = item ?? new ActivityAppointment();
             CurrentAppointment.Start = isStartEqualsEnd ? args.Start.AddHours(8) : args.Start;
-            CurrentAppointment.End = isStartEqualsEnd ? args.End.AddHours(16) : args.End;
+            //end of WorkDay
+            CurrentAppointment.End = new DateTime(CurrentAppointment.Start.Value.Year, CurrentAppointment.Start.Value.Month, CurrentAppointment.Start.Value.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
             newActivityInitialStartDate = CurrentAppointment.Start ?? DateTime.Now;
-            newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(4);
+            newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(1); //end of WorkDay
         }
 
         if (item.IsWorkOrder)
@@ -931,7 +947,14 @@
             var WO_InSlot = _allAppointments.FirstOrDefault(wo => wo.IsWorkOrder && isWOinTimeSlot(wo, newActivityInitialStartDate, newActivityInitialEndDate))?.GetWorkOrder();
             CurrentActivityFormModel.WorkOrderID = WO_InSlot?.WorkOrderID ?? 0;
             CurrentActivityFormModel.DeviceID = WO_InSlot?.MachineID ?? 0;
-            CurrentActivityFormModel.EndDate = WO_InSlot?.EndDate ?? args.End.AddHours(1);
+            if (WO_InSlot != null && WO_InSlot?.StartDate?.Date == WO_InSlot?.EndDate?.Date)
+            {
+                CurrentActivityFormModel.EndDate = WO_InSlot?.EndDate ?? args.End.AddHours(1);
+            }
+            else
+            {
+                CurrentActivityFormModel.EndDate = newActivityInitialEndDate; //end of WorkDay
+            }
             showNewActivityForm = true;
             StateHasChanged();        
 
@@ -1132,8 +1155,16 @@
             {
                 CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
                 CurrentActivityFormModel.WorkOrderID = WO_ID_InSlot ?? 0;
-                CurrentActivityFormModel.DeviceID = CurrentAppointment?.GetWorkOrder()?.MachineID ?? 0;    
-                CurrentActivityFormModel.EndDate = CurrentAppointment?.End ?? newActivityInitialEndDate; //extend endDate to end of WorkOrder
+                CurrentActivityFormModel.DeviceID = CurrentAppointment?.GetWorkOrder()?.MachineID ?? 0;
+                if (CurrentAppointment?.Start?.Date == CurrentAppointment?.End?.Date) //same day)
+                {
+                    CurrentActivityFormModel.EndDate = CurrentAppointment?.End ?? newActivityInitialEndDate; //extend endDate to end of WorkOrder
+                }
+                else
+                {
+                    //trim to end of the work day
+                    CurrentActivityFormModel.EndDate = new DateTime(CurrentActivityFormModel.ActDate.Year, CurrentActivityFormModel.ActDate.Month, CurrentActivityFormModel.ActDate.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
+                }
             }            
             showNewActivityForm = true;
             StateHasChanged();
@@ -1150,7 +1181,17 @@
             {
                 newActivityInitialStartDate = CurrentAppointment.Start ?? DateTime.Now;
             }
-            newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(1); //extend endDate to end of WorkOrder
+
+            if (CurrentAppointment?.Start?.Date == CurrentAppointment?.End?.Date) //same day)
+            {
+                newActivityInitialEndDate = CurrentAppointment?.End ?? newActivityInitialStartDate.AddHours(1); //extend endDate to end of WorkOrder
+            }
+            else
+            {
+                //trim to end of the work day
+                newActivityInitialEndDate = new DateTime(newActivityInitialStartDate.Year, newActivityInitialStartDate.Month, newActivityInitialStartDate.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
+            }
+
             ShowAddActivityForOrderForm = true;
         }
     }
@@ -1183,7 +1224,7 @@
         {
             bool isStartEqualsEnd = _clickedSlotContext.Start == _clickedSlotContext.End;
             var Start = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(8) : _clickedSlotContext.Start;
-            var End = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(16) : _clickedSlotContext.End;
+            var End = new DateTime(Start.Year, Start.Month, Start.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);//end of WorkDay
             CurrentAppointment = new ActivityAppointment()
             {
                 Start = Start,

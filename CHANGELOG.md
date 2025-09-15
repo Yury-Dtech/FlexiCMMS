@@ -1,3 +1,11 @@
+## 2025-09-11 .. 2025-09-12
+
+### Summary
+- Scheduler & Activities: refactored toolbar and appointment rendering; updated UI strings and Telerik localization resources for clearer labels.
+- Add Activity form: added an End Date input and changed default EndTime for new activities to follow the WorkOrder.EndTime, making creation near work-order end more predictable.
+- Settings & Styles: small layout and CSS adjustments on Activities and Settings pages to improve readability and form spacing.
+- Deployment & docs: added GitHub workflows and deployment scripts, plus short install guides (EN/PL/RU) to simplify releases and installs.
+
 ## 2025-09-10
 
 ### Activity Page:

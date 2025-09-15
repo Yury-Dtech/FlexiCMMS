@@ -1,3 +1,11 @@
+## 2025-09-11 .. 2025-09-12
+
+### Podsumowanie
+- Harmonogram i Aktywności: zrefaktoryzowano pasek narzędzi harmonogramu i sposób renderowania terminów; zaktualizowano zasoby i napisy lokalizacyjne (Telerik) dla czytelniejszych etykiet.
+- Formularz Dodawania Aktywności: dodano pole "End Date" oraz zmieniono domyślny `EndTime` nowej aktywności tak, aby podążał za `WorkOrder.EndTime` — ułatwia planowanie przy końcu zlecenia.
+- Ustawienia i style: drobne poprawki układu i CSS na stronach Aktywności i Ustawień dla lepszej czytelności i odstępów.
+- Wdrażanie i dokumentacja: dodano workflowy GitHub i skrypty wdrożeniowe oraz krótkie przewodniki instalacyjne (EN/PL/RU) usprawniające wydania i instalację.
+
 ## 2025-09-10
 
 ### Strona aktywności: 
