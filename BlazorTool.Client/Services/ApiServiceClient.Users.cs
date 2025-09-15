@@ -5,6 +5,8 @@ namespace BlazorTool.Client.Services
 {
     public partial class ApiServiceClient
     {
+        private Task<List<Person>>? _personsLoadingTask;
+        private readonly object _personsLock = new();
 
         #region users
         public async Task<List<UserInfo>> GetUsersInfoList()
@@ -59,37 +61,57 @@ namespace BlazorTool.Client.Services
 
         public async Task<List<Person>> GetAllPersons()
         {
-            if (_personsCache.Any())
-            {
+            // Already cached
+            if (_personsCache.Count > 0)
                 return _personsCache;
+
+            Task<List<Person>> loadingTask;
+            lock (_personsLock)
+            {
+                if (_personsLoadingTask != null)
+                    loadingTask = _personsLoadingTask;
+                else
+                    _personsLoadingTask = loadingTask = LoadPersonsInternalAsync();
             }
 
-            var url = "other/getuserslist";
             try
             {
-                Console.WriteLine("====== Start GetAllPersons() request: " + _http.BaseAddress + url);
-                var response = await _http.GetAsync(url);
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("\n= = = = = = = = = Users response error: " + response.ReasonPhrase + "\n");
-                    return new List<Person>();
-                }
-                var wrapper = await response.Content.ReadFromJsonAsync<ApiResponse<Person>>();
-                Console.WriteLine($"\n= = = = = = = = = response {_http.BaseAddress}{url} \n====== Users: " + wrapper?.Data.Count.ToString() + "\n");
-
-                _personsCache = wrapper?.Data ?? new List<Person>();
-                return _personsCache;
+                return await loadingTask;
             }
-            catch (HttpRequestException ex)
+            finally
             {
-                Console.WriteLine($"ApiServiceClient: HTTP Request error during GET to {url}: {ex.Message}");
-                return new List<Person>();
+                // Allow refresh later if cache was cleared
+                lock (_personsLock)
+                {
+                    _personsLoadingTask = null;
+                }
+            }
+        }
+
+        private async Task<List<Person>> LoadPersonsInternalAsync()
+        {
+            try
+            {
+                var url = $"other/getuserslist?lang={_userState.LangCode}";
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var response = await _http.GetFromJsonAsync<ApiResponse<Person>>(url);
+                sw.Stop();
+
+                if (response?.Data != null && response.IsValid)
+                {
+                    _personsCache = response.Data;
+                    _logger.LogInformation("Loaded {Count} persons in {Ms} ms.", _personsCache.Count, sw.ElapsedMilliseconds);
+                }
+                else
+                {
+                    _logger.LogWarning("GetAllPersons: invalid or empty response.");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ApiServiceClient: Unexpected error during GET to {url}: {ex.Message}");
-                return new List<Person>();
+                _logger.LogError(ex, "GetAllPersons failed.");
             }
+            return _personsCache;
         }
 
         public List<Person> GetAllPersonsCached()
@@ -108,6 +130,11 @@ namespace BlazorTool.Client.Services
                 return _personsCache.FirstOrDefault(p => p.PersonId == personID);
             }
             return null;
+        }
+
+        public void InvalidatePersonsCache()
+        {
+            _personsCache.Clear();
         }
         #endregion
 
