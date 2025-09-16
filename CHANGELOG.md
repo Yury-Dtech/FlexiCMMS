@@ -1,3 +1,14 @@
+## 2025-09-15..16
+
+### Performance & Stability
+- **Optimized Data Loading**: Refactored data fetching for dictionaries (Categories, Reasons, Departments, etc.) to be asynchronous and cached. This significantly improves application startup time and responsiveness on pages like Home, Orders, and Scheduler.
+- **Improved Session Handling**: Reworked session validation on application startup. The app now checks the user's session with the server before rendering the UI, redirecting to the login page if the session is invalid. This prevents users from accessing a non-functional application state.
+- **Bug Fixes**: Addressed several potential null reference exceptions across the application, particularly on the Activities and Devices pages, making the UI more stable.
+
+### UI/UX
+- **Minor UI Adjustments**: Made small visual improvements to the Devices page, including adjusting the grid's page size and height for better usability.
+- **Code Cleanup**: Removed unused variables and code comments to improve maintainability.
+
 ## 2025-09-11 .. 2025-09-12
 
 ### Summary

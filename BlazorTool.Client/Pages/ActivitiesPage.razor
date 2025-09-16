@@ -317,13 +317,14 @@
     </WindowActions>
     <WindowContent>
         <AppointmentEditor Appointment="@CurrentAppointment?.ToSchedulerAppointment()"
-                           isEditable=@(UserState.HasPermission(PermissionType.WO_Edit) || (CurrentAppointment?.AppointmentId ==0 && UserState.HasPermission(PermissionType.WO_Add)))
+                           isEditable="false"
                            ListPersons="@PersonsNames.Where(c=>c != "All").ToList()"
                            currentUser="@currentUser"
                            OnComponentClosing="@RefreshData"
                            isScheduler="true" />
     </WindowContent>
 </TelerikWindow>
+                           @* isEditable=@(UserState.HasPermission(PermissionType.WO_Edit) || (CurrentAppointment?.AppointmentId ==0 && UserState.HasPermission(PermissionType.WO_Add))) *@
 
     @* New Activity full *@
 <TelerikWindow Modal="true" MinWidth="800px" MaxHeight="95vh" Visible="@showNewActivityForm" ThemeColor="@ThemeConstants.Window.ThemeColor.Dark">
@@ -338,7 +339,7 @@
 </TelerikWindow>
 
     @* Add Activity compact *@
-    <TelerikWindow @bind-Visible="ShowAddActivityForOrderForm" Modal="true" Width="500px">
+    <TelerikWindow @bind-Visible="ShowAddActivityForOrderForm" Modal="true" Width="650px">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_AddActivity"]</strong>
         </WindowTitle>
@@ -402,8 +403,8 @@
     private SchedulerView CurrentView { get; set; } = SchedulerView.Month;
     private DateTime DayStart => new DateTime(2000, 1, 1, 7, 0, 0);
     private DateTime DayEnd => new DateTime(2000, 1, 1, 19, 0, 0);
-    private DateTime WorkDayStart => new DateTime(2000, 1, 1, 8, 0, 0);
-    private DateTime WorkDayEnd => new DateTime(2000, 1, 1, 16, 0, 0);
+    private DateTime WorkDayStart = new DateTime(2000, 1, 1, 8, 0, 0);
+    private DateTime WorkDayEnd = new DateTime(2000, 1, 1, 16, 0, 0);
     private MarkupString cellStyles = new MarkupString(); //for rows colors
     private List<WorkOrder> TakenOrders { get; set; } = new();
     private List<WorkOrder> _allOrders = new();
@@ -494,7 +495,6 @@
                     selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
             }
         }
-
         var isWASM = JSRuntime is IJSInProcessRuntime;
         Console.WriteLine($"--- Initialized Activities PAGE. WASM = {isWASM}");
         Console.WriteLine($"--- OnInitializedAsync completed.");
@@ -504,6 +504,8 @@
         {
             numberOfDays = days;
         }
+        WorkDayStart = UserState.WorkDayStart ?? WorkDayStart;
+        WorkDayEnd = UserState.WorkDayEnd ?? WorkDayEnd;
 
         InitializeSaveStateTimer();
 
@@ -745,6 +747,7 @@
         if (!UserState.HasPermission(PermissionType.WO_Edit)) return;
 
         AppointmentToUpdate = args.Item as ActivityAppointment;
+        if (AppointmentToUpdate.IsWorkOrder) return;
         UpdateEventArgs = args;
         ShowConfirmUpdateDialog = true;
     }
@@ -780,6 +783,7 @@
             var editedAppointment = AppointmentToUpdate;
             if (editedAppointment.IsWorkOrder)
             {
+                return; // For now, do not allow editing work orders via scheduler
                 var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
                 if (index != -1)
                 {

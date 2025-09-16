@@ -1,3 +1,14 @@
+## 2025-09-15..16
+
+### Wydajność i Stabilność
+- **Zoptymalizowane Ładowanie Danych**: Zrefaktoryzowano pobieranie danych dla słowników (Kategorie, Powody, Działy itp.), aby było asynchroniczne i buforowane. Znacząco poprawia to czas uruchamiania aplikacji i responsywność na stronach takich jak Strona Główna, Zlecenia i Harmonogram.
+- **Ulepszona Obsługa Sesji**: Przebudowano walidację sesji podczas uruchamiania aplikacji. Aplikacja sprawdza teraz sesję użytkownika z serwerem przed renderowaniem interfejsu, przekierowując na stronę logowania, jeśli sesja jest nieprawidłowa. Zapobiega to dostępowi użytkowników do niefunkcjonalnego stanu aplikacji.
+- **Poprawki Błędów**: Usunięto kilka potencjalnych wyjątków `NullReferenceException` w całej aplikacji, w szczególności na stronach Aktywności i Urządzeń, co czyni interfejs bardziej stabilnym.
+
+### UI/UX
+- **Drobne Poprawki Interfejsu**: Wprowadzono niewielkie ulepszenia wizualne na stronie Urządzeń, w tym dostosowanie rozmiaru strony siatki i jej wysokości dla lepszej użyteczności.
+- **Czyszczenie Kodu**: Usunięto nieużywane zmienne i komentarze w kodzie, aby poprawić jego utrzymywalność.
+
 ## 2025-09-11 .. 2025-09-12
 
 ### Podsumowanie

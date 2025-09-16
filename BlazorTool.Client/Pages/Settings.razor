@@ -346,7 +346,7 @@
                 foreach(var key in keys.Where(k => !k.Value).Select(k => k.Key))
                 {
                     Logger.LogError($"Failed to save setting: {key}");
-                    ShowNotification(Localizer[$"Settings_SaveFailed ({key})"], NotificationTypeEnum.Error);
+                    ShowNotification(Localizer[$"Settings_SaveFailed"] + ": "+ key, NotificationTypeEnum.Error);
                 }
             }
 

@@ -150,10 +150,16 @@
                 <SchedulerResource Field="AssignedPerson" Data="@PersonResources" ValueField="@nameof(Person.Name)" TextField="Name" />
             </SchedulerResources>
             <SchedulerViews>
-                <SchedulerDayView StartTime="@DayStart" EndTime="@DayEnd">
+                <SchedulerDayView   WorkDayStart="@WorkDayStart"
+                                    WorkDayEnd="@WorkDayEnd"
+                                    StartTime="@DayStart" 
+                                    EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
-                            <SchedulerItem Item="@(context as SchedulerAppointment)" View="@SchedulerView.Day" />
+                        @{
+                            var item = (context as SchedulerAppointment) ?? new SchedulerAppointment();
+                        }
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
+                            <SchedulerItem Item="@(item)" View="@SchedulerView.Day" />
                         </div>
                     </ItemTemplate>
                     <SlotTemplate>
@@ -164,10 +170,17 @@
                         }
                     </SlotTemplate>
                 </SchedulerDayView>
-                <SchedulerWeekView StartTime="@DayStart" EndTime="@DayEnd">
+                <SchedulerWeekView 
+                     WorkDayStart="@WorkDayStart"
+                    WorkDayEnd="@WorkDayEnd"
+                    StartTime="@DayStart" 
+                    EndTime="@DayEnd">
                     <ItemTemplate>
-                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
-                            <SchedulerItem Item="@(context as SchedulerAppointment)" View="@SchedulerView.Week" />
+                        @{
+                            var item = (context as SchedulerAppointment) ?? new SchedulerAppointment();
+                        }
+                        <div style="height:100%;" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
+                            <SchedulerItem Item="@item" View="@SchedulerView.Week" />
                         </div>
                     </ItemTemplate>
                     <SlotTemplate>
@@ -179,10 +192,13 @@
                         }
                     </SlotTemplate>
                 </SchedulerWeekView>
-                <SchedulerMonthView ItemsPerSlot="4">
+                <SchedulerMonthView  ItemsPerSlot="4">
                     <ItemTemplate>
-                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
-                            <SchedulerItem Item="@(context as SchedulerAppointment)" View="@SchedulerView.Month" />
+                        @{
+                            var item = (context as SchedulerAppointment) ?? new SchedulerAppointment();
+                        }
+                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
+                            <SchedulerItem Item="@item" View="@SchedulerView.Month" />
                         </div>
                     </ItemTemplate>
                     <SlotTemplate>
@@ -194,11 +210,18 @@
                         }
                     </SlotTemplate>
                 </SchedulerMonthView>
-                <SchedulerTimelineView NumberOfDays="@(numberOfDays ?? 3)" StartTime="@DayStart" EndTime="@DayEnd" 
-                                       ColumnWidth="@(columnWidth ?? 15)" SlotDivisions="@(slotDivisions ?? 1)" SlotDuration="@(slotDuration ?? 15)">
+                    <SchedulerTimelineView WorkDayStart="@WorkDayStart"
+                                           WorkDayEnd="@WorkDayEnd"
+                                           StartTime="@DayStart"
+                                           EndTime="@DayEnd"
+                                           NumberOfDays="@(numberOfDays ?? 3)"
+                                           ColumnWidth="@(columnWidth ?? 15)" SlotDivisions="@(slotDivisions ?? 1)" SlotDuration="@(slotDuration ?? 15)">
                     <ItemTemplate>
-                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as SchedulerAppointment))">
-                            <SchedulerItem Item="@(context as SchedulerAppointment)" View="@SchedulerView.Timeline" />
+                        @{
+                            var item = (context as SchedulerAppointment) ?? new SchedulerAppointment();
+                        }
+                        <div @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
+                            <SchedulerItem Item="@item" View="@SchedulerView.Timeline" />
                         </div>
                     </ItemTemplate>
                     <SlotTemplate>
@@ -370,6 +393,8 @@
     private SchedulerView CurrentView { get; set; } = SchedulerView.Month;
     private DateTime DayStart => DateTime.Today.AddHours(7);
     private DateTime DayEnd => DateTime.Today.AddHours(20);
+    private DateTime WorkDayStart = new DateTime(2000, 1, 1, 8, 0, 0);
+    private DateTime WorkDayEnd = new DateTime(2000, 1, 1, 16, 0, 0);
     private MarkupString cellStyles = new MarkupString(); //for rows colors
     private List<WorkOrder> UntakenOrders { get; set; } = new();
     private List<WorkOrder> TakenOrders { get; set; } = new();
@@ -378,7 +403,7 @@
     private bool customEditFormShown { get; set; } = false;
     private bool isOrderCardOpen = false;
     private SchedulerAppointment CurrentAppointment { get; set; } = new SchedulerAppointment();
-    private WorkOrder CurrentOrder { get; set; }
+    private WorkOrder CurrentOrder { get; set; } = new WorkOrder();
     private List<Person> allPersons = new();
     private List<Person> PersonResources { get; set; } = new();
     private List<string> selectedAssignedPersons = new();
@@ -454,7 +479,8 @@
         {
             numberOfDays = days;
         }
-
+        WorkDayStart = UserState.WorkDayStart ?? WorkDayStart;
+        WorkDayEnd = UserState.WorkDayEnd ?? WorkDayEnd;
         InitializeSaveStateTimer(); // Добавлен вызов инициализации таймера
 
         await HardLoadData();

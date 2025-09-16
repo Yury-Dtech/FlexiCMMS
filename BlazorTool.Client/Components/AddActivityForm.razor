@@ -2,6 +2,8 @@
 @using BlazorTool.Client.Services
 @using Telerik.Blazor.Components
 @using System.ComponentModel.DataAnnotations
+@using Telerik.Blazor.Components.Editor
+@using EditorNS = Telerik.Blazor.Components.Editor;
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 
 @inject ApiServiceClient ApiClient
@@ -80,7 +82,8 @@
                     <Template>
                         <div style="display: flex; align-items: center;">
                             <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_Description"]:</label>
-                                <TelerikTextArea @bind-Value="ActivityModel.Description" Rows="5" Placeholder="@Localizer["ActivityList_Description_Placeholder"]" />
+                                @* <TelerikTextArea @bind-Value="ActivityModel.Description" Rows="5" Placeholder="@Localizer["ActivityList_Description_Placeholder"]" /> *@
+                                <TelerikEditor @bind-Value="ActivityModel.Description" Tools="@customTools" Width="100%"/>
                         </div>
                         <ValidationMessage For="@(() => ActivityModel.Description)" />
                     </Template>
@@ -147,6 +150,7 @@
     private string minWidthLabel = "110px";
     private DateTime MaxActDate;
     private DateTime MinActDate;
+    public List<IEditorTool> customTools { get; set; } = new();
     private DateTime EndDate{ 
         get
         {
@@ -165,6 +169,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        CreateEditorToolBar();
         ActivityModel.WorkOrderID = WorkOrderID;
         ActivityModel.PersonID = UserState.PersonID ?? 0;
         ActivityModel.Cost = 0;
@@ -190,7 +195,7 @@
         {
             EndDate =MaxActDate;
         }
-        
+
         People = ApiClient.GetAllPersonsCached(); // From cache
         Categories = await ApiClient.GetActCategoriesByDeviceCategory(WO?.DeviceCategoryID ?? 0); 
     }
@@ -239,5 +244,20 @@
         };
         ErrorMessage = string.Empty;
         OnActivityAdded.InvokeAsync(null);
+    }
+
+    private void CreateEditorToolBar()
+    {
+        customTools = new List<IEditorTool>(EditorToolSets.Default);
+        var UndoRedoGroup = new EditorButtonGroup(
+            new EditorNS.Undo(), // add individual tools to the group
+            new EditorNS.Redo()
+        );
+        customTools.RemoveAt(1);
+        customTools.RemoveAt(1);
+        customTools.RemoveAt(customTools.Count()-1);
+        customTools.RemoveAt(customTools.Count()-1);
+
+        customTools.Insert(0, UndoRedoGroup);
     }
 }

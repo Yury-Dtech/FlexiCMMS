@@ -14,18 +14,18 @@
     @if(isEditable)
     {
         <TelerikButton Class="popup-target" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@SaveIcon @Localizer["AppointmentEditor_Save"]</TelerikButton>
-    }
 
-    <TelerikButton OnClick="@CancelEditing" ButtonType="ButtonType.Button">@CancelIcon @Localizer["AppointmentEditor_Cancel"]</TelerikButton>
+        <TelerikButton OnClick="@CancelEditing" ButtonType="ButtonType.Button">@CancelIcon @Localizer["AppointmentEditor_Cancel"]</TelerikButton>
 
-    @if(isScheduler)
-    {
-            <TelerikButton OnClick="@DeleteAppointment" ButtonType="ButtonType.Button">@DeleteIcon @Localizer["AppointmentEditor_DeleteFromScheduler"]</TelerikButton>
-    }
+        @if(isScheduler)
+        {
+                <TelerikButton OnClick="@DeleteAppointment" ButtonType="ButtonType.Button">@DeleteIcon @Localizer["AppointmentEditor_DeleteFromScheduler"]</TelerikButton>
+        }
 
-    @if (!isWOClosed && UserState.HasPermission(PermissionType.WO_Close))
-    {
-        <TelerikButton OnClick="@CloseAppointment" ButtonType="ButtonType.Button" ThemeColor="@ThemeConstants.Button.ThemeColor.Warning">@CloseOrderIcon @Localizer["AppointmentEditor_FinishOrder"]</TelerikButton>
+        @if (!isWOClosed && UserState.HasPermission(PermissionType.WO_Close))
+        {
+            <TelerikButton OnClick="@CloseAppointment" ButtonType="ButtonType.Button" ThemeColor="@ThemeConstants.Button.ThemeColor.Warning">@CloseOrderIcon @Localizer["AppointmentEditor_FinishOrder"]</TelerikButton>
+        }
     }
 
     @if (!isCurrentWOTakenByUser 
