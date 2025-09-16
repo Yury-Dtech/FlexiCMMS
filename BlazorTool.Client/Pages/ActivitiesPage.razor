@@ -228,9 +228,9 @@
                     WorkDayStart="@WorkDayStart" WorkDayEnd="@WorkDayEnd">
                     <ItemTemplate>
                         @{
-                            var item = context as ActivityAppointment;
+                            var item = (context as ActivityAppointment) ?? new ActivityAppointment();
                         }
-                        <div class="tooltip-target" style="height:100%;" title="@(item.IsWorkOrder ? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
+                        <div class="tooltip-target" style="height:100%;" title="@((item.IsWorkOrder) ? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Day" />
                         </div>
                     </ItemTemplate>
@@ -249,9 +249,9 @@
                     WorkDayStart="@WorkDayStart" WorkDayEnd="@WorkDayEnd">
                     <ItemTemplate>
                         @{
-                            var item = context as ActivityAppointment;
+                            var item = (context as ActivityAppointment) ?? new ActivityAppointment();
                         }
-                        <div class="tooltip-target" style="height:100%;" title="@(item.IsWorkOrder? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
+                        <div class="tooltip-target" style="height:100%;" title="@(item.IsWorkOrder? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Week" />
                         </div>  
                     </ItemTemplate>
@@ -285,9 +285,9 @@
                     </DateHeaderTemplate>
                     <ItemTemplate>
                         @{
-                            var item = context as ActivityAppointment;
+                            var item = (context as ActivityAppointment) ?? new ActivityAppointment();
                         }
-                        <div class="tooltip-target" style="height:100%;" title="@(item.IsWorkOrder? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, context as ActivityAppointment))">
+                        <div class="tooltip-target" style="height:100%;" title="@(item.IsWorkOrder? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
                             <ActivitySchedulerItem Item="@(context as ActivityAppointment)" View="@SchedulerView.Week" />
                         </div>
                     </ItemTemplate>
@@ -409,7 +409,6 @@
     private List<WorkOrder> _allOrders = new();
     private bool isLoading { get; set; } = true;
     private bool WOEditFormShown { get; set; } = false;
-    private bool isOrderCardOpen = false;
     private bool ShowAddActivityForOrderForm { get; set; } = false;
     private bool ShowActivityCard { get; set; } = false;
     private ActivityAppointment? CurrentAppointment { get; set; } = new ActivityAppointment(); //Selected appointment for edit/view
@@ -793,7 +792,6 @@
                 }
                 //Save WO to Server
                 WOEditFormShown = false;
-                isOrderCardOpen = false;
                 DisplayAppointments();
             }
             else //update activity
@@ -882,7 +880,6 @@
         if (editedAppointment == null)//was removed or cancelled NEW
         {
             WOEditFormShown = false;
-            isOrderCardOpen = false;
             return;
         }
         else
@@ -896,7 +893,6 @@
                 _allAppointments.Add(editedAppointment);
         }
         WOEditFormShown = false;
-        isOrderCardOpen = false;
         await HardLoadData();
         SchedulerRef?.Rebind();
     }
@@ -968,8 +964,6 @@
     void CancelEditing()
     {
         WOEditFormShown = false;
-        isOrderCardOpen = false;
-
     }
 
     private void OnSchedulerCellRender(SchedulerCellRenderEventArgs args)
@@ -1007,9 +1001,9 @@
         sb.AppendLine("<style>");
         foreach (var color in uniqueColors)
         {
-            var safeName = color.TrimStart('#');
+            var safeName = color?.TrimStart('#');
             if (!UserState.UseOriginalColors)
-                switch (safeName.ToLowerInvariant())
+                switch (safeName?.ToLowerInvariant())
                 {
                     case "lime":
                     case "1bf151":
@@ -1030,7 +1024,7 @@
                 }
             else
                 safeName = color;
-            sb.AppendLine($".state-{color.TrimStart('#')} {{");
+            sb.AppendLine($".state-{color?.TrimStart('#')} {{");
             sb.AppendLine($"    background-color: {safeName};");
             sb.AppendLine("}");
         }
@@ -1040,9 +1034,9 @@
     public class Resource
     {
         // these are the default field names
-        public string Text { get; set; }
-        public string Value { get; set; }
-        public string Color { get; set; } // must be a valid CSS string
+        public string Text { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty; // must be a valid CSS string
     }
 
     private void InitializeSaveStateTimer()
@@ -1209,7 +1203,6 @@
     {
         Console.WriteLine($"[{currentUser.Name}]:  Open order: {CurrentAppointment?.WorkOrderID}");
         WOEditFormShown = true;
-        isOrderCardOpen = true;
     }
 
     private void OpenActivity()
@@ -1253,7 +1246,6 @@
         if (editedAppointment == null)//was removed or cancelled NEW
         {
             WOEditFormShown = false;
-            isOrderCardOpen = false;
             return;
         }
         else
@@ -1267,7 +1259,6 @@
             _allAppointments.Add(newAppointment);
         }
         WOEditFormShown = false;
-        isOrderCardOpen = false;
         DisplayAppointments();
     }
 

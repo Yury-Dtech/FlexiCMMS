@@ -28,10 +28,7 @@ namespace BlazorTool.Client.Services
             try
             {
                 var wrapper = await _http.GetFromJsonAsync<ApiResponse<WODict>>(url);
-                Console.WriteLine("\n");
-                Console.WriteLine($"[{_userState.UserName}] = = = = = = = response Dict.Count: " + wrapper?.Data.Count.ToString());
-                Console.WriteLine("\n");
-                Debug.WriteLine($"[{_userState.UserName}] = = = = = = = response Dict.Count: " + wrapper?.Data.Count.ToString());
+               Debug.WriteLine($"[{_userState.UserName}] = = = = = = = response Dict.Count: " + wrapper?.Data.Count.ToString());
                 if (wrapper != null && wrapper.Data != null && wrapper.IsValid)
                 {
                     if (wrapper.Errors.Count == 0)
