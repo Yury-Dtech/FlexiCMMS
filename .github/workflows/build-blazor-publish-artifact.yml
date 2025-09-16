@@ -32,7 +32,7 @@ jobs:
         echo "Telerik source added successfully."
           
     - name: 📦 Restore solution
-      run: dotnet restore
+      run: dotnet restore --runtime linux-x64
 
     - name: 🏗️ Build solution (Release)
       run: dotnet build --configuration Release --no-restore
