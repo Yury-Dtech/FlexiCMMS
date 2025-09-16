@@ -21,11 +21,13 @@ jobs:
 # 👇 private NuGet-source Telerik from secrets
     - name: 🔐 Add Telerik NuGet Feed
       run: |
-        dotnet nuget add source "${{ secrets.TELERIK_NUGET_URL }}" \
-          --name telerik \
+        echo "Adding Telerik NuGet source..."
+        dotnet nuget add source "https://nuget.telerik.com/v3/index.json" \
+          --name "telerik" \
           --username "api-key-placeholder" \
           --password "${{ secrets.TELERIK_API_KEY }}" \
           --store-password-in-clear-text
+        echo "Telerik source added successfully."
           
     - name: 📦 Restore solution
       run: dotnet restore
