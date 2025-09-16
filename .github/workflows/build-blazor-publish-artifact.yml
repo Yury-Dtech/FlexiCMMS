@@ -21,12 +21,10 @@ jobs:
 # 👇 private NuGet-source Telerik from secrets
     - name: 🔐 Add Telerik NuGet Feed
       run: |
-        echo "=== DEBUG: Telerik API Key length ==="
-        echo "${{ secrets.TELERIK_API_KEY }}" | wc -c
         echo "=== Adding NuGet source ==="
         dotnet nuget add source "https://nuget.telerik.com/v3/index.json" \
           --name "telerik" \
-          --username "api-key-placeholder" \
+          --username "api-key" \
           --password "${{ secrets.TELERIK_API_KEY }}" \
           --store-password-in-clear-text
         echo "Telerik source added successfully."
