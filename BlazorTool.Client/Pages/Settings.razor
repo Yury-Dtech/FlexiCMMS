@@ -1,0 +1,463 @@
+﻿@page "/settings"
+@using BlazorTool.Client.Services
+@using BlazorTool.Client.Components
+@using BlazorTool.Client.Models
+@inject ApiServiceClient apiService
+@inject NavigationManager Navigation
+@inject UserState UserState
+@inject AppStateService AppState
+@inject ILogger<Settings> Logger
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<BlazorTool.Client.Components.CheckSession ApiService="@apiService" UserState="@UserState" />
+
+<TelerikNotification @ref="@NotificationReference" Class="my-telerik-notification"
+                     HorizontalPosition="@NotificationHorizontalPosition.Center"
+                     VerticalPosition="@NotificationVerticalPosition.Top" />
+
+<TelerikDialog @bind-Visible="isConfirmDialogVisible">
+    <DialogTitle>@Localizer["Settings_Confirmation"]</DialogTitle>
+    <DialogContent>
+        <p>@Localizer["Settings_ConfirmApiChange"]</p>
+        <p><strong>@Localizer["Settings_OldAddress"]</strong> @oldApiAddress</p>
+        <p><strong>@Localizer["Settings_NewAddress"]</strong> @ApiAddress</p>
+        <p class="text-danger">@Localizer["Settings_AppRestart"]</p>
+    </DialogContent>
+    <DialogButtons>
+        <TelerikButton OnClick="@ConfirmSave" ThemeColor="primary">@Localizer["Settings_Confirm"]</TelerikButton>
+        <TelerikButton OnClick="@CancelSave">@Localizer["Settings_Cancel"]</TelerikButton>
+    </DialogButtons>
+</TelerikDialog>
+
+<h3>@Localizer["Settings_Title"]</h3>
+<div class="container form-grid">
+    @if (isAdmin)
+    {
+        <div class="row mb-3">
+            <label for="apiUrl" class="col-sm-4 col-form-label">@Localizer["Settings_ApiAddress"]</label>
+            <div class="col-sm-8">
+                <div class="input-group settings-input-width">
+                    <input type="text"
+                           id="apiUrl"
+                           class="form-control"
+                           @bind="ApiAddress" />
+                    <button class="btn btn-outline-secondary" type="button" @onclick="TestApiAddress">
+                        @Localizer["Settings_TestApiAddress"]
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <label for="language" class="col-sm-4 col-form-label">@Localizer["Settings_Language"]</label>
+        <div class="col-sm-8">
+            <select id="language" class="form-select settings-input-width" @bind="@SelectedLanguage">
+                <option value="pl-PL">Polski</option>
+                <option value="en-US">English</option>
+                @* Add more languages as needed *@
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="language" class="col-sm-4 col-form-label">@Localizer["WorkDayStart"]</label>
+        <div class="col-sm-8">
+           <TelerikTimePicker @bind-Value="@WorkDayStart"></TelerikTimePicker>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="workDayEnd" class="col-sm-4 col-form-label">@Localizer["WorkDayEnd"]</label>
+        <div class="col-sm-8">
+           <TelerikTimePicker @bind-Value="@WorkDayEnd"></TelerikTimePicker>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="networkShareServer" class="col-sm-4 col-form-label">
+            @Localizer["Settings_NetworkShareServer"]
+        </label>
+        <div class="col-sm-8">
+            <TelerikTextBox Id="networkShareServer"
+                            @bind-Value="@NetworkShareServer"
+                            class="settings-input-width" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="networkShareUsername" class="col-sm-4 col-form-label">
+            @Localizer["Settings_NetworkShareUsername"]
+        </label>
+        <div class="col-sm-8">
+            <TelerikTextBox Id="networkShareUsername"
+                            @bind-Value="@NetworkShareUsername"
+                            class="settings-input-width" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="networkSharePassword" class="col-sm-4 col-form-label">
+            @Localizer["Settings_NetworkSharePassword"]
+        </label>
+        <div class="col-sm-8">
+            <TelerikTextBox Id="networkSharePassword"
+                            @bind-Value="@NetworkSharePassword"
+                            Password="true"
+                            class="settings-input-width" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-8 offset-sm-4">
+            <button class="btn btn-info" @onclick="CheckSmbCredentialsAsync">
+                Check SMB Credentials
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-sm-8 offset-sm-4">
+            <div class="form-check">
+                <TelerikCheckBox Id="color-switcher" @bind-Value="@UseOriginalColors" />
+                <label class="form-check-label" for="color-switcher">
+                    @Localizer["Settings_UseOriginalColors"]
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <button class="btn btn-primary" @onclick="SaveSettingsAsync">
+            @Localizer["Settings_SaveSettings"]
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(StatusMessage))
+    {
+        <div class="mt-3 @StatusMessageClass">
+            @StatusMessage
+        </div>
+    }
+    <div class="row mb-3">
+        <div class="divider my-4"></div>
+    </div>
+</div>
+<div class="container mt-4">
+    <UserProfileDisplay UserState="@UserState" DisplayNames="@UserProfileDisplayNames" />
+</div>
+
+@code{
+
+    protected string? ApiAddress { get; set; }
+    protected string? SelectedLanguage { get; set; } = "pl-Pl";
+    private bool isAdmin = false;
+    protected string? StatusMessage { get; set; }
+    protected string? StatusMessageClass { get; set; } // e.g., "text-success" or "text-danger"
+    string currentUser = "test User";
+    private bool UseOriginalColors { get; set; }
+    protected string? NetworkShareUsername { get; set; }
+    protected string? NetworkSharePassword { get; set; }
+    protected string? NetworkShareServer { get; set; }
+    public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
+    private bool isConfirmDialogVisible = false;
+    private string oldApiAddress = "";
+    private bool needRestart = false;
+    private DateTime? WorkDayStart { get; set; } = new DateTime(1, 1, 1, 8, 0, 0);
+    private DateTime? WorkDayEnd { get; set; } = new DateTime(1, 1, 1, 16, 0, 0);
+    private Dictionary<string, string> UserProfileDisplayNames = new Dictionary<string, string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"[NAV] Settings.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+
+        if (!UserState.IsAuthenticated)
+        {
+            Logger.LogWarning("User is not authenticated, redirecting to login page.");
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        GetUserProfilenames();
+        currentUser = UserState.UserName ?? "unknown user";
+        isAdmin = UserState?.UserName == "MES" || UserState?.UserName?.ToLower() == "admin" || UserState?.RightMatrixID == 1; 
+        Logger.LogInformation($"Current user: {currentUser}, Is Admin: {isAdmin}");
+        await LoadSettingsAsync();
+        UseOriginalColors = UserState?.UseOriginalColors ?? false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void GetUserProfilenames()
+    {
+        UserProfileDisplayNames = new Dictionary<string, string>
+    {
+        { nameof(UserState.UserName), Localizer["UserProfile_UserName"] },
+        { nameof(UserState.LangCode), Localizer["UserProfile_LangCode"] },
+        { nameof(UserState.PersonID), Localizer["UserProfile_PersonID"] },
+        { nameof(UserState.IsAuthenticated), Localizer["UserProfile_IsAuthenticated"] },
+        { nameof(UserState.RightMatrix), Localizer["UserProfile_RightMatrix"] },
+        { nameof(UserState.UseOriginalColors), Localizer["UserProfile_UseOriginalColors"] },
+        { nameof(UserState.CanHaveManyActiveTake), Localizer["CanHaveManyTakenOrders"]  },
+        { "WO_Add", Localizer["Permission_WO_Add"] },
+        { "WO_Edit", Localizer["Permission_WO_Edit"] },
+        { "WO_Edit_Description", Localizer["Permission_WO_Edit_Description"] },
+        { "WO_Del", Localizer["Permission_WO_Del"] },
+        { "WO_Close", Localizer["Permission_WO_Close"] },
+        { "AcT_Add", Localizer["Permission_AcT_Add"] },
+        { "AcT_Del", Localizer["Permission_AcT_Del"] },
+        { "AcT_Edit_Description", Localizer["Permission_AcT_Edit_Description"] },
+        { "WO_SET_AssignedPerson", Localizer["Permission_WO_SET_AssignedPerson"] }
+    };
+    }
+    protected async Task LoadSettingsAsync()
+    {
+        if (isAdmin)
+        {
+            ApiAddress = await LoadSettingAsync("apiAddress");
+            oldApiAddress = AppState.Settings.ApiBaseUrl ?? ApiAddress ?? "";
+            if (string.IsNullOrEmpty(AppState.Settings.ApiBaseUrl) && !string.IsNullOrEmpty(ApiAddress))
+            {
+                AppState.Settings.ApiBaseUrl = ApiAddress;
+            }
+        }
+        SelectedLanguage = UserState.LangCode;
+        UseOriginalColors = UserState.UseOriginalColors;
+        NetworkShareUsername = UserState.NetworkShareUsername;
+        NetworkSharePassword = UserState.NetworkSharePassword;
+        NetworkShareServer = UserState.NetworkShareServer;
+        WorkDayStart = UserState.WorkDayStart ?? new DateTime(1, 1, 1, 8, 0, 0);
+        WorkDayEnd = UserState.WorkDayEnd ?? new DateTime(1, 1, 1, 16, 0, 0);
+    }
+
+    protected async Task<string?> LoadSettingAsync(string key)
+    {
+        return await apiService.LoadSettingAsync(key, currentUser);
+    }
+
+    protected async Task<bool> TestApiAddress()
+    {
+        StatusMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(ApiAddress))
+        {
+            ShowNotification(Localizer["Settings_ApiAddressEmpty"], NotificationTypeEnum.Warning);
+            // StatusMessage = Localizer["Settings_ApiAddressEmpty"];
+            StatusMessageClass = "text-danger";
+            return false;
+        }
+
+        try
+        {
+            var response = await apiService.CheckApiAddressAsync(ApiAddress);
+            if (!response.Item1)
+            {
+                ShowNotification(response.Item2, NotificationTypeEnum.Warning);
+                //StatusMessage = response.Item2;
+                StatusMessageClass = "text-danger";
+                return false;
+            }
+            // StatusMessage = $"{Localizer["Settings_ApiConnected"]} '{ApiAddress}'.";
+            ShowNotification($"{Localizer["Settings_ApiConnected"]} '{ApiAddress}'.", NotificationTypeEnum.Success);
+            StatusMessageClass = "text-success";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"{Localizer["Settings_ApiTestError"]} {ex.Message}", NotificationTypeEnum.Error);
+            // StatusMessage = $"{Localizer["Settings_ApiTestError"]} {ex.Message}";
+            StatusMessageClass = "text-danger";
+            return false;
+        }
+    }
+
+    protected async Task SaveSettingsAsync()
+    {
+        StatusMessage = string.Empty;
+        needRestart = isAdmin && !string.IsNullOrEmpty(ApiAddress) && ApiAddress != oldApiAddress;
+        if (needRestart)
+        {
+            var testResult = await TestApiAddress();
+            if (!testResult)
+            {
+                ShowNotification(Localizer["Settings_WrongApiAddress"], NotificationTypeEnum.Warning);
+                //StatusMessage = Localizer["Settings_WrongApiAddress"];
+                StatusMessageClass = "text-danger";
+                needRestart = false;
+                return;
+            }
+
+            if (!ApiAddress.EndsWith('/')) ApiAddress += "/";
+
+            // If user is admin and the API address has changed, show confirmation dialog
+            isConfirmDialogVisible = true;
+            return;
+        }
+
+        // If no confirmation is needed, proceed with saving other settings
+        await ProceedWithSave(needRestart);
+    }
+
+    private async Task ConfirmSave()
+    {
+        isConfirmDialogVisible = false;
+        await ProceedWithSave(true);
+    }
+
+    private void CancelSave()
+    {
+        isConfirmDialogVisible = false;
+        ApiAddress = oldApiAddress; // Revert the change in the input
+        ShowNotification(Localizer["Settings_Canceled"], NotificationTypeEnum.Info);
+    }
+
+    private async Task ProceedWithSave(bool needRestart)
+    { 
+        bool needReload = false;
+        try
+        {
+            Dictionary<(string, string), bool> keys = new Dictionary<(string, string), bool>
+            {
+                { ("selectedLanguage", SelectedLanguage ?? "pl-Pl"), false },
+                { ("useOriginalColors", UseOriginalColors.ToString()), false },
+                { ("NetworkShareUsername", NetworkShareUsername ?? string.Empty), false },
+                { ("NetworkSharePassword", NetworkSharePassword ?? string.Empty), false },
+                { ("NetworkShareServer", NetworkShareServer ?? string.Empty), false },
+                { ("WorkDayStart", WorkDayStart?.ToShortTimeString() ?? string.Empty), false },
+                { ("WorkDayEnd", WorkDayEnd?.ToShortTimeString() ?? string.Empty), false }
+            };
+            foreach(var key in keys.Keys)
+            {
+                keys[key] = await SaveSettingAsync(key.Item1, key.Item2, currentUser);
+            }
+
+            if (keys.All(r => r.Value))
+            {
+                UserState.UseOriginalColors = UseOriginalColors;
+                UserState.LangCode = SelectedLanguage;
+                UserState.NetworkSharePassword = NetworkSharePassword;
+                UserState.NetworkShareUsername = NetworkShareUsername;
+                UserState.NetworkShareServer = NetworkShareServer;
+                UserState.WorkDayStart = WorkDayStart;
+                UserState.WorkDayEnd = WorkDayEnd;
+                needReload = await UserState.SwitchLanguage(SelectedLanguage);
+                ShowNotification(Localizer["Settings_SettingsSaved"], NotificationTypeEnum.Success);
+            }
+            else
+            {
+                foreach(var key in keys.Where(k => !k.Value).Select(k => k.Key))
+                {
+                    Logger.LogError($"Failed to save setting: {key}");
+                    ShowNotification(Localizer[$"Settings_SaveFailed ({key})"], NotificationTypeEnum.Error);
+                }
+            }
+
+            if (needRestart)
+            {
+                await SaveSettingAsync("apiAddress", ApiAddress, currentUser);
+                AppState.Settings.ApiBaseUrl = ApiAddress;
+                ShowNotification(Localizer["Settings_RestartApplyApi"], NotificationTypeEnum.Info);
+                // Clear client-side cache and force a full page reload
+                Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            }
+            else if (needReload)
+            {
+                // If language changed, reload the page to apply new language settings
+                Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"{Localizer["Settings_AnErrorOccurred"]} {ex.Message}", NotificationTypeEnum.Error);
+            StatusMessageClass = "text-danger";
+        }
+    }
+
+    protected async Task CheckSmbCredentialsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NetworkShareServer) ||
+            string.IsNullOrWhiteSpace(NetworkShareUsername) ||
+            string.IsNullOrWhiteSpace(NetworkSharePassword))
+        {
+            ShowNotification("All SMB credential fields must be filled.", NotificationTypeEnum.Warning);
+            // SmbCheckStatusMessage = "All SMB credential fields must be filled.";
+            // SmbCheckStatusClass = "text-danger";
+            return;
+        }
+
+        var credentials = new SmbCredentials
+        {
+            Server = NetworkShareServer,
+            Username = NetworkShareUsername,
+            Password = NetworkSharePassword,
+            Domain = null // Assuming domain is not used or can be null for now
+        };
+
+        var (isValid, message) = await apiService.CheckSmbCredentialsAsync(credentials);
+
+        if (isValid)
+        {
+            ShowNotification(message, NotificationTypeEnum.Success);
+            // SmbCheckStatusMessage = $"SMB Credentials valid: {message}";
+            // SmbCheckStatusClass = "text-success";
+        }
+        else
+        {
+            ShowNotification(message, NotificationTypeEnum.Error);
+            // SmbCheckStatusMessage = $"SMB Credentials invalid: {message}";
+            // SmbCheckStatusClass = "text-danger";
+        }
+    }
+
+    protected async Task<bool> SaveSettingAsync(string? key, string? value, string? user)
+    {
+        if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(user))
+        {
+            return false;
+        }
+
+        var result = await apiService.SaveSettingAsync(key, value, user);
+        return result;
+    }
+
+    private void ShowNotification(string message, NotificationTypeEnum type)
+    {
+        switch(type)
+        {
+            case NotificationTypeEnum.Success:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.CheckCircle
+                });
+                break;
+            case NotificationTypeEnum.Error:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Error,
+                    CloseAfter = 5000,
+                    Icon = SvgIcon.WarningCircle
+                });
+                break;
+            case NotificationTypeEnum.Info:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.InfoCircle
+                });
+                break;
+            case NotificationTypeEnum.Warning:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.ExclamationCircle
+                });
+                break;
+        }
+    }
+}

@@ -1,0 +1,484 @@
+﻿@using BlazorTool.Client.Models
+@using BlazorTool.Client.Resources
+@using BlazorTool.Client.Services
+@using Telerik.SvgIcons
+@inject ApiServiceClient ApiService
+@inject UserState UserState
+@inject IStringLocalizer<UIStrings> Loc
+@inject IJSRuntime JSRuntime
+
+<div class="device-display-container">
+    <TelerikLoaderContainer Visible="@_isLoading" Template="@LoaderTemplate">
+    </TelerikLoaderContainer>
+        @if (_deviceInfo == null)
+        {
+            @* <div class="error-message">
+                <TelerikSvgIcon Icon="@SvgIcon.ExclamationCircle" Size="@ThemeConstants.SvgIcon.Size.Large"></TelerikSvgIcon>
+                @* <p>@Loc["DeviceDisplay_ErrorLoadingInfo"]</p> 
+            </div> *@
+        }
+        else
+        {
+            <!-- Header Section -->
+            <div class="device-header">
+                <div class="device-header-content">
+                    <div class="device-title-section">
+                        <h1 class="device-title">@_deviceInfo.AssetNo</h1>
+                        <p class="device-subtitle">@_deviceInfo.Type</p>
+                    </div>
+                    @if (_deviceInfo.IsCritical == true)
+                    {
+                        <div class="critical-badge">
+                            <TelerikSvgIcon Icon="@SvgIcon.WarningTriangle" Size="@ThemeConstants.SvgIcon.Size.Small"></TelerikSvgIcon>
+                            <span>@Loc["DeviceDisplay_Critical"]</span>
+                        </div>
+                    }
+                </div>
+                <div class="device-status-indicator @GetStatusClass()">
+                    <span class="status-dot"></span>
+                    @if (_deviceInfo.LastState != null)
+                    {
+                        <span>@_deviceInfo.LastState.StateName</span>
+                    }
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="device-content-grid">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- General Information Card -->
+                    <TelerikCard Class="info-card">
+                        <CardHeader>
+                            <div class="card-header-with-icon">
+                                <TelerikSvgIcon Icon="@SvgIcon.InfoCircle" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
+                                <h3>@Loc["DeviceDisplay_GeneralInfo"]</h3>
+                            </div>
+                        </CardHeader>
+                        <CardBody>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>@Loc["DeviceDisplay_Category"]</label>
+                                    <TelerikTextBox Id="DeviceCategory" Value="@(_deviceInfo.DeviceCategory ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
+                                </div>
+                                <div class="info-item">
+                                    <label>@Loc["DeviceDisplay_SerialNo"]</label>
+                                    <TelerikTextBox Id="SerialNo" Value="@(_deviceInfo.SerialNo ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
+                                </div>
+                                <div class="info-item">
+                                    <label>@Loc["DeviceDisplay_Location"]</label>
+                                <TelerikTextBox Id="LocationName" Value="@(_deviceInfo.LocationName ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
+                                </div>
+                                    <div class="info-item">
+                                        <label>@Loc["DeviceDisplay_Place"]</label>
+                                <TelerikTextBox Id="Place" Value="@(_deviceInfo.Place ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>@Loc["DeviceDisplay_Owner"]</label>
+                                        <TelerikTextBox Id="Owner" Value="@(_deviceInfo.Owner ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>@Loc["DeviceDisplay_Set"]</label>
+                                <TelerikTextBox Id="SetName" Value="@(_deviceInfo.SetName ?? string.Empty)" ReadOnly="true"></TelerikTextBox>
+                                    </div>
+                                    <div class="info-item full-width">
+                                        <label>@Loc["DeviceDisplay_Documentation"]</label>
+                                        <TelerikButton OnClick="@(() => OpenDocumentation(_deviceInfo.DocumentationPath))" 
+                                                     Icon="@SvgIcon.FileData" 
+                                                     Class="doc-button">
+                                            @Loc["DeviceDisplay_OpenDocumentation"]
+                                        </TelerikButton>
+                                    </div>
+                            </div>
+                        </CardBody>
+                    </TelerikCard>
+
+                    <!-- State Information Card -->
+                    @if (_deviceInfo.LastState != null)
+                    {
+                        <TelerikCard Class="state-card">
+                            <CardHeader>
+                                <div class="card-header-with-icon">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Clock" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
+                                    <h3>@Loc["DeviceDisplay_DeviceState"]</h3>
+                                </div>
+                            </CardHeader>
+                            <CardBody>
+                                <div class="state-info">
+                                    <div class="state-main">
+                                        <div class="state-name">@_deviceInfo.LastState.StateName</div>
+                                        <div class="state-duration">
+                                            @Loc["DeviceDisplay_Duration"] @FormatDuration(_deviceInfo.LastState.StateTime)
+                                        </div>
+                                    </div>
+                                    @if (_deviceInfo.LastState.ChangeTime.HasValue)
+                                    {
+                                        <div class="state-change-time">
+                                            @Loc["DeviceDisplay_Changed"] @_deviceInfo.LastState.ChangeTime.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")
+                                        </div>
+                                    }
+                                </div>
+                            </CardBody>
+                        </TelerikCard>
+                    }
+               
+                </div>
+
+                <!-- middle Column -->
+                @* <div class="middle-column">
+                 <!-- Documentation Files Card -->
+                <TelerikCard Class="images-card">
+                            <CardHeader>
+                                <div class="card-header-with-icon">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Paperclip" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
+                                    <h3>@Loc["DeviceDisplay_DocumentationFiles"]</h3>
+                                </div>
+                            </CardHeader>
+                            <CardBody>
+                    @if (_deviceInfo.DirectoryFiles != null && _deviceInfo.DirectoryFiles.Any())
+                    {
+                                <TelerikListView Data="@_deviceInfo.DirectoryFiles" 
+                                               Pageable="true" 
+                                               PageSize="5">
+                                    <Template>
+                                        @{ var file = context as WorkOrderFileItem; }
+                                        <div class="file-item" @onclick="@(() => OpenFile(file.FullName))">
+                                            <TelerikSvgIcon Icon="@GetFileIcon(file.Name)" Size="@ThemeConstants.SvgIcon.Size.Small"></TelerikSvgIcon>
+                                            <span>@file.Name</span>
+                                        </div>
+                                    </Template>
+                            </TelerikListView>
+                        }else
+                        {
+                            <div>No files</div>
+                        }
+                            </CardBody>
+                        </TelerikCard>
+
+                </div> *@
+            <div class="right-column">
+                    <!-- Device Images -->
+                @if (!_isImageLoading)
+                {                   
+                
+                        <TelerikCard Class="images-card">
+                            <CardHeader>
+                                <div class="card-header-with-icon">
+                                    <TelerikSvgIcon Icon="@SvgIcon.Image" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
+                                    <h3>@Loc["DeviceDisplay_DeviceImages"]</h3>
+                                </div>
+                            </CardHeader>
+                @if (_deviceInfo.Images != null && _deviceInfo.Images.Any(i => !string.IsNullOrEmpty(i.Image)))
+                    {
+                            <CardBody>
+                                <div class="images-gallery">
+                                    @foreach (var image in _deviceInfo.Images.Where(i => !string.IsNullOrEmpty(i.Image)))
+                                    {
+                                        <div class="image-item" @onclick="@(() => OpenImageModal(image.Image))">
+                                            <img src="data:image/png;base64,@image.Image" alt="Device Image" />
+                                            <div class="image-overlay">
+                                                <TelerikSvgIcon Icon="@SvgIcon.ZoomIn" Size="@ThemeConstants.SvgIcon.Size.Medium"></TelerikSvgIcon>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </CardBody>
+                }else
+                {
+
+                            <div >
+                                @* @IconHtmlHelper.Picture(150) *@
+                                <br />
+                                @SvgIcon.FileImage
+                                No photo
+                            </div>
+
+                }
+                    </TelerikCard>
+
+                }else
+                {
+                    <div>@Loc["WorkOrderFiles_LoadingImage"]</div>
+                }
+            
+            </div>
+            </div>
+
+            <!-- Full Width Sections -->
+            <div class="full-width-sections">
+                <!-- Device Details -->
+                @if (_deviceInfo.Details != null && _deviceInfo.Details.Any())
+                {
+                    <div class="details-table-container">
+                    <h3>@Loc["DeviceDisplay_DeviceDetails"]</h3>
+                        <table class="device-details-table">
+                            <thead>
+                                <tr>
+                                    <th>@Loc["DeviceDisplay_Property"]</th>
+                                    <th>@Loc["DeviceDisplay_Value"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detail in _deviceInfo.Details.OrderBy(d => d.DisplayIndex))
+                                {
+                                    <tr>
+                                        <td><strong>@detail.PropertyName</strong></td>
+                                        <td>
+                                        @if (detail.PropertyType == "Boolean")
+                                        {
+                                                @if (detail.PropertyValue == "0")
+                                                    {@Loc["Yes"]}
+                                                else if (detail.PropertyValue == "1")
+                                                    { @Loc["No"]}
+                                                else if (bool.TryParse(detail.PropertyValue, out bool val))
+                                                { @(val ? Loc["Yes"] : Loc["No"])}
+                                                else
+                                                {
+                                                    @detail?.PropertyValue?.ToString()
+                                                }
+                                        }
+                                        else
+                                        {
+                                            @(detail?.PropertyValue?.ToString() ?? "-")
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+            </div>
+        }
+   
+</div>
+
+<!-- Image Modal -->
+<TelerikWindow @bind-Visible="@_showImageModal" Modal="true" Class="image-modal" CloseOnOverlayClick="true" >
+    <WindowTitle>@Loc["DeviceDisplay_ImageModalTitle"]</WindowTitle>
+    <WindowContent>
+        @if (!string.IsNullOrEmpty(_selectedImage))
+        {
+            @if (!_isFullImageLoading)
+            {
+                <img src="data:image/png;base64,@_selectedImage" alt="Device Image" class="modal-image" />
+            }else
+            {
+                <div>@Loc["WorkOrderFiles_LoadingFullSizeImage"]</div>
+            }
+        }
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
+<!-- Documentation Files Modal -->
+<TelerikWindow @bind-Visible="@_showDocumentationModal" Modal="true" Class="documentation-modal" CloseOnOverlayClick="true">
+    <WindowTitle>@Loc["DeviceDisplay_DocumentationFiles"]</WindowTitle>
+    <WindowContent>
+        @if (_deviceInfo?.DirectoryFiles != null && _deviceInfo.DirectoryFiles.Any())
+        {
+            <div class="documentation-file-list">
+                @copied
+                @foreach (var file in _deviceInfo.DirectoryFiles)
+                {
+                    <div class="documentation-file-item">
+                        <i class="file-icon @GetFileIconClass(file.Name)"></i>
+                        <a href="@ApiService.GetFileDownloadUrl(file.FullName)" target="_blank">@file.Name</a>    
+                        <div class="file-path-container">
+                            <span class="file-path"></span>
+                            <TelerikButton Icon="@SvgIcon.Copy" OnClick="@(() => CopyPathToClipboard(file.FullName))" Class="copy-path-button">Copy path</TelerikButton>
+                        </div>
+                    </div>
+                }
+            </div>
+            <small>only demo, add files - in future</small>
+            <TelerikFileSelect @ref="@FileSelectRef" />
+        }
+        else
+        {
+            <div class="no-documentation-files-message">@Loc["DeviceDisplay_NoDocumentationFiles"]</div>
+        }
+    </WindowContent>
+    <WindowActions>
+        <WindowAction Name="Close" />
+    </WindowActions>
+</TelerikWindow>
+
+@code {
+    [Parameter]
+    public int DeviceID { get; set; }
+
+    private FullDeviceInfo? _deviceInfo;
+    private bool _isLoading = true;
+    private bool _showImageModal = false;
+    private string? _selectedImage;
+    private bool _isImageLoading = false;
+    private bool _isFullImageLoading = false;
+    private int ImgHeight = 300;
+    private int ImgWidth = 300;
+    private bool isFullImgLoaded = false;
+    private bool _showDocumentationModal = false;
+    private string copied = "";
+    private TelerikFileSelect FileSelectRef { get; set; }
+    private RenderFragment LoaderTemplate => __builder => {
+        <div class="loader-wrapper">
+            <TelerikLoader Type="@LoaderType.ConvergingSpinner" Size="large"></TelerikLoader>
+            <p class="loading-text">@Loc["DeviceDisplay_LoadingInfo"]</p>
+        </div>
+
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (DeviceID <= 0) return;
+
+        _isLoading = true;
+        _isImageLoading = true;
+        try
+        {
+            _deviceInfo = await ApiService.GetFullDeviceInfoAsync(DeviceID, UserState.LangCode);
+            _isLoading = false;
+            await LoadImages(ImgWidth, ImgHeight);
+        }
+        catch (Exception ex)
+        {
+            // Log error if logging is available
+            _deviceInfo = null;
+        }
+        finally
+        {
+            _isLoading = false;
+            _isImageLoading = false;
+        }
+    }
+
+    private void OnFileClick()
+    {
+        FileSelectRef.OpenSelectFilesDialog();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+    }
+
+    private async Task<DeviceImage> LoadImages(int? width = null, int? height = null)
+    {
+        var imageResponse = await ApiService.GetDeviceImageAsync(DeviceID, width, height);
+        if (imageResponse.IsValid && imageResponse.Data != null)
+        {
+            _deviceInfo?.Images?.Clear();
+            _deviceInfo?.Images?.Add(imageResponse.Data);
+        }
+        return imageResponse.Data;
+    }
+    private string GetStatusClass()
+    {
+        if (_deviceInfo?.LastState == null) return "status-unknown";
+
+        return _deviceInfo.LastState.StateID switch
+        {
+            1 => "status-running",
+            2 => "status-stopped",
+            3 => "status-warning",
+            4 => "status-error",
+            _ => "status-unknown"
+        };
+    }
+
+    private string FormatDuration(int minutes)
+    {
+        if (minutes < 60)
+            return $"{minutes} {Loc["DeviceDisplay_MinutesAbbr"]}";
+
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+
+        if (hours < 24)
+            return $"{hours} {Loc["DeviceDisplay_HoursAbbr"]} {remainingMinutes} {Loc["DeviceDisplay_MinutesAbbr"]}";
+
+        var days = hours / 24;
+        var remainingHours = hours % 24;
+
+        return $"{days} {Loc["DeviceDisplay_DaysAbbr"]} {remainingHours} {Loc["DeviceDisplay_HoursAbbr"]} {remainingMinutes} {Loc["DeviceDisplay_MinutesAbbr"]}";
+    }
+
+    private void OpenDocumentation(string? path)
+    {
+        _showDocumentationModal = true;
+
+        copied = "";
+    }
+
+    private async Task OpenImageModal(string? image)
+    {
+        if (isFullImgLoaded) return;
+        _isFullImageLoading = true;
+        _selectedImage = image;
+        _showImageModal = true;
+        _selectedImage = (await LoadImages()).Image;
+        _isFullImageLoading = false;
+        isFullImgLoaded = true;
+    }
+
+    private async Task OpenFile(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return;
+
+        var fileDataResponse = await ApiService.GetWorkOrderFile(filePath);
+        if (fileDataResponse.IsValid && fileDataResponse.Data != null && !string.IsNullOrEmpty(fileDataResponse.Data.Data))
+        {
+            // Determine file type and open accordingly
+            var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+            switch (fileExtension)
+            {
+                case ".pdf":
+                    // For PDF, you might want to open in a new tab or use a PDF viewer component
+                    // For now, let's just log or show a message
+                    Console.WriteLine($"Opening PDF: {filePath}");
+                    // Example: _jsRuntime.InvokeVoidAsync("open", $"data:application/pdf;base64,{fileDataResponse.Data.Data}", "_blank");
+                    break;
+                case ".jpg":
+                case ".jpeg":
+                case ".png":
+                case ".gif":
+                    // For images, open in the existing image modal
+                    await OpenImageModal($"data:image/{fileExtension.TrimStart('.')};base64,{fileDataResponse.Data.Data}");
+                    break;
+                default:
+                    Console.WriteLine($"Unsupported file type: {fileExtension}");
+                    // Optionally, provide a download link or error message
+                    break;
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Failed to load file data for {filePath}");
+        }
+    }
+   
+    private async Task CopyPathToClipboard(string fullPath)
+    {
+        var uncPath = fullPath;
+        var res = await JSRuntime.InvokeAsync<bool>("BlazorTool.copyToClipboard", uncPath);
+        copied = res ? "Copied" : "Error";
+    }
+
+    private string GetFileIconClass(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".pdf" => "icon-pdf",
+            ".doc" or ".docx" => "icon-word",
+            ".xls" or ".xlsx" => "icon-excel",
+            ".ppt" or ".pptx" => "icon-ppt",
+            ".jpg" or ".jpeg" or ".png" or ".gif" => "icon-image",
+            ".zip" or ".rar" => "icon-zip",
+            ".txt" => "icon-txt",
+            _ => "icon-file"
+        };
+    }
+}

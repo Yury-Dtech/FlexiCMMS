@@ -1,0 +1,195 @@
+@using BlazorTool.Client.Models
+@using Microsoft.Extensions.Localization
+@inject BlazorTool.Client.Services.ApiServiceClient ApiServiceClient
+@inject ILogger<WorkOrderFilesDisplay> Logger
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<h3>@Localizer["WorkOrderFiles_Title"]</h3>
+
+@if (WorkOrderFiles == null)
+{
+    <p><em>@Localizer["WorkOrderFiles_LoadingFiles"]...</em></p>
+}
+else if (!WorkOrderFiles.Any())
+{
+    <p><em>@Localizer["WorkOrderFiles_NoAttachedFiles"].</em></p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var file in WorkOrderFiles)
+        {
+            <div class="list-group-item d-flex align-items-center" @onclick="(() => OpenFile(file))" style="cursor: pointer;">
+                <span class="me-3">@file.File_Name</span>
+                @if (IsImage(file.Extension))
+                {
+                    <div class="thumbnail-container">
+                        @if (FileThumbnails.TryGetValue(file.WorkOrderDataID, out var imageData))
+                        {
+                            <img src="@($"data:image/{file.Extension.TrimStart('.')};base64,{imageData}")" alt="@file.File_Name" class="img-thumbnail" style="max-width: 100px; max-height: 100px;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">@Localizer["WorkOrderFiles_LoadingThumbnail"]...</span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+
+@if (ShowModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@CurrentFileName</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal" aria-label="@Localizer["WorkOrderFiles_Close"]"></button>
+                </div>
+                <div class="modal-body text-center">
+                    @if (!string.IsNullOrEmpty(FullSizeImageData))
+                    {
+                        <img src="@($"data:image/{CurrentFileExtension.TrimStart('.')};base64,{FullSizeImageData}")" alt="@CurrentFileName" class="img-fluid" />
+                    }
+                    else
+                    {
+                        <p>@Localizer["WorkOrderFiles_LoadingFullSizeImage"]...</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">@Localizer["WorkOrderFiles_Close"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public int WorkOrderId { get; set; }
+
+    private List<WorkOrderFile>? WorkOrderFiles { get; set; }
+    private Dictionary<int, string> FileThumbnails { get; set; } = new Dictionary<int, string>();
+
+    private bool ShowModal { get; set; }
+    private string? CurrentFileName { get; set; }
+    private string? CurrentFileExtension { get; set; }
+    private string? FullSizeImageData { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadWorkOrderFiles();
+    }
+
+    private async Task LoadWorkOrderFiles()
+    {
+        try
+        {
+            var response = await ApiServiceClient.GetWorkOrderFilesAsync(WorkOrderId);
+            if (response.IsValid && response.Data != null)
+            {
+                WorkOrderFiles = response.Data;
+                await LoadThumbnails();
+            }
+            else
+            {
+                Logger.LogError(Localizer["WorkOrderFiles_ErrorLoadingList"] + ": {Errors}", string.Join(", ", response.Errors ?? new List<string>()));
+                WorkOrderFiles = new List<WorkOrderFile>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, Localizer["WorkOrderFiles_UnexpectedErrorLoadingList"] + " {WorkOrderId}", WorkOrderId);
+            WorkOrderFiles = new List<WorkOrderFile>();
+        }
+    }
+
+    private async Task LoadThumbnails()
+    {
+        if (WorkOrderFiles == null) return;
+
+        foreach (var file in WorkOrderFiles)
+        {
+            if (IsImage(file.Extension) && !FileThumbnails.ContainsKey(file.WorkOrderDataID))
+            {
+                try
+                {
+                    // 100x100
+                    var response = await ApiServiceClient.GetWorkOrderFileAsync(file.WorkOrderDataID, 100, 100);
+                    if (response.IsValid && response.Data != null && !string.IsNullOrEmpty(response.Data.Data))
+                    {
+                        FileThumbnails[file.WorkOrderDataID] = response.Data.Data;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        Logger.LogWarning(Localizer["WorkOrderFiles_FailedToLoadThumbnail"] + " {FileName} (ID: {FileId}): {Errors}",
+                            file.File_Name, file.WorkOrderDataID, string.Join(", ", response.Errors ?? new List<string>()));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, Localizer["WorkOrderFiles_ErrorLoadingThumbnail"] + " {FileName} (ID: {FileId})", file.File_Name, file.WorkOrderDataID);
+                }
+            }
+        }
+    }
+
+    private async Task OpenFile(WorkOrderFile file)
+    {
+        if (IsImage(file.Extension))
+        {
+            CurrentFileName = file.File_Name;
+            CurrentFileExtension = file.Extension;
+            FullSizeImageData = null;
+            ShowModal = true;
+            StateHasChanged();
+
+            try
+            {
+                var response = await ApiServiceClient.GetWorkOrderFileAsync(file.WorkOrderDataID, 0, 0);
+                if (response.IsValid && response.Data != null && !string.IsNullOrEmpty(response.Data.Data))
+                {
+                    FullSizeImageData = response.Data.Data;
+                }
+                else
+                {
+                    Logger.LogWarning(Localizer["WorkOrderFiles_FailedToLoadFullSizeImage"] + " {FileName} (ID: {FileId}): {Errors}",
+                        file.File_Name, file.WorkOrderDataID, string.Join(", ", response.Errors ?? new List<string>()));
+                    FullSizeImageData = ""; // Устанавливаем пустую строку, чтобы показать, что загрузка завершилась неудачно
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, Localizer["WorkOrderFiles_ErrorLoadingFullSizeImage"] + " {FileName} (ID: {FileId})", file.File_Name, file.WorkOrderDataID);
+                FullSizeImageData = "";
+            }
+            StateHasChanged(); 
+        }
+        else
+        {
+            // TODO: Обработка других типов файлов (например, скачивание)
+            Logger.LogInformation(Localizer["WorkOrderFiles_NonImageFileClick"] + ": {FileName}", file.File_Name);
+        }
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        CurrentFileName = null;
+        CurrentFileExtension = null;
+        FullSizeImageData = null;
+        StateHasChanged();
+    }
+
+    private bool IsImage(string extension)
+    {
+        if (string.IsNullOrEmpty(extension)) return false;
+        var lowerExtension = extension.ToLowerInvariant().TrimStart('.');
+        return lowerExtension == "jpg" || lowerExtension == "jpeg" || lowerExtension == "png" || lowerExtension == "gif" || lowerExtension == "bmp";
+    }
+}

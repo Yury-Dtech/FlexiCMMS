@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BlazorTool.Client": {
+      "commandName": "Project",
+      "launchBrowser": true
+    }
+  }
+}

@@ -1,0 +1,60 @@
+.activity-list-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    max-height: 93vh;
+    overflow-block:auto;
+}
+
+.activity-list-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.activity-list-header > span {
+    padding: 0 10px;
+    white-space: nowrap;
+}
+
+.activity-list-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.activity-list-body-external {
+    overflow-y: auto;
+}
+
+.activity-category {
+    flex-basis: 20%;
+}
+
+.activity-description {
+    flex-basis: 40%;
+}
+
+.activity-workload {
+    flex-basis: 10%;
+    text-align: right;
+}
+
+.activity-workers {
+    flex-basis: 10%;
+    text-align: center;
+}
+
+.activity-persons {
+    flex-basis: 15%;
+}
+
+.activity-date {
+    flex-basis: 13%;
+    text-align: right;
+}

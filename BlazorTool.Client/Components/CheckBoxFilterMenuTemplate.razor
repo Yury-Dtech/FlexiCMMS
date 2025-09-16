@@ -1,0 +1,81 @@
+﻿@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+@foreach (var value in Values)
+{
+    @if (value == @Localizer["CustomFilterMenuTemplate_All"]) // part of handling nulls - show meaningful text for the end user
+    {
+        continue;
+    }
+    <div>
+        <TelerikCheckBox Value="@(IsCheckboxInCurrentFilter(context.FilterDescriptor, value))"
+                         TValue="bool"
+                         ValueChanged="@((val) => UpdateCheckedPersons(val, value, context, NameOfField))"
+                         Id="@($"state_{value}")">
+        </TelerikCheckBox>
+        <label for="@($"a_person_{value}")">
+            @value
+        </label>
+    </div>
+}
+@code {
+    [Parameter] 
+    public IEnumerable<string> Values { get; set; } = new List<string>();
+    [Parameter] 
+    public FilterMenuTemplateContext context { get; set; } = new FilterMenuTemplateContext();
+    [Parameter]
+    public string NameOfField { get; set; } = string.Empty;
+
+    private bool IsCheckboxInCurrentFilter(CompositeFilterDescriptor filterDescriptor, string value)
+    {
+        // get all current filter descriptors and evaluate whether to select the current checkbox
+        // the default value for string filter descriptors is null so it would select the null checkbox always
+        // so we will add a check to ensure it matches the desired operator - IsNull (see the UpdateCheckedSizes method below)
+        if (value == null)
+        {
+            foreach (FilterDescriptor item in filterDescriptor.FilterDescriptors)
+            {
+                if (item.Operator == FilterOperator.IsNull)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return filterDescriptor.FilterDescriptors.Select(f => (f as FilterDescriptor).Value?.ToString()).ToList().Contains(value);
+    }
+    
+    private void UpdateCheckedPersons(bool isChecked, string itemValue, FilterMenuTemplateContext context, string MemberField)
+    {
+        var compositeFilterDescriptor = context.FilterDescriptor;
+        compositeFilterDescriptor.LogicalOperator = FilterCompositionLogicalOperator.Or;
+
+        if (!isChecked)
+        {
+            // find and remove the filter descriptor for this checkbox
+            compositeFilterDescriptor.FilterDescriptors.Remove(compositeFilterDescriptor.FilterDescriptors.First(x =>
+            {
+                var fd = x as FilterDescriptor;
+                if ((fd.Operator == FilterOperator.IsNull && itemValue == null) ||
+                    (fd.Operator == FilterOperator.IsEqualTo && fd.Value?.ToString() == itemValue))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }));
+        }
+        else
+        {
+            // add a filter descriptor for this checkbox
+            compositeFilterDescriptor.FilterDescriptors.Add(new FilterDescriptor()
+            {
+                Member = MemberField,
+                MemberType = typeof(string),
+                Operator = itemValue == null ? FilterOperator.IsNull : FilterOperator.IsEqualTo,
+                Value = itemValue
+            });
+        }
+    }
+}

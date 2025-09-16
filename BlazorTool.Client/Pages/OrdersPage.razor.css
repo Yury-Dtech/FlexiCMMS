@@ -1,0 +1,22 @@
+﻿::deep .orders-grid .k-master-row tr {
+    border-bottom: 2px solid #808080; 
+}
+
+::deep .orders-grid .k-master-row td {
+    padding: 4px 12px;
+}
+
+
+.description-cell {
+    overflow: hidden; /* Обязательно для работы line-clamp */
+    /* Эти три свойства работают вместе, чтобы обрезать текст после N строк */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3; /* <-- Укажите желаемое количество строк */
+    /* Для совместимости с некоторыми старыми движками можно оставить и max-height,
+       но основную работу делает line-clamp. */
+    max-height: 4.5em; /* Примерно 3 строки (3 * 1.5em line-height) */
+}
+
+
+

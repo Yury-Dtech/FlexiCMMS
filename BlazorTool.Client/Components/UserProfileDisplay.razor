@@ -1,0 +1,113 @@
+@using BlazorTool.Client.Services
+@using BlazorTool.Client.Models
+@using Telerik.Blazor.Components
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<TelerikCard Width="700px" Class="mb-2">
+    <CardHeader>
+        <CardTitle>@Localizer["UserInfo"]</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <div class="k-form-horizontal">
+            @if (UserState != null)
+            {
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.UserName)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikTextBox Value="@UserState.UserName" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.LangCode)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikTextBox Value="@UserState.LangCode" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.PersonID)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikTextBox Value="@(UserState.PersonID?.ToString() ?? "")" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.RightMatrixID)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikTextBox Value="@(UserState.RightMatrixID.ToString() ?? "")" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.DepartmentID)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikTextBox Value="@(UserState.DepartmentID.ToString() ?? string.Empty)" ReadOnly="true" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.UseOriginalColors)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikCheckBox Value="@UserState.UseOriginalColors" Enabled="false" />
+                    </div>
+                </div>
+                <div class="k-form-field user-profile-field">
+                    <label class="k-label k-form-label">@GetDisplayName(nameof(UserState.CanHaveManyActiveTake)):</label>
+                    <div class="k-form-field-wrap">
+                        <TelerikCheckBox Value="@UserState.CanHaveManyActiveTake" Enabled="false" />
+                    </div>
+                </div>
+
+                @if (UserState.RightMatrix != null)
+                {
+                    <TelerikCard Class="mt-4">
+                        <CardHeader>
+                            <CardTitle>@GetDisplayName(nameof(UserState.RightMatrix))</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <div class="k-form-horizontal">
+                                @foreach (var prop in UserState.RightMatrix.GetType().GetProperties())
+                                {
+                                    if (DisplayNames.Any(x=>x.Key == prop.Name))
+                                    {                                        
+                                        <div class="k-form-field user-profile-field">
+                                            <label class="k-label k-form-label">@GetDisplayName(prop.Name):</label>
+                                            <div class="k-form-field-wrap">
+                                        @if (prop.PropertyType == typeof(bool))
+                                        {
+                                          <TelerikCheckBox Value="@((bool)prop.GetValue(UserState.RightMatrix))" Enabled="false" />
+                                        }
+                                        else
+                                        {
+                                            <span class="k-checkbox-wrap">@(prop.GetValue(UserState.RightMatrix))</span>
+                                        }
+                                            </div>
+                                        </div>
+                                        }
+                                }
+                            </div>
+                        </CardBody>
+                    </TelerikCard>
+                }
+            }
+            else
+            {
+                <p>@Localizer["NoData"] </p>
+            }
+        </div>
+    </CardBody>
+</TelerikCard>
+
+@code {
+    [Parameter]
+    public UserState UserState { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> DisplayNames { get; set; } = new Dictionary<string, string>();
+
+    private string GetDisplayName(string? propertyName)
+    {
+        if (string.IsNullOrEmpty(propertyName)) return string.Empty;
+        if (DisplayNames.TryGetValue(propertyName, out var displayName))
+        {
+            return displayName;
+        }
+        return propertyName;
+    }
+}

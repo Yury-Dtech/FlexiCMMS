@@ -1,0 +1,16 @@
+﻿::deep .user-profile-field {
+    display: flex;
+    align-items: center; /* Выравнивание по вертикали по центру */
+    margin-bottom: 10px; /* Отступ между полями */
+}
+
+    ::deep .user-profile-field .k-label {
+        flex-basis: 400px; /* Фиксированная ширина для меток */
+        margin-right: 10px;
+        text-align: right; /* Выравнивание текста метки по правому краю */
+        padding-top: 0 !important;
+    }
+
+   :deep .user-profile-field .k-form-field-wrap {
+        flex-grow: 1; /* Позволяет обертке поля занимать оставшееся пространство */
+    }

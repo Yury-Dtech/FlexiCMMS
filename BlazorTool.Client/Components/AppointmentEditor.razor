@@ -1,0 +1,249 @@
+﻿@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using Telerik.Blazor.Components.Scheduler.Models
+@using BlazorTool.Client.Helpers;
+@inject AppointmentService ApptService
+@inject ApiServiceClient ApiService
+@inject UserState UserState
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<EditForm Model="@Appointment" OnValidSubmit="@SaveAppointment">
+   
+  <div class="button-row">
+    @if(isEditable)
+    {
+        <TelerikButton Class="popup-target" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@SaveIcon @Localizer["AppointmentEditor_Save"]</TelerikButton>
+    }
+
+    <TelerikButton OnClick="@CancelEditing" ButtonType="ButtonType.Button">@CancelIcon @Localizer["AppointmentEditor_Cancel"]</TelerikButton>
+
+    @if(isScheduler)
+    {
+            <TelerikButton OnClick="@DeleteAppointment" ButtonType="ButtonType.Button">@DeleteIcon @Localizer["AppointmentEditor_DeleteFromScheduler"]</TelerikButton>
+    }
+
+    @if (!isWOClosed && UserState.HasPermission(PermissionType.WO_Close))
+    {
+        <TelerikButton OnClick="@CloseAppointment" ButtonType="ButtonType.Button" ThemeColor="@ThemeConstants.Button.ThemeColor.Warning">@CloseOrderIcon @Localizer["AppointmentEditor_FinishOrder"]</TelerikButton>
+    }
+
+    @if (!isCurrentWOTakenByUser 
+    && (UserState.CanHaveManyActiveTake || !userHaveAnyTakenWorkOrders))
+    {
+        <TelerikButton OnClick="@OnTakeWorkOrder" ButtonType="ButtonType.Button">@TakeOrderIcon @Localizer["TakeOrder"]</TelerikButton>
+    }
+
+    @if(UserState.HasPermission(PermissionType.AcT_Add))
+    {
+        <TelerikButton OnClick="@(() => WORef?.AddActivity())" ButtonType="ButtonType.Button" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@AddAction @Localizer["WorkOrder_AddActivity"]</TelerikButton>
+    }
+
+    </div>
+</EditForm>
+<WorkOrderComponent WorkOrder="@Appointment"
+                    @ref="WORef"
+                ListPersons="@ListPersons" 
+                isEditable=@isEditable
+                currentUser="@currentUser"
+                isScheduler = "@isScheduler"
+                OnStateChanged="@((isValid) => {isValidData = isValid; StateHasChanged();})"
+                NeedReloadModel="@((wo) => ReloadModel(wo.WorkOrderID))"
+>
+</WorkOrderComponent>
+
+<TelerikPopup @ref="@PopupRef"
+              AnchorSelector=".popup-target"
+              AnimationType="@AnimationType.SlideDown"
+              AnimationDuration="200"
+              Width="300px"
+              Height="200px"
+              >
+    <div Class="warning-popup">
+        <p>@popupMessage</p>
+        <TelerikButton OnClick="@(() => PopupRef?.Hide())"
+                       Icon="@SvgIcon.XCircle">Close</TelerikButton>
+    </div>
+
+</TelerikPopup>
+
+@code{
+
+    //communcation with the parent component where the scheduler is
+    [Parameter] public SchedulerAppointment Appointment { get; set; }
+    [Parameter] public EventCallback<SchedulerAppointment?> OnComponentClosing { get; set; }
+    [Parameter] public EventCallback<SchedulerAppointment?> OnRefreshData { get; set; }
+    [Parameter] public List<string>? ListPersons { get; set; }
+    [Parameter] public bool isEditable { get; set; } = false;
+    [Parameter] public Person currentUser { get; set; }
+    [Parameter] public bool isScheduler { get; set; } = false; // Indicates if this component is used in the scheduler context
+    // [Parameter] public List<Dict>? ListDicts { get; set; }
+    private bool isNewAppointment = false;
+    private string titleAlarm = string.Empty;
+    private TelerikPopup? PopupRef { get; set; }
+    private WorkOrderComponent WORef;
+    private string popupMessage = string.Empty;
+    private SchedulerAppointment? _OriginAppointment; // Used to store the original appointment for cancellation
+    private WorkOrderInfo? workOrderInfo = null; //additional information about the work order /wo/get?WorkOrderID=
+    private bool isWOClosed = false;
+    private bool isValidData = true;
+    private List<int> userTakenWorkOrdersID = new List<int>();
+    private bool userHaveAnyTakenWorkOrders = true;
+    private bool isCurrentWOTakenByUser = true;
+    private MarkupString SaveIcon = IconHtmlHelper.Save(20);
+    private MarkupString CancelIcon = IconHtmlHelper.Cancel(20);
+    private MarkupString CloseOrderIcon = IconHtmlHelper.CloseOrder(20);
+    private MarkupString DeleteIcon = IconHtmlHelper.Delete(20);
+    private MarkupString TakeOrderIcon = IconHtmlHelper.TakeOrder(25);
+    private MarkupString AddAction = IconHtmlHelper.AddAction(20);
+
+    protected override async Task OnInitializedAsync()
+    {
+        isNewAppointment = Appointment.AppointmentId == 0;
+        if (string.IsNullOrWhiteSpace(Appointment.AssetNo))
+        {
+            titleAlarm = "bg-warning";
+        }
+        else
+        {
+            titleAlarm = string.Empty;
+        }
+        _OriginAppointment = Appointment.ShallowCopy();
+        if (!isNewAppointment)
+        {
+            workOrderInfo = await ApptService.GetWorkOrderInfo(Appointment);
+            isWOClosed = IsWOClosed();
+        }
+        string popupMessage = Localizer["AppointmentEditor_FillRequiredFields"];
+        userTakenWorkOrdersID = (await ApiService.GetWOTakenbyPerson(UserState.PersonID ?? 0)).ToList();
+        userHaveAnyTakenWorkOrders = userTakenWorkOrdersID.Any();
+        isCurrentWOTakenByUser = userTakenWorkOrdersID.Contains(Appointment?.WorkOrderID ?? 0);
+    }
+
+    async Task SaveAppointment()
+    {
+        if (!isValidData)
+        {
+            Console.WriteLine("---- > Workorder data IS INVALID");
+            popupMessage = Localizer["AppointmentEditor_FillRequiredFields"];
+            PopupRef?.Show();
+            return;
+        }
+
+        var result = await ApptService.UpdateAppointment(Appointment);
+        if (!result.IsValid)
+        {
+            string errors = string.Join(Environment.NewLine, result.Errors);
+            popupMessage = errors ?? Localizer["AppointmentEditor_FailedToSave"];
+            PopupRef?.Show();
+            return;
+        }
+
+        await OnComponentClosing.InvokeAsync(new SchedulerAppointment(result.Data));
+    }
+
+    async Task DeleteAppointment()
+    {
+        if (isNewAppointment) return;
+
+        var tryClose = await ApptService.RemoveAppointment(Appointment);
+        if (!tryClose.IsValid)
+        {
+            string errors = string.Join(Environment.NewLine, tryClose.Errors);
+            popupMessage = errors ?? Localizer["AppointmentEditor_FailedToClose"];
+            PopupRef?.Show();
+            return;
+        }
+
+        await OnComponentClosing.InvokeAsync(null);
+    }
+
+    async Task CloseAppointment()
+    {
+        if (isNewAppointment) return;
+        // Set the appointment as closed
+        // Appointment.ModDate = DateTime.Now;
+        Appointment.ModPerson = currentUser.Name; // Assuming currentUser has a Name property
+        var result = await ApptService.CloseAppointment(Appointment);
+        if (!result.IsValid)
+        {
+            string errors = string.Join(Environment.NewLine, result.Errors);
+            popupMessage = errors ?? Localizer["AppointmentEditor_FailedToClose"];
+            PopupRef?.Show();
+            return;
+        }
+        if (result.Data != null)
+        {
+            Appointment = new SchedulerAppointment(result.Data);
+        }   
+        await OnComponentClosing.InvokeAsync(Appointment);
+    }
+
+    async Task CancelEditing()
+    {
+        if (isNewAppointment)
+        {
+            await OnComponentClosing.InvokeAsync(null);
+            return;
+        }
+
+        // Reset the appointment to the original one
+        Appointment = _OriginAppointment.ShallowCopy();
+        await OnComponentClosing.InvokeAsync(Appointment);
+    }
+
+    private bool IsValidAppointment()
+    {
+        if(!isScheduler)
+        {
+            return !string.IsNullOrWhiteSpace(Appointment.AssetNo) &&
+                  Appointment.Start < Appointment.End &&
+                  Appointment.MachineID != 0 &&
+                  // !string.IsNullOrEmpty(Appointment.DepName) &&
+                  !string.IsNullOrWhiteSpace(Appointment.WODesc) &&
+                  !string.IsNullOrWhiteSpace(Appointment.WOLevel) &&
+                  !string.IsNullOrWhiteSpace(Appointment.WOCategory) &&
+                  !string.IsNullOrWhiteSpace(Appointment.WOReason);
+        }else
+            return !string.IsNullOrWhiteSpace(Appointment.AssetNo) &&
+                   Appointment.Start != default &&
+                   Appointment.End != default &&
+                   Appointment.Start < Appointment.End &&
+                   Appointment.MachineID != 0 &&
+                   // !string.IsNullOrEmpty(Appointment.DepName) &&
+                   !string.IsNullOrWhiteSpace(Appointment.WODesc) &&
+                   !string.IsNullOrWhiteSpace(Appointment.WOLevel) &&
+                   !string.IsNullOrWhiteSpace(Appointment.WOCategory) &&
+                   !string.IsNullOrWhiteSpace(Appointment.WOReason);
+    }
+
+    private bool IsWOClosed()
+    {
+        if (workOrderInfo == null || workOrderInfo.StateID != 5)
+        {
+            return false; // No work order info available
+        }
+
+        return true;
+    }
+
+    private async Task OnTakeWorkOrder()
+    {
+        if (Appointment == null) return;
+        bool success = (await ApiService.TakeWorkOrderAsync(Appointment, UserState.PersonID ?? 0)).IsValid;
+
+        if (success) {
+            isCurrentWOTakenByUser = true;
+            await ReloadModel(Appointment.WorkOrderID);
+        }
+    }
+
+    private async Task ReloadModel(int? workOrderId)
+    {
+        if (workOrderId == null) return;
+        Appointment = await ApptService.RefreshAppointmentById(workOrderId.Value);
+        await OnRefreshData.InvokeAsync(Appointment);
+        await WORef.Refresh();
+        StateHasChanged();
+    }
+}

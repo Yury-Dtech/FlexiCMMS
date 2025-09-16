@@ -1,0 +1,435 @@
+﻿@page "/orders"
+
+@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@using BlazorTool.Client.Components
+@using System.Text
+@using System.Linq
+@using System.Diagnostics
+@using Telerik.DataSource.Extensions
+@using Telerik.Blazor
+@using Telerik.Blazor.Components
+@inject NavigationManager Navigation
+@inject BlazorTool.Client.Services.ApiServiceClient apiService
+@inject UserState UserState
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject ViewSettingsService ViewSettingsService
+
+<CheckSession apiService="@apiService" UserState="@UserState" />
+@* <label>@Localizer["OrdersPage_Devices"]</label> *@
+
+@if (isDevicesLoading)
+{
+    <TelerikLoaderContainer Visible="@isDevicesLoading" Text="@Localizer["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
+}
+else
+{
+    <div class="filter-controls-row">
+        <div>
+            @* <TelerikRadioGroup Data="@TagModes"
+                               @bind-Value="@TagMode"
+                               ValueField="@nameof(Tags.Mode)"
+                               TextField="@nameof(Tags.Description)"
+                               Layout="RadioGroupLayout.Horizontal">
+            </TelerikRadioGroup> *@
+
+            <label>@Localizer["OrdersPage_Devices"]</label>
+            <TelerikMultiSelect Data="@devices"
+                              @bind-Value="@selectedDeviceIds"
+                              ValueField="@nameof(Device.MachineID)"
+                              TextField="@nameof(Device.AssetNo)"
+                              TagMode="@TagMode"
+                              MaxAllowedTags="@MaxAllowedTags"
+                              Placeholder="@Localizer["OrdersPage_SelectDevices"]"
+                              AutoClose="false"
+                              OnClose="@OnMultiValueClosed"
+                              OnChange="@(async (arg) => { if (selectedDeviceIds.Count == 0) await LoadData();})"
+                              Width="500px"
+                                Filterable="true"
+                                FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                              ShowClearButton="true">
+            </TelerikMultiSelect>
+        </div>
+        <div style="display:flex; align-items: center; gap:3px;">
+            <label>@Localizer["OrdersPage_DeviceCategory"]:</label>
+            <div style="display:inline;">
+
+            <TelerikComboBox Data="@deviceCategories"
+                             TextField="DeviceCategory"
+                             @bind-Value="@selectedDeviceCategory"
+                             Placeholder="@Localizer["OrdersPage_SelectCategory"]"
+                             ShowClearButton="true"
+                             Filterable="true"
+                             OnChange="@OnCategoryChanged">
+            </TelerikComboBox>
+            </div>
+        </div>
+        <div><TelerikButton OnClick="@HardLoadData" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+
+    </div>
+}
+
+<h3>@Localizer["OrdersPage_Orders"] (@OrdersForGrid.Count)</h3>
+<div style="height:80vh">
+@if (isOrdersLoading)
+{
+    <div>@Localizer["OrdersPage_LoadingOrderList"]</div>
+}
+else
+{
+    <OrdersGrid @ref="ordersGrid"
+                OrdersForGrid="@OrdersForGrid"
+                workOrderStates="@workOrderStates"
+                OnOrderChanged="@OnOrderChanged"
+                OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
+                isLoading="@isOrdersLoading" 
+                PageSize="50"
+                MenuItems="@MenuItems"
+                OnMenuItemClick="@HandleMenuItemClick"
+                OnRowContextMenu="@(()=>MakeContextMenu())" />
+}
+
+
+</div>
+
+<TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="500px">
+	<WindowTitle>
+		<strong>@Localizer["WorkOrder_AddActivity"]</strong>
+	</WindowTitle>
+	<WindowActions>
+		<WindowAction Name="Close" />
+	</WindowActions>
+	<WindowContent>
+		<AddActivityForm WorkOrderID="@(selectedWorkOrder?.WorkOrderID ?? 0)" OnActivityAdded="HandleActivityAdded" />
+	</WindowContent>
+</TelerikWindow>
+
+<TelerikPopup @ref="@PopupRef"
+              AnchorSelector=".popup-dep-target"
+              AnimationType="@AnimationType.ZoomOut"
+              AnimationDuration="200"
+              Width="260px"
+              Class="popup-dep"
+              >
+    <div class="popup-dep" style="text-align: center; padding:20px; ">
+        <EditForm Model="@selectedWorkOrder" OnValidSubmit="@(async () => {await apiService.UpdateWorkOrderAsync(selectedWorkOrder); PopupRef?.Hide();})">
+        <span><p>@Localizer["WorkOrder_OrderNo"] @selectedWorkOrder?.WorkOrderID</p></span>
+            <TelerikComboBox Data="@allDepartments"
+                             @bind-Value="@selectedWorkOrder.DepName"
+                             Placeholder=@Localizer["Scheduler_SelectDepartment"]
+                             Width="180px"
+                             Filterable="true" />
+            <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
+                <TelerikButton ButtonType="ButtonType.Submit">@Localizer["Move"]</TelerikButton>
+                @* <TelerikButton ButtonType="ButtonType.Reset"  OnClick="@(() => PopupRef?.Hide())">Cancel</TelerikButton> *@
+            </div>
+        </EditForm>
+    </div>
+</TelerikPopup>
+
+<div class="popup-dep-target" style="position:fixed; left:@MenuPositionX; top:@MenuPositionY; z-index: 9999; "></div>
+
+@code {
+    private string ViewSettingsKey = ViewSettingsService.SettingsKeys["OrdersPage"];
+    private ViewSettings<WorkOrder> _viewSettings;
+    private TelerikPopup? PopupRef { get; set; }
+    private bool isOrdersLoading = false;
+    private bool isDevicesLoading = false;
+    private List<WorkOrder> OrdersForGrid = new List<WorkOrder>();
+    private IEnumerable<Device> selectedDevices = new List<Device>();
+    private List<int> selectedDeviceIds = new List<int>();
+    private string? selectedState = "All";
+    private string? selectedDeviceType = "All";
+    private string? selectedDeviceCategory = "All";
+    private List<Device> devices = new List<Device>();
+    List<string?> deviceCategories = new List<string?>();
+    List<string?> deviceTypes = new List<string?>();
+    List<string>? workOrderStates = new List<string>();
+    private List<Person> allPersons = new List<Person>();
+    private List<string> personNames = new List<string>();
+    private List<string> selectedPersons = new List<string>();
+    private List<string> allDepartments = new List<string>();
+    private List<WODict> dicts = new List<WODict>();
+    private Person currentUser = new Person();
+    private OrdersGrid ordersGrid;
+    private MultiSelectTagMode TagMode { get; set; } = MultiSelectTagMode.Single;
+    private int? MaxAllowedTags { get; set; }
+    private bool hasInitialized = false;
+    private List<ContextMenuItem> MenuItems = new List<ContextMenuItem>();
+    private bool HaveAnyTakenOrders = false;
+    private string MenuPositionX { get; set; } = "50%";
+    private string MenuPositionY { get; set; } = "50%";
+    private WorkOrder? selectedWorkOrder = new WorkOrder();
+    private bool IsAddActivityWindowVisible { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"[NAV] OrdersPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasInitialized)
+        {
+            hasInitialized = true;
+
+            Console.WriteLine("______Initialized ORDERS PAGE");
+            _viewSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(ViewSettingsKey);
+            RestoreCustomFilterState();
+
+            await UserState.InitializationTask; // Ensure UserState is loaded
+            if (!UserState.IsAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+            }            
+            await HardLoadData();
+            
+            await LoadData();
+
+            MakeContextMenu();
+
+            await InvokeAsync(StateHasChanged);
+            // Apply the state after the data is loaded and the grids are rendered
+            if (ordersGrid != null) await ordersGrid.ApplyStateAsync(_viewSettings.GridState);
+        }
+    }
+
+    private async Task LoadData()
+    {
+        isOrdersLoading = true;
+        StateHasChanged();
+        if (devices == null || devices.Count == 0)
+        {
+            return; // No devices available, exit early
+        }
+
+        if (selectedDevices == null || selectedDevices.Count() == 0)
+        {
+            selectedDevices = new List<Device>();
+        }
+
+        if (selectedDeviceIds == null || selectedDeviceIds.Count == 0)
+        {
+            selectedDeviceIds = new List<int>();
+        }
+        Console.WriteLine($"Selected devices count: {selectedDevices.Count()}");
+        var filteredDevices = GetFilteredDevices();
+        OrdersForGrid = await GetFilteredOrders(filteredDevices);
+        HaveAnyTakenOrders = (await apiService.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
+        //OrdersForGrid = OrdersForGrid.OrderByDescending(o => o.WorkOrderID).ToList();
+        isOrdersLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task HardLoadData()
+    {
+        isDevicesLoading = true;
+            StateHasChanged();
+        dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
+        allPersons = await apiService.GetAllPersons();
+
+        OrdersForGrid = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode)).OrderByDescending(o => o.WorkOrderID).ToList();
+
+        devices = await apiService.GetAllDevicesAsync();
+        allDepartments = (await apiService.GetWODepartments()).Select(x=>x.Name).ToList();
+        personNames = allPersons.Select(p => p.Name).ToList();
+        currentUser.PersonId = UserState.PersonID ?? -1;
+        currentUser.Name = UserState.UserName ?? string.Empty;            
+        workOrderStates = OrdersForGrid.Select(o => o.WOState ?? string.Empty).Distinct().ToList();            
+        deviceCategories = devices.Select(d => d.DeviceCategory).Distinct().ToList();
+        deviceCategories?.Insert(0, "All");
+        deviceTypes = devices.Select(d => d.Type).Distinct().ToList();
+        deviceTypes?.Insert(0, "All");
+        isDevicesLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveStateAsync()
+    {
+        _viewSettings.SetCustomFilter("selectedDeviceIds", selectedDeviceIds);
+        _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedDeviceCategory);
+        _viewSettings.SetCustomFilter("TagMode", TagMode);
+        await ViewSettingsService.SaveSettingsAsync(ViewSettingsKey, _viewSettings);
+    }
+
+    private void RestoreCustomFilterState()
+    {
+        selectedDeviceIds = _viewSettings.GetCustomFilter("selectedDeviceIds", new List<int>());
+        selectedDeviceCategory = _viewSettings.GetCustomFilter("selectedDeviceCategory", "All");
+        TagMode = _viewSettings.GetCustomFilter("TagMode", MultiSelectTagMode.Single);
+
+    }
+
+    private IEnumerable<Device> GetFilteredDevices()
+    {
+        return devices.Where(d =>
+            (string.IsNullOrWhiteSpace(selectedDeviceCategory) || d.DeviceCategory == selectedDeviceCategory || selectedDeviceCategory == "All") &&
+            (string.IsNullOrWhiteSpace(selectedDeviceType) || d.Type == selectedDeviceType || selectedDeviceType == "All") &&
+            (selectedDeviceIds.Count == 0 || selectedDeviceIds.Contains(d.MachineID))
+        );
+    }
+
+    private async Task<List<WorkOrder>> GetFilteredOrders(IEnumerable<Device> devices)
+    {
+        List<WorkOrder> orders = new List<WorkOrder>();
+        if (selectedDeviceIds.Count == 0 &&
+            selectedState == "All" &&
+            selectedPersons.Count == 0 &&
+            selectedDeviceCategory == "All" &&
+            selectedDeviceType == "All"
+        )
+        {
+            orders = await apiService.GetWorkOrdersCachedAsync();
+        }
+        else
+        {
+            orders = await apiService.GetWorkOrdersCachedAsync(devices);
+        }
+
+        var result = orders.Where(o =>
+            (o.WOState == selectedState || selectedState == "All" || string.IsNullOrWhiteSpace(selectedState)) &&
+            (selectedPersons.Count == 0 || selectedPersons.Contains(o.AssignedPerson))
+        ).OrderByDescending(o => o.WorkOrderID).ToList(); ;
+        return result;
+    }
+
+    private async Task OnOrderChanged(SchedulerAppointment? editedAppointment)
+    {
+        if (editedAppointment == null) return;
+
+        var index = OrdersForGrid.FindIndex(x => x.WorkOrderID == editedAppointment.AppointmentId);
+        OrdersForGrid.RemoveAt(index);
+        OrdersForGrid.Insert(index, editedAppointment);
+        ordersGrid.RefreshGrid();
+        StateHasChanged();
+    }
+
+    #region Filter events
+    //Select devices from MultiSelect
+    private async Task OnMultiValueClosed()
+    {
+        selectedDevices = devices.Where(d => selectedDeviceIds.Contains(d.MachineID)).ToList();
+        await LoadData();
+        await SaveStateAsync();
+    }
+
+    async Task OnCategoryChanged()
+    {
+        if (string.IsNullOrWhiteSpace(selectedDeviceCategory))
+            selectedDeviceCategory = "All";
+        await LoadData();
+        await SaveStateAsync();
+    }
+
+    async Task selectAllDevices()
+    {
+        selectedDeviceIds = devices.Select(d => d.MachineID).ToList();
+        selectedDevices = devices.ToList();
+        selectedDeviceCategory = "All";
+        selectedDeviceType = "All";
+        selectedState = "All";
+        await LoadData();
+        await SaveStateAsync();
+    }
+    #endregion
+
+    private List<Tags> TagModes { get; set; } = new List<Tags>()
+    {
+        new Tags { Mode = MultiSelectTagMode.Single, Description = "Compact" },
+        new Tags { Mode = MultiSelectTagMode.Multiple, Description = "Extended" }
+    };
+
+    private class Tags
+    {
+        public MultiSelectTagMode Mode { get; set; }
+        public string Description { get; set; }
+    }
+
+    private void MakeContextMenu()
+    {
+        string addActivityText = Localizer["WorkOrder_AddActivity"];
+        string takeOrderText = Localizer["TakeOrder"];
+        string assignToMyselfText = Localizer["AssignToMyself"];
+        string moveToDepartment = Localizer["MoveToDepartment"];
+        string openOrderText = Localizer["Scheduler_Open"];
+
+        MenuItems = new List<ContextMenuItem>();
+        MenuItems.Add(new ContextMenuItem { Text = openOrderText, CommandName = "OpenOrder", Icon = SvgIcon.FileAscx });
+
+        if (UserState.HasPermission(PermissionType.AcT_Add))
+            new ContextMenuItem { Text = addActivityText, CommandName = "AddActivity", Icon = SvgIcon.ClockArrowRotate };
+
+        if (UserState.HasPermission(PermissionType.WO_SET_AssignedPerson))
+            new ContextMenuItem { Text = assignToMyselfText, CommandName = "AssignToMyself", Icon = SvgIcon.Eye };
+
+        if (UserState.HasPermission(PermissionType.WO_Edit))
+            new ContextMenuItem { Text = moveToDepartment, CommandName = "MoveToDepartment", Icon = SvgIcon.ChevronDoubleRight };
+
+        if(UserState.CanHaveManyActiveTake || !HaveAnyTakenOrders)
+        {
+            MenuItems.Add(new ContextMenuItem { Text = takeOrderText, CommandName = "TakeOrder", Icon = SvgIcon.Hand });
+        }		
+    }
+
+    private async Task HandleMenuItemClick(ContextMenuItemClickEventArgs<WorkOrder> args)
+    {
+        var workOrder = args.Item;
+        var command = args.MenuItem.CommandName;
+        MenuPositionX = (args.MenuItem.CursorX).ToString() + "px";
+        MenuPositionY = (args.MenuItem.CursorY - 70).ToString() + "px";
+        if (workOrder == null || string.IsNullOrWhiteSpace(command))
+        {
+            return;
+        }
+
+        switch (command)
+        {
+            case "AddActivity":
+                if (workOrder == null)
+                {
+                    return;
+                }
+                selectedWorkOrder = workOrder;
+                IsAddActivityWindowVisible = true;
+                break;
+            case "TakeOrder":
+                if (HaveAnyTakenOrders) return;
+                var result = await apiService.TakeWorkOrderAsync(workOrder, UserState.PersonID);
+                break;
+            case "AssignToMyself":
+                if (workOrder.AssignedPerson == UserState.UserName) return;
+                workOrder.AssignedPerson = UserState.UserName;
+                await apiService.UpdateWorkOrderAsync(workOrder);
+                break;
+            case "MoveToDepartment":
+                selectedWorkOrder = workOrder;
+                PopupRef?.Show();
+                break;
+            case "OpenOrder":
+                selectedWorkOrder = workOrder;
+                ordersGrid?.OpenWorkOrderWindow(workOrder);
+                break;
+        }
+
+		// await LoadData();
+	}
+
+    private async Task HandleActivityAdded(Models.Activity newActivity)
+	{
+		if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
+		{
+			if (selectedWorkOrder != null)
+			{
+				await apiService.RefreshWorkOrderInCacheAsync(selectedWorkOrder.WorkOrderID);
+				await LoadData();
+			}
+		}
+		else
+		{
+			// Handle the case where adding the activity failed
+			Console.WriteLine("Failed to add activity.");
+		}
+			IsAddActivityWindowVisible = false;
+	}
+}

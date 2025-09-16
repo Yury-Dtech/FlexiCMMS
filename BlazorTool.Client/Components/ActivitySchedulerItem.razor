@@ -1,0 +1,50 @@
+@using BlazorTool.Client.Models
+@using Telerik.Blazor.Components
+@inject IStringLocalizer<Resources.UIStrings> Loc
+
+<div class="scheduler-item-wrapper view-@View.ToString().ToLower() @(Item.IsWorkOrder ? "workorder-app" : "")">
+    @* @if (View == SchedulerView.Month)
+    {
+        <div class="scheduler-item-month">
+            <span class="item-assignee"> : @Item.Description</span>
+        </div>
+    }
+    else if(View == SchedulerView.Timeline)
+    {
+        <div class="scheduler-item-month">
+            <span class="item-assignee">: @Item.Description</span>
+        </div>
+    } *@
+    @if (View == SchedulerView.Week || View == SchedulerView.Day)
+    {
+        @if (Item.IsWorkOrder) //workorder
+        {
+            <div class="scheduler-workorder-details">
+                <div class="item-wo-header">@Loc["WorkOrder_OrderNo"]@Item.WorkOrderID]</div>
+                <div class="item-body">
+                    <span>@Item.GetWorkOrder().AssetNo</span>
+                </div>
+                <div class="item-description">@((MarkupString)Markdig.Markdown.ToHtml(Item.Description ?? ""))</div>
+            </div>
+        }
+        else //activity
+        {
+            <div class="scheduler-activity-details">
+                <div class="item-header">[@Item.WorkOrderID] @Item.ActCategory</div>
+                <div class="item-body">
+                    <span>@Item.ActPersonsName.Replace("#",", ")</span>
+                </div>
+                <div class="item-description">@((MarkupString)Markdig.Markdown.ToHtml(Item.Description ?? ""))</div>
+            </div>
+        }
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public ActivityAppointment Item { get; set; } = new();
+
+    [Parameter]
+    public SchedulerView View { get; set; }
+}

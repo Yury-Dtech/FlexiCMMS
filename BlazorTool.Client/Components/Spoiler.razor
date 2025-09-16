@@ -1,0 +1,17 @@
+@using Microsoft.AspNetCore.Components
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Resources.UIStrings> Localizer
+
+  <button class="btn btn-link" @onclick="Toggle">
+    @(collapsed ? Localizer["Spoiler_Show"] : Localizer["Spoiler_Hide"]) @Title
+  </button>
+  @if (!collapsed)
+  {
+      @ChildContent
+  }
+
+@code {
+  [Parameter] public string Title { get; set; }
+  [Parameter] public RenderFragment ChildContent { get; set; }
+  private bool collapsed = true;
+  private void Toggle() => collapsed = !collapsed;
+}

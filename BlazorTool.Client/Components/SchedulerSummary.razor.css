@@ -1,0 +1,32 @@
+.summary-table-container {
+    margin-top: 1rem;
+    border: 1px solid #ccc;
+    padding: 0.3rem;
+    border-radius: 4px;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8em;
+}
+
+.summary-table th, .summary-table td {
+    border: 1px solid #ddd;
+    padding: 2px;
+    text-align: center;
+}
+
+.summary-table th {
+    background-color: #f2f2f2;
+}
+
+.summary-table td:first-child {
+    text-align: left;
+    font-weight: bold;
+}
+
+
+.ClearFilters-btn{
+
+}

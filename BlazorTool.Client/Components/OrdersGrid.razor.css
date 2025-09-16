@@ -1,0 +1,18 @@
+.description-cell {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    max-height: 4.5em;
+}
+
+.vertical-stack-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stack-item {
+    display: flex;
+    gap: 4px;
+}

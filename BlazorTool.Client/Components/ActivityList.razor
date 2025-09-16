@@ -1,0 +1,139 @@
+@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@using System.Globalization
+@inject ApiServiceClient ApiClient
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<div class="activity-list-container">
+    @if(!isExternalWindow)
+    {
+        <div style="display:flex; align-items: center; justify-content: space-between;">
+            <div style="display:inline-flex">
+                <h5>@Localizer["ActivityList_ActivitiesForWorkOrder"] @WorkOrderId.
+                    (@Localizer["Total"]: @activities?.Sum(x=>x.WorkLoad).ToString("F2") @Localizer["ActivityList_HoursAbbreviation"] / 
+                     @activities?.Sum(c=>c.Cost)?.ToString("C2", new CultureInfo("pl-PL")) )
+                    </h5>
+            </div>
+            <div style="display:inline-flex;">
+                <TelerikButton Icon="@SvgIcon.Fullscreen" Size="lg" Title=@Localizer["ShowActivities"] OnClick="ShowActivities"></TelerikButton>
+            </div>
+        </div>
+    }
+    @if (activities == null)
+    {
+        <p><em>@Localizer["ActivityList_LoadingActivities"]</em></p>
+    }
+    else if (activities.Count == 0)
+    {
+        <p>@Localizer["ActivityList_NoActivitiesFound"]</p>
+    }
+    else
+    {
+        <div class="activity-list-header">
+            <span class="activity-category">@Localizer["ActivityList_Category"]</span>
+            <span class="activity-description">@Localizer["ActivityList_Description"]</span>
+            <span class="activity-workload">@Localizer["ActivityList_Workload"]</span>
+            <span class="activity-workers">@Localizer["ActivityList_Workers"]</span>
+            <span class="activity-persons">@Localizer["ActivityList_Assigned"]</span>
+            <span class="activity-date">@Localizer["ActivityList_Date"]</span>
+            <span class="activity-workload">@Localizer["Cost"]</span>
+        </div>
+        <div class="@bodyListClass">
+            @foreach (var activity in activities)
+            {
+                var personsName = activity.ActPersonsName.Split('#').Where(x=>!string.IsNullOrWhiteSpace(x));
+                var persons = ApiClient.GetAllPersonsCached().Where(p => personsName.Contains(p.Name)).ToList();
+                activity.Cost = activity.Cost == null ? 0 : activity.Cost;
+                <ActivityDisplay ActivityItem="activity" Persons="@persons" isEditable="@isEditable" OnClick="JoinActivityClickAsync" isExternalWindow="@isExternalWindow"/>
+            }
+        </div>
+    }
+
+    <TelerikWindow @bind-Visible="IsWindowVisible" Modal="true" Width="400px">
+        <WindowTitle>
+            <strong>@Localizer["WorkOrder_Action"] #@activityId</strong>
+        </WindowTitle>
+        <WindowActions>
+            <WindowAction Name="Close" />
+        </WindowActions>
+        <WindowContent>
+            <JoinToActivityForm ActivityID="@activityId" OnActivityAdded="HandleActivityAdded" />
+        </WindowContent>
+    </TelerikWindow>
+
+    <TelerikWindow @bind-Visible="ShowActivitiesWindows" Modal="true" Width="70%" CloseOnOverlayClick="true">
+        <WindowTitle>
+            <strong>@Localizer["ActivityList_ActivitiesForWorkOrder"] @WorkOrderId.    (@Localizer["ActivityList_TotalWorkload"] @activities?.Sum(x => x.WorkLoad).ToString("F2") @Localizer["ActivityList_HoursAbbreviation"])</strong>
+        </WindowTitle>
+        <WindowActions>
+            <WindowAction Name="Close" />
+        </WindowActions>
+        <WindowContent>
+            <ActivityList WorkOrderId="@WorkOrderId" isEditable="@isEditable" isExternalWindow = "true"></ActivityList>
+        </WindowContent>
+    </TelerikWindow>
+</div>
+
+@code {
+
+    [Parameter]
+    public int WorkOrderId { get; set; }
+    [Parameter]
+    public bool isEditable { get; set; } = false;
+    [Parameter]
+    public bool isExternalWindow { get; set; } = false;
+
+    public List<Activity>? activities;
+    private string bodyListClass = "activity-list-body";
+    private bool IsWindowVisible { get; set; } = false;
+    private bool ShowActivitiesWindows { get; set; } = false;
+
+    private int activityId = 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await RefreshActivitiesAsync();
+    }
+
+    public async Task RefreshActivitiesAsync()
+    {
+        if (WorkOrderId > 0)
+        {
+            bodyListClass = isExternalWindow ? "activity-list-body-external" : "activity-list-body";
+            activities = null;
+            StateHasChanged();
+            activities = await ApiClient.GetActivitiesByWO(WorkOrderId);
+            if (activities != null)
+            {
+                activities.Sort((x, y) => y.AddDate.CompareTo(x.AddDate));
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void JoinActivityClickAsync(int activityID)
+    {
+        activityId = activityID;
+        IsWindowVisible = true;
+    }
+
+    private async Task HandleActivityAdded(bool success)
+    {
+        if (success)
+        {
+            IsWindowVisible = false;
+            await RefreshActivitiesAsync();
+        }
+        else
+        {
+            // Handle the case where joining the activity failed
+            Console.WriteLine("Failed to join activity.");
+            IsWindowVisible = false;
+        }
+    }
+
+    private void ShowActivities()
+    {
+        ShowActivitiesWindows = true;
+    }
+}

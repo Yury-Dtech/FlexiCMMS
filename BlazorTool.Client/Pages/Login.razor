@@ -1,0 +1,110 @@
+﻿@page "/login"
+@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@inject NavigationManager Navigation
+@inject UserState UserState
+@inject AppStateService AppState
+@inject ApiServiceClient ApiServiceClient
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject ViewSettingsService viewSettingsService
+
+<div class="login-container">
+    <form @onsubmit="HandleLogin">
+        <h2>@Localizer["Login_LoginToThe"] @AppState.Settings.ApplicationName</h2>
+        <div class="form-group">
+            <label for="username">@Localizer["Login_UserName"]</label>
+            <TelerikComboBox Data="@Persons"
+                             TextField="Name"                             
+                             ValueField="Name"
+                             @bind-Value="@Username"
+                             Placeholder="@Localizer["Login_SelectUserName"]"
+                             Filterable="true"
+                             AllowCustom="false"
+                             Width="100%">
+            </TelerikComboBox>
+        </div>
+        <div class="form-group">
+            <label for="password">@Localizer["Login_Password"]</label>
+            <input id="password" type="password" class="form-control" @bind="Password" autocomplete="current-password" />
+        </div>
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="error-message">@ErrorMessage</div>
+        }
+        <button type="submit" class="btn-login" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <TelerikLoaderContainer Size="@Telerik.Blazor.ThemeConstants.Loader.Size.Small" Text="@Localizer["Login_Checking"]" />
+            }
+            else
+            {
+                <span>@Localizer["Login_Enter"]</span>
+            }
+        </button>
+    </form>
+</div>
+
+@code {
+
+    private string Username { get; set; } = string.Empty;
+    private string Password { get; set; } = string.Empty;
+    private string ErrorMessage { get; set; } = string.Empty;
+    private List<Person> Persons { get; set; } = new List<Person>();
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Username = "Loading...";
+        StateHasChanged();
+        Persons = await ApiServiceClient.GetAllPersons();
+        await UserState.InitializationTask;
+        Username = UserState?.UserName ?? Persons.FirstOrDefault()?.Name ?? string.Empty;
+        Password = UserState?.Password ?? string.Empty;
+    }
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = Localizer["Login_EmptyField"];
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            var loginRequest = new BlazorTool.Client.Models.LoginRequest
+            {
+                Username = Username,
+                Password = Password
+            };
+            var response = await ApiServiceClient.LoadUserStateSettingsAsync(loginRequest);
+            bool isForceReload = response.Item1;
+            if (response.Item2 != null)
+            {
+                ErrorMessage = $"{Localizer["Login_AnErrorOccurred"]} {response.Item2}";
+                return;
+            }
+            foreach (var val in ViewSettingsService.SettingsKeys.Values)
+                {
+                    //read all view settings for the user
+                    var settings = await ApiServiceClient.GetViewSettingsAsync(UserState.UserName, val);
+                    if (settings != null)
+                    {
+                        await viewSettingsService.SaveSettingsAsync<WorkOrder>(val, settings);
+                    }
+                }
+            Navigation.NavigateTo("/", isForceReload);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"{Localizer["Login_AnErrorOccurred"]} {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+

@@ -1,0 +1,1141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Greeting" xml:space="preserve">
+    <value>Hello!</value>
+  </data>
+  <data name="OrdersPage_LoadingDevicesList" xml:space="preserve">
+    <value>Loading devices list...</value>
+  </data>
+  <data name="OrdersPage_SelectAll" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="OrdersPage_SelectDevices" xml:space="preserve">
+    <value>Select devices</value>
+  </data>
+  <data name="OrdersPage_DeviceCategory" xml:space="preserve">
+    <value>Device category</value>
+  </data>
+  <data name="OrdersPage_SelectCategory" xml:space="preserve">
+    <value>Select category...</value>
+  </data>
+  <data name="OrdersPage_Orders" xml:space="preserve">
+    <value>Orders</value>
+  </data>
+  <data name="OrdersPage_LoadingOrderList" xml:space="preserve">
+    <value>loading order list...</value>
+  </data>
+  <data name="WorkOrder_ID" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="Device_Name" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="OrdersPage_Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="OrdersPage_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="OrdersPage_LastYear" xml:space="preserve">
+    <value>Last Year</value>
+  </data>
+  <data name="OrdersPage_Quarter" xml:space="preserve">
+    <value>Quarter</value>
+  </data>
+  <data name="OrdersPage_Month" xml:space="preserve">
+    <value>Month</value>
+  </data>
+  <data name="OrdersPage_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="OrdersPage_Devices" xml:space="preserve">
+    <value>Devices:</value>
+  </data>
+  <data name="OrdersPage_Compact" xml:space="preserve">
+    <value>Compact</value>
+  </data>
+  <data name="OrdersPage_Extended" xml:space="preserve">
+    <value>Extended</value>
+  </data>
+  <data name="WorkOrder_Description" xml:space="preserve">
+    <value>Description:</value>
+  </data>
+  <data name="WorkOrder_Reason" xml:space="preserve">
+    <value>Reason:</value>
+  </data>
+  <data name="WorkOrder_State" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="WorkOrder_Level" xml:space="preserve">
+    <value>Level:</value>
+  </data>
+  <data name="NavMenu_NavigationMenu" xml:space="preserve">
+    <value>Navigation menu</value>
+  </data>
+  <data name="NavMenu_Main" xml:space="preserve">
+    <value>Main</value>
+  </data>
+  <data name="NavMenu_Orders" xml:space="preserve">
+    <value>Orders</value>
+  </data>
+  <data name="NavMenu_Scheduler" xml:space="preserve">
+    <value>Scheduler</value>
+  </data>
+  <data name="NavMenu_Activities" xml:space="preserve">
+    <value>Activities</value>
+  </data>
+  <data name="NavMenu_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Login_LoginToThe" xml:space="preserve">
+    <value>Login to the</value>
+  </data>
+  <data name="Login_UserName" xml:space="preserve">
+    <value>User name</value>
+  </data>
+  <data name="Login_SelectUserName" xml:space="preserve">
+    <value>Select user name...</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Login_Checking" xml:space="preserve">
+    <value>Checking...</value>
+  </data>
+  <data name="Login_Enter" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="Login_EmptyField" xml:space="preserve">
+    <value>Empty field</value>
+  </data>
+  <data name="Login_LoginFailed" xml:space="preserve">
+    <value>Login failed. Please check your credentials.</value>
+  </data>
+  <data name="Settings_AnErrorOccurred" xml:space="preserve">
+    <value>An error occurred:</value>
+  </data>
+  <data name="Settings_NetworkShareUsername" xml:space="preserve">
+    <value>Network Share Username</value>
+  </data>
+  <data name="Settings_NetworkSharePassword" xml:space="preserve">
+    <value>Network Share Password</value>
+  </data>
+  <data name="Settings_NetworkShareServer" xml:space="preserve">
+    <value>Network Share Server</value>
+  </data>
+  <data name="Home_Orders" xml:space="preserve">
+    <value>ORDERS</value>
+  </data>
+  <data name="Home_Scheduler" xml:space="preserve">
+    <value>SCHEDULER</value>
+  </data>
+  <data name="Settings_Confirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="Settings_ConfirmApiChange" xml:space="preserve">
+    <value>Are you sure you want to change the API address?</value>
+  </data>
+  <data name="Settings_OldAddress" xml:space="preserve">
+    <value>Old Address:</value>
+  </data>
+  <data name="Settings_NewAddress" xml:space="preserve">
+    <value>New Address:</value>
+  </data>
+  <data name="Settings_AppRestart" xml:space="preserve">
+    <value>The application will restart!</value>
+  </data>
+  <data name="Settings_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Settings_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_ApiAddress" xml:space="preserve">
+    <value>API Address</value>
+  </data>
+  <data name="Settings_TestApiAddress" xml:space="preserve">
+    <value>Test API Address</value>
+  </data>
+  <data name="Settings_UseOriginalColors" xml:space="preserve">
+    <value>Use original colors</value>
+  </data>
+  <data name="Settings_SaveSettings" xml:space="preserve">
+    <value>Save Settings</value>
+  </data>
+  <data name="Settings_ApiAddressEmpty" xml:space="preserve">
+    <value>API Address cannot be empty.</value>
+  </data>
+  <data name="Settings_ApiConnected" xml:space="preserve">
+    <value>Successfully connected to API at</value>
+  </data>
+  <data name="Settings_ApiTestError" xml:space="preserve">
+    <value>Error testing API address:</value>
+  </data>
+  <data name="Settings_WrongApiAddress" xml:space="preserve">
+    <value>Wrong API address</value>
+  </data>
+  <data name="Settings_Canceled" xml:space="preserve">
+    <value>Canceled.</value>
+  </data>
+  <data name="Settings_SettingsSaved" xml:space="preserve">
+    <value>Settings saved successfully!</value>
+  </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>Failed to save one or more settings.</value>
+  </data>
+  <data name="Settings_RestartApplyApi" xml:space="preserve">
+    <value>The application will restart to apply the new API address.</value>
+  </data>
+  <data name="MainLayout_ApplicationLoading" xml:space="preserve">
+    <value>Application is loading ...</value>
+  </data>
+  <data name="MainLayout_Hello" xml:space="preserve">
+    <value>Hello,</value>
+    <comment>Hello,</comment>
+  </data>
+  <data name="MainLayout_Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="MainLayout_Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Scheduler_AssignedPersons" xml:space="preserve">
+    <value>Assigned persons:</value>
+  </data>
+  <data name="Scheduler_SelectAssignedPersons" xml:space="preserve">
+    <value>Select assigned persons</value>
+  </data>
+  <data name="Scheduler_Department" xml:space="preserve">
+    <value>Department:</value>
+  </data>
+  <data name="Scheduler_SelectDepartment" xml:space="preserve">
+    <value>Select department...</value>
+  </data>
+  <data name="Scheduler_Device" xml:space="preserve">
+    <value>Device:</value>
+  </data>
+  <data name="Scheduler_SelectAsset" xml:space="preserve">
+    <value>Select asset...</value>
+  </data>
+  <data name="Scheduler_DeviceCategory" xml:space="preserve">
+    <value>Device category:</value>
+  </data>
+  <data name="Scheduler_SelectDeviceCategory" xml:space="preserve">
+    <value>Select device category...</value>
+  </data>
+  <data name="Scheduler_ScheduledOrders" xml:space="preserve">
+    <value>Scheduled orders:</value>
+  </data>
+  <data name="Scheduler_ReloadAllData" xml:space="preserve">
+    <value>Reload all data</value>
+  </data>
+  <data name="Scheduler_ColumnWidth" xml:space="preserve">
+    <value>Column Width:</value>
+  </data>
+  <data name="Scheduler_SlotDivisions" xml:space="preserve">
+    <value>Slot Divisions:</value>
+  </data>
+  <data name="Scheduler_SlotDuration" xml:space="preserve">
+    <value>Slot Duration (min):</value>
+  </data>
+  <data name="Scheduler_NumberOfDays" xml:space="preserve">
+    <value>Number of days:</value>
+  </data>
+  <data name="Scheduler_NumberOfWorkDays" xml:space="preserve">
+    <value>Number of work days:</value>
+    <comment>Liczba dni roboczych</comment>
+  </data>
+  <data name="Scheduler_LoadingAppointments" xml:space="preserve">
+    <value>Loading appointments...</value>
+  </data>
+  <data name="Scheduler_LoadingOrders" xml:space="preserve">
+    <value>Loading orders…</value>
+  </data>
+  <data name="Scheduler_OrdersWithoutStartDate" xml:space="preserve">
+    <value>Orders without StartDate:</value>
+  </data>
+  <data name="Scheduler_ShowCompletedOrders" xml:space="preserve">
+    <value>show completed orders</value>
+  </data>
+  <data name="Scheduler_NotStarted" xml:space="preserve">
+    <value>Not started</value>
+  </data>
+  <data name="Scheduler_InProgress" xml:space="preserve">
+    <value>In progress</value>
+  </data>
+  <data name="Scheduler_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Scheduler_FailedToCloseAppointment" xml:space="preserve">
+    <value>Failed to close appointment.</value>
+  </data>
+  <data name="Scheduler_AddNew" xml:space="preserve">
+    <value>New order</value>
+  </data>
+  <data name="Scheduler_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Scheduler_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Add_New_Activity" xml:space="preserve">
+    <value>Add new activity</value>
+  </data>
+  <data name="NoActionsAvailable" xml:space="preserve">
+    <value>No actions available</value>
+  </data>
+  <data name="Scheduler_Duplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="AppointmentEditor_AssetNo" xml:space="preserve">
+    <value>AssetNo:</value>
+  </data>
+  <data name="AppointmentEditor_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="AppointmentEditor_End" xml:space="preserve">
+    <value>End:</value>
+  </data>
+  <data name="AppointmentEditor_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="AppointmentEditor_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AppointmentEditor_DeleteFromScheduler" xml:space="preserve">
+    <value>Delete from scheduler</value>
+  </data>
+  <data name="AppointmentEditor_FinishOrder" xml:space="preserve">
+    <value>Close order</value>
+  </data>
+  <data name="AppointmentEditor_FillRequiredFields" xml:space="preserve">
+    <value>Please fill in all required fields.</value>
+  </data>
+  <data name="AppointmentEditor_FailedToSave" xml:space="preserve">
+    <value>Failed to save appointment.</value>
+  </data>
+  <data name="AppointmentEditor_FailedToClose" xml:space="preserve">
+    <value>Failed to close appointment.</value>
+  </data>
+  <data name="WorkOrder_OrderNo" xml:space="preserve">
+    <value>Order №</value>
+  </data>
+  <data name="Device" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="WorkOrder_NoDevice" xml:space="preserve">
+    <value>no device</value>
+  </data>
+  <data name="WorkOrder_Category" xml:space="preserve">
+    <value>Category:</value>
+  </data>
+  <data name="WorkOrder_DescriptionTitle" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="WorkOrder_SelectWOCategory" xml:space="preserve">
+    <value>Select category...</value>
+  </data>
+  <data name="WorkOrder_NotSpecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="WorkOrder_SelectWOLevel" xml:space="preserve">
+    <value>Select level...</value>
+  </data>
+  <data name="WorkOrder_Executors" xml:space="preserve">
+    <value>Executors</value>
+  </data>
+  <data name="WorkOrder_AssignedPerson" xml:space="preserve">
+    <value>Assigned Person</value>
+  </data>
+  <data name="WorkOrder_SelectPerson" xml:space="preserve">
+    <value>Select person...</value>
+  </data>
+  <data name="WorkOrder_Department" xml:space="preserve">
+    <value>Department:</value>
+  </data>
+  <data name="WorkOrder_Dates" xml:space="preserve">
+    <value>Dates</value>
+  </data>
+  <data name="WorkOrder_Added" xml:space="preserve">
+    <value>Added:</value>
+  </data>
+  <data name="WorkOrder_Start" xml:space="preserve">
+    <value>Start:</value>
+  </data>
+  <data name="WorkOrder_End" xml:space="preserve">
+    <value>End:</value>
+  </data>
+  <data name="WorkOrder_Closed" xml:space="preserve">
+    <value>Closed:</value>
+  </data>
+  <data name="PersonTakeDate" xml:space="preserve">
+    <value>Person take date</value>
+  </data>
+  <data name="WorkOrder_Statistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="WorkOrder_Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="WorkOrder_Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="WorkOrder_Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="WorkOrder_Parts" xml:space="preserve">
+    <value>Parts</value>
+  </data>
+  <data name="IneffectiveCount" xml:space="preserve">
+    <value>Ineffective actions count</value>
+  </data>
+  <data name="WorkOrder_RecentChanges" xml:space="preserve">
+    <value>Recent Changes</value>
+  </data>
+  <data name="WorkOrder_ChangeDate" xml:space="preserve">
+    <value>Change Date:</value>
+  </data>
+  <data name="WorkOrder_ModifiedBy" xml:space="preserve">
+    <value>Modified By:</value>
+  </data>
+  <data name="WorkOrder_NoWorkOrderFound" xml:space="preserve">
+    <value>No workorder found for ID=</value>
+  </data>
+  <data name="ActivityList_ActivitiesForWorkOrder" xml:space="preserve">
+    <value>Activities for Work Order:</value>
+  </data>
+  <data name="ActivityList_TotalWorkload" xml:space="preserve">
+    <value>Total work time:</value>
+  </data>
+  <data name="ActivityList_HoursAbbreviation" xml:space="preserve">
+    <value>h</value>
+    <comment>&#x8;</comment>
+  </data>
+  <data name="ActivityList_LoadingActivities" xml:space="preserve">
+    <value>Loading activities...</value>
+  </data>
+  <data name="ActivityList_NoActivitiesFound" xml:space="preserve">
+    <value>No activities found for this work order.</value>
+  </data>
+  <data name="ActivityList_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="ActivityList_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ActivityList_Workload" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="ActivityList_Workers" xml:space="preserve">
+    <value>Workers</value>
+  </data>
+  <data name="ActivityList_Assigned" xml:space="preserve">
+    <value>Assigned</value>
+  </data>
+  <data name="ActivityList_Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="SchedulerSummary_Person" xml:space="preserve">
+    <value>Person</value>
+  </data>
+  <data name="SchedulerSummary_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="SchedulerSummary_NotAssigned" xml:space="preserve">
+    <value>Not assigned</value>
+  </data>
+  <data name="ActivityDisplay_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="ActivityDisplay_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ActivityDisplay_WorkLoad" xml:space="preserve">
+    <value>Work Load</value>
+  </data>
+  <data name="ActivityDisplay_HoursAbbreviation" xml:space="preserve">
+    <value>h</value>
+  </data>
+  <data name="ActivityDisplay_Workers" xml:space="preserve">
+    <value>Workers</value>
+  </data>
+  <data name="ActivityDisplay_WorkersCount" xml:space="preserve">
+    <value>worker(s)</value>
+  </data>
+  <data name="ActivityDisplay_AssignedPersons" xml:space="preserve">
+    <value>Assigned Persons</value>
+  </data>
+  <data name="ActivityDisplay_DateAdded" xml:space="preserve">
+    <value>Date Added</value>
+  </data>
+  <data name="CheckSession_NotAuthenticated" xml:space="preserve">
+    <value>User is not authenticated, redirecting to login page.</value>
+  </data>
+  <data name="CheckSession_SessionCheckFailed" xml:space="preserve">
+    <value>Session check failed with status code:</value>
+  </data>
+  <data name="CheckSession_FailedToCheckSession" xml:space="preserve">
+    <value>Failed to check session:</value>
+  </data>
+  <data name="CustomFilterMenuTemplate_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="ChangelogPage_Title" xml:space="preserve">
+    <value>Changelog Page</value>
+  </data>
+  <data name="ChangelogPage_Loading" xml:space="preserve">
+    <value>Loading changelog...</value>
+  </data>
+  <data name="ChangelogPage_ErrorLoading" xml:space="preserve">
+    <value>Error loading changelog:</value>
+  </data>
+  <data name="App_Title" xml:space="preserve">
+    <value>FlexiCMMS</value>
+  </data>
+  <data name="WorkOrder_SelectWOReason" xml:space="preserve">
+    <value>Select reason...</value>
+  </data>
+  <data name="WorkOrder_AddActivity" xml:space="preserve">
+    <value>New action</value>
+  </data>
+  <data name="ActivityDisplay_AddPerson" xml:space="preserve">
+    <value>Join new person</value>
+  </data>
+  <data name="WorkOrder_JoinAction" xml:space="preserve">
+    <value>Add a person to the selected action</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="All_Fields_Required" xml:space="preserve">
+    <value>All fields are required</value>
+  </data>
+  <data name="DeviceCategoryID" xml:space="preserve">
+    <value>Device Category ID</value>
+  </data>
+  <data name="WorkOrderID" xml:space="preserve">
+    <value>Order ID</value>
+  </data>
+  <data name="MachineID" xml:space="preserve">
+    <value>Device ID</value>
+  </data>
+  <data name="AssetNo" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="AssetNoShort" xml:space="preserve">
+    <value>Short name</value>
+  </data>
+  <data name="DeviceCategory" xml:space="preserve">
+    <value>Device Category</value>
+  </data>
+  <data name="WODesc" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="WOCategory" xml:space="preserve">
+    <value>Category</value>
+    <comment>category</comment>
+  </data>
+  <data name="WOState" xml:space="preserve">
+    <value>State</value>
+  </data>
+  <data name="WOReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="AddDate" xml:space="preserve">
+    <value>Add date</value>
+  </data>
+  <data name="TakeDate" xml:space="preserve">
+    <value>Take Date</value>
+  </data>
+  <data name="CloseDate" xml:space="preserve">
+    <value>Close date</value>
+  </data>
+  <data name="Cost" xml:space="preserve">
+    <value>Cost</value>
+  </data>
+  <data name="TakePersons" xml:space="preserve">
+    <value>Participating persons</value>
+  </data>
+  <data name="PlanID" xml:space="preserve">
+    <value>Plan ID</value>
+  </data>
+  <data name="StateColor" xml:space="preserve">
+    <value>State color</value>
+  </data>
+  <data name="ModDate" xml:space="preserve">
+    <value>Modification Date</value>
+  </data>
+  <data name="ModPerson" xml:space="preserve">
+    <value>Modified by</value>
+  </data>
+  <data name="WOLevel" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="LevelID" xml:space="preserve">
+    <value>Level ID</value>
+  </data>
+  <data name="ActCount" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="DepName" xml:space="preserve">
+    <value>Department</value>
+  </data>
+  <data name="AssignedPerson" xml:space="preserve">
+    <value>Assigned Person</value>
+  </data>
+  <data name="FileCount" xml:space="preserve">
+    <value>File Count</value>
+  </data>
+  <data name="PartCount" xml:space="preserve">
+    <value>Part Count</value>
+  </data>
+  <data name="PlanActCount" xml:space="preserve">
+    <value>Planned actions count</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Start Date</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="IsScheduledPlanned" xml:space="preserve">
+    <value>Is scheduled planned</value>
+  </data>
+  <data name="CategoryID" xml:space="preserve">
+    <value>Category ID</value>
+  </data>
+  <data name="ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="Scheduler_Days" xml:space="preserve">
+    <value>Days</value>
+  </data>
+  <data name="Scheduler_Custom" xml:space="preserve">
+    <value>Custom</value>
+    <comment>Custom</comment>
+  </data>
+  <data name="Activity_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="ActivityList_Workload_Placeholder" xml:space="preserve">
+    <value>Enter workload</value>
+  </data>
+  <data name="ActivityList_Cost_Placeholder" xml:space="preserve">
+    <value>Enter cost</value>
+  </data>
+  <data name="ActivityList_ActDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="ActivityList_ActDate_Placeholder" xml:space="preserve">
+    <value>Enter start date</value>
+  </data>
+  <data name="ActivityList_Description_Placeholder" xml:space="preserve">
+    <value>Enter description</value>
+  </data>
+  <data name="Home_MyAssignedOrders" xml:space="preserve">
+    <value>My assigned orders</value>
+  </data>
+  <data name="Home_MyTakenOrders" xml:space="preserve">
+    <value>My taken orders</value>
+  </data>
+  <data name="Home_OrdersForDepartment" xml:space="preserve">
+    <value>Orders for department</value>
+  </data>
+  <data name="TakeOrder" xml:space="preserve">
+    <value>Take order</value>
+  </data>
+  <data name="CanHaveManyTakenOrders" xml:space="preserve">
+    <value>You can  take multiple orders at the same time</value>
+  </data>
+  <data name="CannotHaveManyTakenOrders" xml:space="preserve">
+    <value>You cannot  take multiple orders at the same time</value>
+  </data>
+  <data name="NewOrder" xml:space="preserve">
+    <value>New order</value>
+  </data>
+  <data name="Wait_a_moment" xml:space="preserve">
+    <value>Wait a moment</value>
+    <comment>Wait a moment</comment>
+  </data>
+  <data name="AssignToMyself" xml:space="preserve">
+    <value>Assign to myself</value>
+  </data>
+  <data name="MoveToDepartment" xml:space="preserve">
+    <value>Move to another department</value>
+    <comment>Move to another department</comment>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>Move</value>
+    <comment>Przenieś</comment>
+  </data>
+  <data name="Person_Required" xml:space="preserve">
+    <value>Person is required</value>
+  </data>
+  <data name="Person_MustBeSelected" xml:space="preserve">
+    <value>Person must be selected.</value>
+  </data>
+  <data name="Category_Required" xml:space="preserve">
+    <value>Category is required</value>
+  </data>
+  <data name="Category_MustBeSelected" xml:space="preserve">
+    <value>Category must be selected.</value>
+  </data>
+  <data name="Workload_Positive" xml:space="preserve">
+    <value>Time must be a positive number between 0 - 24h</value>
+  </data>
+  <data name="Workload_0_24" xml:space="preserve">
+    <value>The value must be between 0 and 24</value>
+  </data>
+  <data name="Cost_Positive" xml:space="preserve">
+    <value>Workload must be a positive number.</value>
+  </data>
+  <data name="Description_Required" xml:space="preserve">
+    <value>Description is required</value>
+  </data>
+  <data name="Activity_Required" xml:space="preserve">
+    <value>Activity is required</value>
+  </data>
+  <data name="Activity_MustBeSelected" xml:space="preserve">
+    <value>Activity must be selected.</value>
+  </data>
+  <data name="Spoiler_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Spoiler_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="Home_WorkOrdersWithPerson" xml:space="preserve">
+    <value>Orders with my activities</value>
+  </data>
+  <data name="ShowActivities" xml:space="preserve">
+    <value>Show activities in window</value>
+  </data>
+  <data name="UserProfile_UserName" xml:space="preserve">
+    <value>User Name</value>
+  </data>
+  <data name="UserProfile_LangCode" xml:space="preserve">
+    <value>Language Code</value>
+  </data>
+  <data name="UserProfile_PersonID" xml:space="preserve">
+    <value>Person ID</value>
+  </data>
+  <data name="UserProfile_IsAuthenticated" xml:space="preserve">
+    <value>Is Authenticated</value>
+  </data>
+  <data name="UserProfile_RightMatrix" xml:space="preserve">
+    <value>Rights Matrix</value>
+  </data>
+  <data name="UserProfile_UseOriginalColors" xml:space="preserve">
+    <value>Use Original Colors</value>
+  </data>
+  <data name="UserProfile_CanHaveManyActiveTake" xml:space="preserve">
+    <value>Can Have Many Active Orders</value>
+  </data>
+  <data name="Permission_WO_Add" xml:space="preserve">
+    <value>Add Order</value>
+  </data>
+  <data name="Permission_WO_Edit" xml:space="preserve">
+    <value>Edit Order</value>
+  </data>
+  <data name="Permission_WO_Edit_Description" xml:space="preserve">
+    <value>Edit Order Description</value>
+  </data>
+  <data name="Permission_WO_Del" xml:space="preserve">
+    <value>Delete Order</value>
+  </data>
+  <data name="Permission_WO_Close" xml:space="preserve">
+    <value>Close Order</value>
+  </data>
+  <data name="Permission_AcT_Add" xml:space="preserve">
+    <value>Add Activity</value>
+  </data>
+  <data name="Permission_AcT_Del" xml:space="preserve">
+    <value>Delete Activity</value>
+  </data>
+  <data name="Permission_AcT_Edit_Description" xml:space="preserve">
+    <value>Edit Activity Description</value>
+  </data>
+  <data name="Permission_ParT_WO_take" xml:space="preserve">
+    <value>Take Order</value>
+  </data>
+  <data name="Permission_ParT_WO_Order" xml:space="preserve">
+    <value>Order Part</value>
+  </data>
+  <data name="Permission_ParT_Edit_State" xml:space="preserve">
+    <value>Edit State</value>
+  </data>
+  <data name="Permission_WO_SET_AssignedPerson" xml:space="preserve">
+    <value>Set Assigned Person</value>
+  </data>
+  <data name="Permission_ParT_Give" xml:space="preserve">
+    <value>Give Part</value>
+  </data>
+  <data name="Permission_MD_Add" xml:space="preserve">
+    <value>Add Device</value>
+  </data>
+  <data name="Permission_MD_Edit" xml:space="preserve">
+    <value>Edit Device</value>
+  </data>
+  <data name="Permission_MD_Edit_Warranty" xml:space="preserve">
+    <value>Edit Device Warranty</value>
+  </data>
+  <data name="Permission_ParT_Add" xml:space="preserve">
+    <value>Add Part</value>
+  </data>
+  <data name="Permission_MD_Add_ForceCycle" xml:space="preserve">
+    <value>Add Force Cycle</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+    <value>User information</value>
+    <comment>User information</comment>
+  </data>
+  <data name="NoData" xml:space="preserve">
+    <value>No data loaded</value>
+  </data>
+  <data name="DevicesPage_Title" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="Device_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Device_SerialNo" xml:space="preserve">
+    <value>Serial No.</value>
+  </data>
+  <data name="Device_LocationName" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="Device_Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
+  <data name="NavMenu_Devices" xml:space="preserve">
+    <value>Devices</value>
+  </data>
+  <data name="WorkOrderFiles_Title" xml:space="preserve">
+    <value>Work Order Files</value>
+  </data>
+  <data name="WorkOrderFiles_LoadingFiles" xml:space="preserve">
+    <value>Loading files</value>
+  </data>
+  <data name="WorkOrderFiles_NoAttachedFiles" xml:space="preserve">
+    <value>No attached files</value>
+  </data>
+  <data name="WorkOrderFiles_LoadingThumbnail" xml:space="preserve">
+    <value>Loading thumbnail</value>
+  </data>
+  <data name="WorkOrderFiles_LoadingFullSizeImage" xml:space="preserve">
+    <value>Loading full-size image</value>
+  </data>
+  <data name="WorkOrderFiles_LoadingImage" xml:space="preserve">
+    <value>Loading image</value>
+  </data>
+  <data name="WorkOrderFiles_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="WorkOrderFiles_ErrorLoadingList" xml:space="preserve">
+    <value>Error loading file list</value>
+  </data>
+  <data name="WorkOrderFiles_UnexpectedErrorLoadingList" xml:space="preserve">
+    <value>Unexpected error loading file list for WorkOrderId</value>
+  </data>
+  <data name="WorkOrderFiles_FailedToLoadThumbnail" xml:space="preserve">
+    <value>Failed to load thumbnail for file</value>
+  </data>
+  <data name="WorkOrderFiles_ErrorLoadingThumbnail" xml:space="preserve">
+    <value>Error loading thumbnail for file</value>
+  </data>
+  <data name="WorkOrderFiles_FailedToLoadFullSizeImage" xml:space="preserve">
+    <value>Failed to load full-size image for file</value>
+  </data>
+  <data name="WorkOrderFiles_ErrorLoadingFullSizeImage" xml:space="preserve">
+    <value>Error loading full-size image for file</value>
+  </data>
+  <data name="WorkOrderFiles_NonImageFileClick" xml:space="preserve">
+    <value>Non-image file click</value>
+  </data>
+  <data name="BackToList" xml:space="preserve">
+    <value>Back to list</value>
+  </data>
+  <data name="DeviceDetails_Title" xml:space="preserve">
+    <value>Device Details</value>
+  </data>
+  <data name="DeviceDetails_NoDeviceSelected" xml:space="preserve">
+    <value>No device selected.</value>
+  </data>
+  <data name="DeviceDisplay_ErrorLoadingInfo" xml:space="preserve">
+    <value>Failed to load device information</value>
+  </data>
+  <data name="DeviceDisplay_Critical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="DeviceDisplay_GeneralInfo" xml:space="preserve">
+    <value>General Information</value>
+  </data>
+  <data name="DeviceDisplay_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="DeviceDisplay_SerialNo" xml:space="preserve">
+    <value>Serial Number</value>
+  </data>
+  <data name="DeviceDisplay_Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="DeviceDisplay_NotSpecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="DeviceDisplay_Place" xml:space="preserve">
+    <value>Place</value>
+  </data>
+  <data name="DeviceDisplay_Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
+  <data name="DeviceDisplay_Set" xml:space="preserve">
+    <value>Set</value>
+  </data>
+  <data name="DeviceDisplay_Documentation" xml:space="preserve">
+    <value>Documentation</value>
+  </data>
+  <data name="DeviceDisplay_OpenDocumentation" xml:space="preserve">
+    <value>Open documentation</value>
+  </data>
+  <data name="DeviceDisplay_DeviceState" xml:space="preserve">
+    <value>Device State</value>
+  </data>
+  <data name="DeviceDisplay_Duration" xml:space="preserve">
+    <value>Duration:</value>
+  </data>
+  <data name="DeviceDisplay_MinutesAbbr" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="DeviceDisplay_HoursAbbr" xml:space="preserve">
+    <value>h</value>
+  </data>
+  <data name="DeviceDisplay_DaysAbbr" xml:space="preserve">
+    <value>d</value>
+  </data>
+  <data name="DeviceDisplay_Changed" xml:space="preserve">
+    <value>Changed:</value>
+  </data>
+  <data name="DeviceDisplay_DeviceImages" xml:space="preserve">
+    <value>Device Images</value>
+  </data>
+  <data name="DeviceDisplay_DeviceDetails" xml:space="preserve">
+    <value>Device Details</value>
+  </data>
+  <data name="DeviceDisplay_Property" xml:space="preserve">
+    <value>Property</value>
+  </data>
+  <data name="DeviceDisplay_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="DeviceDisplay_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="DeviceDisplay_DeviceStatuses" xml:space="preserve">
+    <value>Device Statuses</value>
+  </data>
+  <data name="DeviceDisplay_Device" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="DeviceDisplay_Detail" xml:space="preserve">
+    <value>Detail</value>
+  </data>
+  <data name="DeviceDisplay_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="DeviceDisplay_ImageModalTitle" xml:space="preserve">
+    <value>Device Image</value>
+  </data>
+  <data name="DeviceDisplay_LoadingInfo" xml:space="preserve">
+    <value>Loading device information...</value>
+  </data>
+  <data name="DeviceDisplay_DocumentationFiles" xml:space="preserve">
+    <value>Documentation Files</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+    <comment>Yes</comment>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+    <comment>No</comment>
+  </data>
+  <data name="DeviceDisplay_NoDocumentationFiles" xml:space="preserve">
+    <value>No documentation files found.</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+    <comment>Total</comment>
+  </data>
+  <data name="Select_Device" xml:space="preserve">
+    <value>Select device</value>
+  </data>
+  <data name="SelectWorkOrder" xml:space="preserve">
+    <value>Selec workorder</value>
+  </data>
+  <data name="ActivityList_EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="OpenOrder" xml:space="preserve">
+    <value>Open order</value>
+  </data>
+  <data name="OpenActivity" xml:space="preserve">
+    <value>Open activity</value>
+  </data>
+  <data name="Login_AnErrorOccurred" xml:space="preserve">
+    <value>Login error:</value>
+  </data>
+  <data name="NoPermissionToEditActivity" xml:space="preserve">
+    <value>No permission to edit activity</value>
+  </data>
+  <data name="NotYourActivity" xml:space="preserve">
+    <value>You not in list of axtivity workers</value>
+  </data>
+  <data name="EditActivity" xml:space="preserve">
+    <value>Edit activity</value>
+  </data>
+  <data name="SchedulerRowHeight" xml:space="preserve">
+    <value>Row height</value>
+    <comment>Row height</comment>
+  </data>
+  <data name="ApplyChangesQuestion" xml:space="preserve">
+    <value>Apply changes ?</value>
+  </data>
+  <data name="Scheduler_ShowWorkOrders" xml:space="preserve">
+    <value>Show workorders</value>
+  </data>
+  <data name="Scheduler_ShowActivities" xml:space="preserve">
+    <value>Show activities</value>
+  </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>Interface language</value>
+  </data>
+  <data name="WorkDayStart" xml:space="preserve">
+    <value>Work day end</value>
+  </data>
+  <data name="WorkDayEnd" xml:space="preserve">
+    <value>Work day start</value>
+  </data>
+</root>

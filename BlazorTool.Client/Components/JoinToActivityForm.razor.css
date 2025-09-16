@@ -1,0 +1,30 @@
+.add-activity-form-container {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.form-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+}
+
+.form-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-right {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.k-form-buttons {
+    text-align: right;
+    padding-top: 1rem;
+}

@@ -1,0 +1,128 @@
+﻿:root {
+    --card-bg: #fff;
+    --text: #222;
+    --muted: #667085;
+    --line: #eaecf0;
+    --primary: #2563eb;
+    --badge-bg: #eef2ff;
+    --chip-bg: #f7f7f9;
+}
+
+.activity-card {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(16, 24, 40, 0.08);
+    max-width: 900px;
+    font-size: 1.05rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.activity-description {
+    font-size: 1.25rem;
+    font-weight: 600;
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+    color: #111827;
+}
+
+.subline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    font-size: 1rem;
+    color: var(--muted);
+}
+
+.badge {
+    background: var(--badge-bg);
+    color: var(--primary);
+    border: 1px solid rgba(37, 99, 235, .15);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.meta {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 1rem;
+    font-size: 1rem;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: var(--chip-bg);
+    border: 1px solid var(--line);
+    color: #374151;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 1rem;
+}
+
+.footer-section {
+    margin-top: 16px;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+}
+
+.avatars-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70px;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.avatar-label {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: center;
+    overflow: hidden;
+/*    text-overflow: ellipsis;
+    white-space: nowrap;*/
+}
+
+.ids {
+    font-size: 0.9rem;
+    color: var(--muted);
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+}

@@ -1,0 +1,61 @@
+.activity-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 0.4rem;
+    background-color: #fafafa;
+    font-size: 0.9rem;
+}
+
+.activity-row:hover {
+    background-color: #f0f0f0;
+}
+
+.activity-row > span {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 5px;
+}
+
+.activity-category {
+    font-weight: bold;
+    flex-basis: 20%;
+}
+
+.activity-description {
+    flex-basis: 40%;
+    color: #333;
+    max-height: 12rem;
+    overflow: auto !important;
+}
+.activity-description-external {
+    flex-basis: 40%;
+    color: #333;
+    max-height: 28rem;
+    overflow: auto !important;
+}
+
+.activity-workload {
+    flex-basis: 10%;
+    text-align: right;
+}
+
+.activity-workers {
+    flex-basis: 10%;
+    text-align: center;
+}
+
+.activity-persons {
+    flex-basis: 15%;
+}
+
+.activity-date {
+    flex-basis: 13%;
+    text-align: right;
+    color: #6c757d;
+}
+

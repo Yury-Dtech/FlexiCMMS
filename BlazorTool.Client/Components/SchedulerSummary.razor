@@ -1,0 +1,128 @@
+@using BlazorTool.Client.Models
+@inject UserState userState
+@using BlazorTool.Client.Services
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<div class="summary-table-container">
+    @if (SummaryData.Any())
+    {
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>@Localizer["SchedulerSummary_Person"]</th>
+                    <th>@Localizer["SchedulerSummary_Total"]</th>
+                    @foreach (var status in Statuses)
+                    {
+                        <th>@status</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var summary in SummaryData)
+                {
+                    <tr>
+                        <td>@summary.PersonName</td>
+                        <td>@summary.TotalCount</td>
+                        @foreach (var status in Statuses)
+                        {
+                            var count = summary.StatusCounts.GetValueOrDefault(status, 0);
+                            var color = GetColor(StatusColors.GetValueOrDefault(status));
+                            <td style="background-color:@color">
+                                @count
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<SchedulerAppointment> Appointments { get; set; } = new();
+
+    private List<PersonWorkOrderSummary> SummaryData { get; set; } = new();
+    private List<string> Statuses { get; set; } = new();
+    private Dictionary<string, string> StatusColors { get; set; } = new();
+
+    protected override void OnParametersSet()
+    {
+        GenerateSummaryData();
+    }
+
+    private void GenerateSummaryData()
+    {
+        if (Appointments == null || !Appointments.Any())
+        {
+            SummaryData.Clear();
+            Statuses.Clear();
+            StatusColors.Clear();
+            return;
+        }
+
+        Statuses = Appointments
+            .Where(a => !string.IsNullOrEmpty(a.WOState))
+            .Select(a => a.WOState)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        StatusColors = Appointments
+            .Where(a => !string.IsNullOrEmpty(a.WOState) && !string.IsNullOrEmpty(a.StateColor))
+            .GroupBy(a => a.WOState)
+            .ToDictionary(g => g.Key, g => g.First().StateColor.ToLowerInvariant());
+
+        var personGroups = Appointments.GroupBy(a => a.AssignedPerson);
+        var newSummaryData = new List<PersonWorkOrderSummary>();
+
+        foreach (var group in personGroups)
+        {
+            var summary = new PersonWorkOrderSummary
+            {
+                PersonName = string.IsNullOrEmpty(group.Key) ? Localizer["SchedulerSummary_NotAssigned"] : group.Key,
+                TotalCount = group.Count(),
+                StatusCounts = group.GroupBy(a => a.WOState)
+                                     .ToDictionary(g => g.Key, g => g.Count())
+            };
+            newSummaryData.Add(summary);
+        }
+
+        SummaryData = newSummaryData.OrderBy(s => s.PersonName).ToList();
+    }
+
+    private string GetColor(string? color)
+    {
+        if (string.IsNullOrEmpty(color))
+        {
+            return "";
+        }
+        if (userState.UseOriginalColors)
+        {
+            return color;
+        }
+        switch (color.ToLowerInvariant())
+        {
+        case "lime":
+        case "#1bf151":
+            return "LightGreen";
+        case "red":
+            return "LightCoral";
+        case "yellow":
+        case "#ffff80":
+            return "LightYellow";
+        case "silver":
+            return "LightSteelBlue";
+        default:
+            return "";
+        }
+    }
+
+    public class PersonWorkOrderSummary
+    {
+        public string PersonName { get; set; } = string.Empty;
+        public int TotalCount { get; set; }
+        public Dictionary<string, int> StatusCounts { get; set; } = new();
+    }
+}
+

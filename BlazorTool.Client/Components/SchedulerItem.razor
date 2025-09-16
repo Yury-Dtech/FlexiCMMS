@@ -1,0 +1,46 @@
+@using BlazorTool.Client.Models
+@using Telerik.Blazor.Components
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<div class="scheduler-item-wrapper view-@View.ToString().ToLower()">
+    @if (View == SchedulerView.Month)
+    {
+        <div class="scheduler-item-month">
+            <span class="item-asset">@Item.AssetNo</span>
+            <span class="item-assignee"> : @Item.WODesc</span>
+        </div>
+    }
+    else if(View == SchedulerView.Timeline)
+    {
+        <div class="scheduler-item-month">
+            <span class="item-asset">@Item.AssetNo</span>
+            <span class="item-assignee">: @Item.Description</span>
+        </div>
+    }
+    else // Week or Day view
+    {
+         <div class="scheduler-item-details">
+            <div class="item-header">[@Item.AppointmentId] @Item.AssetNo</div>
+            <div class="item-body">
+                @if (!string.IsNullOrEmpty(Item.DepName))
+                {
+                    <span>@Item.DepName : </span>
+                }
+                <span>@Item.AssignedPerson</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Item.WODesc))
+            {
+                <div class="item-description">@Item.WODesc</div>
+            }
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public SchedulerAppointment Item { get; set; } = new();
+
+    [Parameter]
+    public SchedulerView View { get; set; }
+}

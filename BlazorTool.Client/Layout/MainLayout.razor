@@ -1,0 +1,136 @@
+﻿@using BlazorTool.Client.Components
+@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@using System.Globalization
+@inherits LayoutComponentBase
+@inject UserState UserState
+@inject AppStateService AppState
+@inject NavigationManager Navigation
+@inject ApiServiceClient ApiClient
+@inject IHttpClientFactory HttpClientFactory
+@inject ILogger<MainLayout> Logger
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject ViewSettingsService viewSettingsService
+
+<TelerikRootComponent>
+
+    
+    @if (!AppState.IsInitialized || !_sessionChecked)
+    {
+        <div style="position:fixed; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.9); z-index:9999;">
+            <TelerikLoader Visible="true" Size="Telerik.Blazor.ThemeConstants.Loader.Size.Large" />
+            <p style="margin-left: 1rem; font-size: 1.2rem;">@Localizer["MainLayout_ApplicationLoading"]</p>
+        </div>
+    }
+    else
+    {
+        <div class="page">
+            <div class="sidebar">
+                @if (UserState.IsAuthenticated)
+                {
+                    <NavMenu />
+                }
+            </div>
+
+            <main>
+                <div class="top-row ">
+                    @if (UserState.IsAuthenticated)
+                    {
+                        <span class="user-name">@Localizer["MainLayout_Hello"] @UserState.UserName!</span>
+                        <button class="btn btn-link logout-button" @onclick="Logout">@Localizer["MainLayout_Logout"]</button>
+                    }
+                    <a href="changelog">@formattedVersion</a>
+                </div>
+                <article class="content ">
+                    @Body
+                </article>
+            </main>
+        </div>
+    }
+</TelerikRootComponent>
+    @code{
+    private string buildDate = "N/A";
+    private bool _sessionChecked = false;
+    private string formattedVersion = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("DEBUG: MainLayout OnInitializedAsync started. Current UI Culture: {Culture}", CultureInfo.CurrentUICulture.Name);
+
+        // Initialize app settings first, which is required for the rest of the app
+        await AppState.InitializeAsync();
+        await UserState.InitializationTask;
+        await UserState.LoadUserStateFromCache();
+        if (UserState.IsAuthenticated)
+        {
+            var session = await ApiClient.CheckSessionAsync();
+            if (!session.IsSuccessStatusCode)
+            {
+                await UserState.ClearAsync();
+                Navigation.NavigateTo("/login", true);
+                return;
+            }
+        }
+        _sessionChecked = true;
+        formattedVersion = Localizer["MainLayout_Version"];
+        // Now that settings are loaded, we can proceed with other initializations
+        try
+        {
+            var versionString = AppState.Settings.Version;
+            formattedVersion = $"{Localizer["MainLayout_Version"]} {versionString}";
+            var Http = HttpClientFactory.CreateClient("ServerHost");
+            buildDate = await Http.GetStringAsync("buildinfo.txt");
+            formattedVersion += $" ({buildDate})";
+        }
+        catch (Exception)
+        {
+            // buildDate = "N/A";
+        }
+
+        Logger.LogInformation("DEBUG: UserState InitializationTask awaited. Current UI Culture: {Culture}", CultureInfo.CurrentUICulture.Name);
+
+        // If user state is not authenticated locally, redirect to login
+        // if (!UserState.IsAuthenticated)
+        // {
+        //     Navigation.NavigateTo("/login");
+        //     return;
+        // }
+
+        Logger.LogInformation($"User [{UserState.UserName}] is authenticated from userState");
+        // If on a page other than login, verify session with the server
+        // if (!Navigation.Uri.EndsWith("/login", StringComparison.OrdinalIgnoreCase))
+        // {
+        //     try
+        //     {
+        //         var response = await ApiClient.CheckSessionAsync();
+        //         if (!response.IsSuccessStatusCode)
+        //         {
+        //             Server session expired or invalid, clear local state and redirect
+        //             Logger.LogWarning($"[{UserState.UserName}] == Session check failed with status code: {response.StatusCode}");
+        //             await UserState.ClearAsync();
+        //             Navigation.NavigateTo("/login");
+        //         }
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Handle potential network errors or API unavailability
+        //         Logger.LogError(ex, "Failed to check session for user {UserName}", UserState.UserName);
+        //         Console.WriteLine($"Failed to check session: {ex.Message}");
+        //         await UserState.ClearAsync();
+        //         Navigation.NavigateTo("/login");
+        //     }
+        // }
+    }
+
+    private async Task Logout()
+    {
+        Logger.LogInformation($"<==== [{UserState.UserName}] is logging out");
+        foreach(var key in ViewSettingsService.SettingsKeys.Values)
+        {
+            var viewSettings = await viewSettingsService.LoadSettingsAsync<WorkOrder>(key);
+            await ApiClient.SaveViewSettingsAsync(UserState.UserName, key, viewSettings);
+        }
+        await UserState.ClearAsync();
+        await viewSettingsService.ClearAsync();
+        Navigation.NavigateTo("/login");
+    }
+}

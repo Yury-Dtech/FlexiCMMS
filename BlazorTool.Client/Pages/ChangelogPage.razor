@@ -1,0 +1,52 @@
+﻿@page "/changelog"
+@inject IHttpClientFactory HttpClientFactory
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+@using Markdig
+
+<h3>@Localizer["ChangelogPage_Title"]</h3>
+
+@if (!string.IsNullOrEmpty(changelogContent))
+{
+    <div class="changelog-content">
+        <div class="full-width-container flex flex-col md:flex-row">
+            <div class="w-full md:w-1/2 bg-blue-100 p-4">
+                @((MarkupString)changelogContent)
+            </div>
+
+            <div class="w-full md:w-1/2 bg-green-100 p-4">
+                @((MarkupString)changelogContent_PL)
+            </div>
+        </div>
+        
+    </div>
+}
+else
+{
+    <p>@Localizer["ChangelogPage_Loading"]</p>
+}
+
+@code {
+    private string changelogContent;
+    private string changelogContent_PL;
+    private string changelogUrl = "CHANGELOG.md";
+    private string changelogUrl_PL = "CHANGELOG_PL.md";
+    protected override async Task OnInitializedAsync()
+    {
+    
+        try
+        {
+            var Http = HttpClientFactory.CreateClient("ServerHost");
+            var markdownEn = await Http.GetStringAsync(changelogUrl);
+            changelogContent = Markdig.Markdown.ToHtml(markdownEn ?? "");
+
+            var markdownPl = await Http.GetStringAsync(changelogUrl_PL);
+            changelogContent_PL = Markdig.Markdown.ToHtml(markdownPl ?? "");
+        }
+        catch (Exception ex)
+        {
+            changelogContent = $"<p>{Localizer["ChangelogPage_ErrorLoading"]} {ex.Message}</p>";
+            changelogContent_PL = $"<p>{Localizer["ChangelogPage_ErrorLoading"]} {ex.Message}</p>";
+        }
+    }
+}

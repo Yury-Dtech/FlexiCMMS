@@ -1,0 +1,53 @@
+﻿@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+<div>
+    <TelerikMultiSelect Data="@Values"
+                        @bind-Value="@SelectedValues"
+                        TagMode="@MultiSelectTagMode.Multiple"
+                        Placeholder="@Localizer["OrdersPage_SelectDevices"]"
+                        AutoClose="false"
+                        OnClose="OnClosed"
+                        OnChange="() => {if (SelectedValues.Count == 0) context.ClearFilterAsync(); }"
+                        ShowClearButton="true"
+                        >
+
+    </TelerikMultiSelect>
+</div>
+
+@code {
+    [Parameter] 
+    public IEnumerable<string> Values { get; set; } = new List<string>();
+    [Parameter] 
+    public FilterMenuTemplateContext context { get; set; } = new FilterMenuTemplateContext();
+    [Parameter]
+    public string NameOfField { get; set; } = string.Empty;
+    private List<string?> SelectedValues { get; set; } = new List<string>();
+
+    protected override void OnInitialized()
+    {
+        if (context?.FilterDescriptor?.FilterDescriptors.Count != 0)
+        {
+            SelectedValues = context.FilterDescriptor.FilterDescriptors
+                .Where(fd => ((FilterDescriptor) fd).Member == NameOfField)
+                .Select(fd => ((FilterDescriptor) fd).Value?.ToString())
+                .ToList();
+        }
+    }
+
+    private void OnClosed()
+    {
+        var compositeFilterDescriptor = context.FilterDescriptor;
+        compositeFilterDescriptor.LogicalOperator = FilterCompositionLogicalOperator.Or;
+        compositeFilterDescriptor.FilterDescriptors.Clear();
+        foreach(var itemValue in SelectedValues)
+        {
+            compositeFilterDescriptor.FilterDescriptors.Add(new FilterDescriptor()
+            {
+                Member = NameOfField,
+                MemberType = typeof(string),
+                Operator = itemValue == null ? FilterOperator.IsNull : FilterOperator.IsEqualTo,
+                Value = itemValue
+            });
+        }
+    }
+}

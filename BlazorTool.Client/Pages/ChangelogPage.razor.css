@@ -1,0 +1,31 @@
+﻿body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f0f4f8; /* Светло-серый фон */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 95vh; /* Минимальная высота body равна высоте окна просмотра */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.full-width-container {
+    width: 99%; /* Занимает всю ширину окна просмотра */
+    height: 90vh; /* Занимает всю высоту окна просмотра */
+    display: flex;
+    align-items: stretch; /* Растягивает дочерние элементы по высоте */
+    overflow-y: scroll;
+}
+
+pre {
+    height: 100%; /* Заставляет pre занять всю высоту родителя */
+    overflow: auto; /* Добавляет скроллбары (и верт., и гориз.) по необходимости */
+    box-sizing: border-box; /* Чтобы padding и border не увеличивали размер блока */
+    white-space: pre-wrap; /* Разрешает перенос длинных строк */
+    word-wrap: break-word; /* Помогает переносить очень длинные слова без пробелов */
+    max-width: 100%; /* Гарантирует, что pre не выйдет за рамки родителя по ширине */
+    border: 1px solid #ccc; /* Более стандартный вид рамки */
+    padding: 16px; /* Внутренний отступ для текста */
+    margin: 0; /* Убираем внешний отступ по умолчанию, т.к. есть padding у родителя */
+}

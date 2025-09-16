@@ -1,0 +1,49 @@
+﻿@using BlazorTool.Client.Services
+@inject ILogger<CheckSession> Logger
+@inject NavigationManager Navigation
+
+@code {
+    [Parameter] public ApiServiceClient apiService { get; set; }
+    [Parameter] public UserState UserState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Navigation.Uri.EndsWith("/login", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+        await UserState.InitializationTask; // Ensure UserState is loaded
+        // Ensure the user is authenticated before checking the session
+        if (UserState.IsAuthenticated)
+        {
+            await checkSession();
+        }
+        else
+        {
+            Logger.LogWarning("User is not authenticated, redirecting to login page.");
+            Navigation.NavigateTo("/login", forceLoad: true, replace: true);
+        }
+    }
+    private async Task checkSession()
+    {
+        try
+        {
+            var response = await apiService.CheckSessionAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                // Server session expired or invalid, clear local state and redirect
+                Logger.LogWarning($"[{UserState.UserName}] == Session check failed with status code: {response.StatusCode}");
+                await UserState.ClearAsync();
+                Navigation.NavigateTo("/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle potential network errors or API unavailability
+            Logger.LogError(ex, "Failed to check session for user {UserName}", UserState.UserName);
+            Console.WriteLine($"Failed to check session: {ex.Message}");
+            await UserState.ClearAsync();
+            Navigation.NavigateTo("/login");
+        }
+    }
+}

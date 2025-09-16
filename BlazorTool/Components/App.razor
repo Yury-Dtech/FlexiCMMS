@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="BlazorTool.styles.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet @rendermode="@RenderMode.InteractiveAuto" />
+    <title>FlexiCMMS</title>
+    <link rel="stylesheet" href="https://blazor.cdn.telerik.com/blazor/6.2.0/kendo-theme-bootstrap/swatches/bootstrap-urban.css" />
+    <script src="https://blazor.cdn.telerik.com/blazor/6.2.0/telerik-blazor.min.js" defer></script>
+    <script src="/js/utility.js"></script>
+</head>
+
+<body>
+    <Routes @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>

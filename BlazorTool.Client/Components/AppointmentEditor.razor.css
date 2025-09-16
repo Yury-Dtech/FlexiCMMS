@@ -1,0 +1,79 @@
+﻿body {
+
+}
+form {
+    max-width: 500px;
+}
+
+    form label.width100 {
+        width: 100%;
+    }
+
+.datetime-row {
+    display: flex;
+    gap: 10px;
+}
+
+    .datetime-row label {
+        flex: 1;
+    }
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-top: 0px;
+    padding-bottom: 16px;
+}
+
+/* Styles for the inner content div with class "warning-popup" */
+.warning-popup {
+    background-color: #f7b86a;
+    border: 1px solid #e0e0e0; /* Легкая серая рамка */
+    border-radius: 5px; /* Более округлые углы для современного вида */
+    box-shadow: 0 9px 29px rgba(0, 0, 0, 0.4); /* Мягкая, но заметная тень для объема */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Современный шрифт */
+    color: #333; /* Темно-серый цвет текста для хорошего контраста */
+    width: 100%; /* Занимаем всю доступную ширину родительского контейнера TelerikPopup */
+    height: 100%; /* Занимаем всю доступную высоту родительского контейнера TelerikPopup */
+    box-sizing: border-box; /* Важно, чтобы padding не выталкивал div за 100% */
+    /* Для центрирования содержимого */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 25px; /* Просторный внутренний отступ для содержимого */
+    text-align: center; /* Центрирование текста внутри параграфа */
+}
+
+    /* Style for the paragraph text inside the popup */
+    .warning-popup p {
+        margin-bottom: 20px; /* Отступ между текстом и кнопкой */
+        font-size: 1.1em; /* Немного увеличенный размер шрифта для сообщения */
+        line-height: 1.5; /* Улучшенная читаемость текста */
+        color: #555; /* Чуть более светлый оттенок для сообщения */
+        font-weight: 500; /* Средняя толщина шрифта */
+    }
+
+    /* Optional: Style for the Telerik Button inside this specific popup */
+    .warning-popup .k-button {
+        /* Можно добавить свои стили для кнопки, если нужно переопределить стандартные */
+        /* background-color: #007bff; */
+        /* color: white; */
+        /* border: none; */
+        /* padding: 10px 20px; */
+        /* border-radius: 5px; */
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        .warning-popup .k-button:hover {
+            /* background-color: #0056b3; */
+        }
+
+/* Если вы хотите, чтобы фон был оранжевым, как на вашем скриншоте,
+   а не белым, как в предложенном "стильном" варианте,
+   замените background-color в .warning-popup на:
+   background-color: #fdd835; // Пример мягкого оранжевого/желтого
+   border-color: #fbc02d; // Соответствующий цвет рамки
+*/

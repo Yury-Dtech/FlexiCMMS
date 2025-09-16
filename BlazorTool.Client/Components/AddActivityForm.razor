@@ -1,0 +1,243 @@
+@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@using Telerik.Blazor.Components
+@using System.ComponentModel.DataAnnotations
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+
+@inject ApiServiceClient ApiClient
+@inject UserState UserState
+
+<div class="add-activity-form-container">
+    <TelerikForm Model="@ActivityModel" OnValidSubmit="@HandleValidSubmit">
+        <FormValidation>
+            <DataAnnotationsValidator />
+           
+        </FormValidation>
+    <FormItems>
+        <div class="form-layout">
+            <div class="form-left">
+                    <FormItem Field="@nameof(ActivityModel.PersonID)">
+                    <Template>
+                        <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["SchedulerSummary_Person"]:</label>
+                            <TelerikComboBox Data="@People"
+                                             @bind-Value="@ActivityModel.PersonID"
+                                             ValueField="@nameof(Person.PersonId)"
+                                             TextField="@nameof(Person.Name)"
+                                             Placeholder="@Localizer["WorkOrder_SelectPerson"]"
+                                             Filterable="true"
+                                                 FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                             ShowClearButton="true"
+                                             
+                                             >
+                            </TelerikComboBox>
+                        </div>
+                        <ValidationMessage For="@(() => ActivityModel.PersonID)" />
+                    </Template>
+                    </FormItem>
+                <FormItem Field="@nameof(ActivityModel.CategoryID)">
+                    <Template>
+                        <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["Activity_Category"]:</label>
+                            <TelerikComboBox Data="@Categories"
+                                         @bind-Value="@ActivityModel.CategoryID"
+                                         ValueField="@nameof(WODict.Id)"
+                                         TextField="@nameof(WODict.Name)"
+                                         Placeholder="@Localizer["WorkOrder_SelectWOCategory"]"
+                                         Filterable="true"
+                                                 FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                         ShowClearButton="true"
+                                         
+                                                 >
+                            </TelerikComboBox>
+                        </div>
+                        <ValidationMessage For="@(() => ActivityModel.CategoryID)" />
+                    </Template>
+                </FormItem>
+
+                <FormItem Field="@nameof(ActivityModel.WorkLoad)">
+                    <Template>
+                        <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_Workload"]:</label>
+                                <TelerikNumericTextBox @bind-Value="ActivityModel.WorkLoad" Format="n2" Step="0.25m" Placeholder="@Localizer["ActivityList_Workload_Placeholder"]" />
+                        </div>
+                        <ValidationMessage For="@(() => ActivityModel.WorkLoad)" />
+                    </Template>
+                </FormItem>
+                    <FormItem Field="@nameof(ActivityModel.Cost)">
+                        <Template>
+                            <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width: @minWidthLabel; margin-right: 10px;">@Localizer["Cost"]:</label>
+                                <TelerikNumericTextBox @bind-Value="ActivityModel.Cost" Placeholder="@Localizer["ActivityList_Cost_Placeholder"]" />
+                            </div>
+                            <ValidationMessage For="@(() => ActivityModel.Cost)" />
+                        </Template>
+                    </FormItem>
+            </div>
+
+            <div class="form-right">
+                <FormItem Field="@nameof(ActivityModel.Description)">
+                    <Template>
+                        <div style="display: flex; align-items: center;">
+                            <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_Description"]:</label>
+                                <TelerikTextArea @bind-Value="ActivityModel.Description" Rows="5" Placeholder="@Localizer["ActivityList_Description_Placeholder"]" />
+                        </div>
+                        <ValidationMessage For="@(() => ActivityModel.Description)" />
+                    </Template>
+                </FormItem>
+                    <FormItem Field="@nameof(ActivityModel.ActDate)">
+                        <Template>
+                            <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_ActDate"]:</label>
+                                <TelerikDateTimePicker @bind-Value="ActivityModel.ActDate"
+                                                       Placeholder="@Localizer["ActivityList_ActDate_Placeholder"]" 
+                                Format="dd MMMM yyyy HH:mm"
+                                
+                                />
+                            </div>
+                    @* @if (MinActDate > DateTime.MinValue && MaxActDate < DateTime.MaxValue)
+                            {
+                             <p style="text-align:end; font-size:smaller;"> Min=@MinActDate.ToString("G") / Max=@MaxActDate.ToString("G")</p>
+                            } *@
+                        </Template>
+                    </FormItem>
+                    <FormItem>
+                        <Template>
+                            <div style="display: flex; align-items: center;">
+                                <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_EndDate"]:</label>
+                                <TelerikDateTimePicker @bind-Value="EndDate"
+                                                       Format="dd MMMM yyyy HH:mm" />
+                            </div>                           
+                        </Template>
+                    </FormItem>
+            </div>
+        </div>
+    </FormItems>
+    <FormButtons>
+            <div style="display: flex; justify-content: center; gap: 50px; width: 100%;">
+        <TelerikButton ButtonType="ButtonType.Submit" ThemeColor="primary">@Localizer["Add"]</TelerikButton>
+            <TelerikButton ButtonType="ButtonType.Button" OnClick="OnCancelhandler" ThemeColor="secondary">@Localizer["Settings_Cancel"]</TelerikButton>
+        </div>
+    </FormButtons>
+</TelerikForm>
+    <div class="form-footer">
+        @* <p class="note">* @Localizer["All_Fields_Required"].</p> *@
+        <p>  </p>
+        <p>@ErrorMessage</p>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public int WorkOrderID { get; set; }
+    [Parameter]
+    public string LangCode { get; set; } = "pl-PL";
+    [Parameter]
+    public DateTime? RecommendedStart { get; set; }
+    [Parameter]
+    public DateTime? RecommendedEnd { get; set; }
+    [Parameter]
+    public EventCallback<Activity?> OnActivityAdded { get; set; }
+
+    private AddActivity ActivityModel { get; set; } = new AddActivity();
+    private List<Person> People { get; set; } = new List<Person>();
+    private List<WODict> Categories { get; set; } = new List<WODict>();
+    private string ErrorMessage { get; set; } = string.Empty;
+    private string minWidthLabel = "110px";
+    private DateTime MaxActDate;
+    private DateTime MinActDate;
+    private DateTime EndDate{ 
+        get
+        {
+            return ActivityModel.ActDate?.AddHours((double)ActivityModel.WorkLoad) ?? DateTime.Now.AddHours(1);
+        }
+        set
+        {
+            if (ActivityModel.ActDate != null)
+            {
+                var duration = value - ActivityModel.ActDate.Value;
+                ActivityModel.WorkLoad = (decimal)duration.TotalHours;
+                StateHasChanged();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ActivityModel.WorkOrderID = WorkOrderID;
+        ActivityModel.PersonID = UserState.PersonID ?? 0;
+        ActivityModel.Cost = 0;
+        var WO = await ApiClient.GetWorkOrderByIdAsync(WorkOrderID);
+        MinActDate = WO?.StartDate ?? WO?.AddDate ?? DateTime.MinValue;
+        MaxActDate = WO?.EndDate ?? WO?.CloseDate ?? DateTime.MaxValue;
+        if (RecommendedStart != null && RecommendedStart > MinActDate && RecommendedStart < MaxActDate)
+        {
+            ActivityModel.ActDate = RecommendedStart.Value;
+        }
+        else
+        {
+            ActivityModel.ActDate = ((MinActDate < DateTime.Now) && (MaxActDate > DateTime.Now)) ? DateTime.Now : MinActDate;
+        }
+
+        var takePersonsIDs = WO.TakePersons?.Split('#');
+        bool isMyOrder = takePersonsIDs?.Any(x => x == UserState.PersonID.ToString()) ?? false;
+        ActivityModel.WorkLoad = isMyOrder ? CalculateDecimalHours(WO?.PersonTakeDate ?? WO?.TakeDate) : 0.25m;
+        if (RecommendedEnd != null && RecommendedEnd >= MinActDate && RecommendedEnd <= MaxActDate)
+        {
+            EndDate = RecommendedEnd.Value;
+        }else
+        {
+            EndDate =MaxActDate;
+        }
+        
+        People = ApiClient.GetAllPersonsCached(); // From cache
+        Categories = await ApiClient.GetActCategoriesByDeviceCategory(WO?.DeviceCategoryID ?? 0); 
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var response = await ApiClient.CreateActivityAsync(ActivityModel);
+        if (response.IsValid)
+        {
+            // Reset model for next entry
+            ActivityModel = new AddActivity
+            {
+                WorkOrderID = this.WorkOrderID,
+                PersonID = UserState.PersonID ?? 0
+            };
+            var activities = await ApiClient.GetActivitiesByWO(WorkOrderID);
+            await OnActivityAdded.InvokeAsync(activities.FirstOrDefault(a=> a.ActivityID == response.Data.ActivityID));
+            StateHasChanged();
+        }
+        else
+        {
+            // Handle error (e.g., show notification)
+            Console.WriteLine($"Error creating activity: {string.Join(", ", response.Errors)}");
+            ErrorMessage = $"Error creating activity: {string.Join(", ", response.Errors)}";
+            await OnActivityAdded.InvokeAsync(null);
+        }
+    }
+
+    private decimal CalculateDecimalHours(DateTime? takeDate)
+    {
+        //if 15 minutes = 0.25 hours
+        if (takeDate == null) return 0.25m;
+        var hours = (DateTime.Now - takeDate.Value).TotalHours;
+
+        if (hours < 0.25) return 0.25m;
+        if (hours > 24) return 24m;
+        return (decimal)hours;
+    }
+
+    private void OnCancelhandler()
+    {
+        ActivityModel = new AddActivity
+        {
+            WorkOrderID = this.WorkOrderID,
+            PersonID = UserState.PersonID ?? 0
+        };
+        ErrorMessage = string.Empty;
+        OnActivityAdded.InvokeAsync(null);
+    }
+}

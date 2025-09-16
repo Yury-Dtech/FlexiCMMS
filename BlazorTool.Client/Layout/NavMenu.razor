@@ -1,0 +1,72 @@
+﻿@using BlazorTool.Client.Services
+@inject AppStateService AppState
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject UserState UserState
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">@AppState.Settings.ApplicationName</a>
+    </div>
+</div>
+
+<input type="checkbox" title="@Localizer["NavMenu_NavigationMenu"]" class="navbar-toggler" />
+@if(isUserStateReady && UserState.IsAuthenticated == true){
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="navbar-nav flex-column">
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="/" Match="NavLinkMatch.All">
+                <TelerikSvgIcon Icon="@SvgIcon.Home" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Main"]</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="orders">
+                <TelerikSvgIcon Icon="@SvgIcon.TrackChangesEnable" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Orders"]</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="scheduler">
+                <TelerikSvgIcon Icon="@SvgIcon.Calendar" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Scheduler"]</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="activities">
+                <TelerikSvgIcon Icon="@SvgIcon.StarOutline" Size="lg"></TelerikSvgIcon>
+                <span class="p-2">@Localizer["NavMenu_Activities"]</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="devices">
+                <TelerikSvgIcon Icon="@SvgIcon.Gears" Size="lg"></TelerikSvgIcon>
+                <span class="p-2" >@Localizer["NavMenu_Devices"]</span>
+            </NavLink>
+        </div>
+            <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="settings">
+                <TelerikSvgIcon Icon="@SvgIcon.Sliders" Size="lg"></TelerikSvgIcon>
+                <span class="p-2" aria-hidden="true">@Localizer["NavMenu_Settings"]</span>
+            </NavLink>
+            </div>
+    </nav>
+    <div class="nav-footer">
+        <span class="api-info">@AppState.Settings.ApiBaseUrl</span>
+    </div>
+</div>
+}
+
+
+@code{
+    private bool isUserStateReady = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UserState.InitializationTask;
+            isUserStateReady = UserState != null;
+            StateHasChanged();
+        }
+    }
+}

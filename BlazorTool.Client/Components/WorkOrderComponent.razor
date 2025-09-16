@@ -1,0 +1,676 @@
+﻿@using System.Text.Json.Serialization
+@using BlazorTool.Client.Models
+@using System.Globalization
+@using BlazorTool.Client.Services
+@inject ApiServiceClient apiService
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject UserState UserState
+
+<PageTitle>@Localizer["WorkOrder_OrderNo"]@(WorkOrder?.WorkOrderID)</PageTitle>
+
+<div class="work-order-container @(showActivities ? "activities-visible" : "")">
+  @if(WorkOrder != null)
+        {
+    <!-- HEADER -->
+        <CardHeader Class="d-flex justify-content-between align-items-center flex-wrap p-2">
+
+            <div class="shadow fs-5 p-2 rounded">
+                <div class="@DeviceAlarm">
+                    <strong>@Localizer["Device"]: </strong>
+                    @if (isNewWorkOrder && isEditable)
+                    {
+                        <TelerikComboBox Data="@ListDevices"
+                                         ValueField="@nameof(Device.MachineID)"
+                                         TextField="@nameof(Device.AssetNo)"
+                                         Placeholder=@Localizer["Scheduler_SelectAsset"]
+                                         ValueChanged="@((int devId) => OnDeviceChanged(devId))"
+                                         Width="250px"
+                                         ShowClearButton="false"
+                                         AllowCustom="false"
+                                         Filterable="true"
+                                         FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                         Class="@DeviceAlarm"
+                                         Size="sm">
+                        </TelerikComboBox>
+                    }
+                    else
+                    {
+                        @(" " + selectedDevice?.AssetNo ?? WorkOrder.AssetNo ?? @Localizer["WorkOrder_NoDevice"])
+                    }
+                </div>
+                <div><strong>Category:</strong> @(WorkOrder.DeviceCategory ?? selectedDevice?.DeviceCategory ?? @Localizer["WorkOrder_NoDevice"])</div>
+            </div>
+
+            <div>
+                <span class="badge @StateColor fs-3 shadow">
+                    @WorkOrder.WOState
+                </span>
+            </div>
+
+        </CardHeader>
+
+    <!-- INFO CARDS GRID -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mt-2">
+        <!-- Description -->
+        <div class="col ">
+            <TelerikCard Class="h-100">
+                <CardHeader Class="py-1 px-2">
+                    <CardTitle>@Localizer["WorkOrder_DescriptionTitle"]</CardTitle>
+                </CardHeader>
+                <CardBody Class="p-2 card-body-description">
+                    <div class="field-group ">
+                        <label>@Localizer[nameof(WorkOrder.WODesc)]:</label>
+                        <div class="control-wrapper">
+                            <TelerikTextArea @bind-Value="@WorkOrder.WODesc"
+                                             ReadOnly="@(isEditable == false || (!UserState.HasPermission(PermissionType.WO_Edit_Description) && !isNewWorkOrder))"
+                                             Size="sm"
+                                             Rows="6"
+                                             ResizeMode="@TextAreaResizeMode.Vertical"
+                                             Class="@DescriptionAlarm"
+                                             OnChange="@OnDescriptionChanged" 
+                                             />
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>@Localizer[nameof(WorkOrder.WOCategory)]:</label>
+                        <div class="control-wrapper">
+                            <TelerikComboBox Data="@ListCategories"
+                                             ValueField="@nameof(WODict.Id)"
+                                             TextField="@nameof(WODict.Name)"
+                                             Value="@(WorkOrder?.CategoryID ?? 0)"
+                                             Placeholder="@Localizer["WorkOrder_SelectWOCategory"]"
+                                             ValueChanged="@((int id) => OnCategoryChanged(id))"
+                                             Width="100%"
+                                             ReadOnly="@(isEditable == false)"
+                                             ShowClearButton="false"
+                                             AllowCustom="false"
+                                             Size="@cb_size"
+                                             Filterable="true"
+                                             FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                             Class="@CategoryAlarm">
+                            </TelerikComboBox>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>@Localizer[nameof(WorkOrder.WOReason)]:</label>
+                        <div class="control-wrapper">
+                            <TelerikComboBox Data="@ListReasons"
+                                             ValueField="@nameof(WODict.Id)"
+                                             TextField="@nameof(WODict.Name)"
+                                             Value="@(WorkOrder?.ReasonID ?? 0)"
+                                             Placeholder="@Localizer["WorkOrder_SelectWOReason"]"
+                                             ValueChanged="@((int reasonId) => OnReasonChanged(reasonId))"
+                                             Width="100%"
+                                             ReadOnly="@(isEditable == false)"
+                                             ShowClearButton="false"
+                                             AllowCustom="false"
+                                                 Size="@cb_size"
+                                                 Filterable="true"
+                                                 FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                             Class="@ReasonAlarm">
+                            </TelerikComboBox>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>@Localizer[nameof(WorkOrder.WOLevel)]:</label>
+                        <div class="control-wrapper">
+                            <TelerikComboBox Data="@ListLevels"
+                                             ValueField="@nameof(WODict.Id)"
+                                             TextField="@nameof(WODict.Name)"
+                                             Value="@(WorkOrder?.LevelID ?? 0)"
+                                             Placeholder="@Localizer["WorkOrder_SelectWOLevel"]"
+                                             ValueChanged="@((int levelId) => OnLevelChanged(levelId))"
+                                             Width="100%"
+                                             ReadOnly="@(isEditable == false)"
+                                             ShowClearButton="false"
+                                             AllowCustom="false"
+                                                 Size="@cb_size"
+                                             Class="@LevelAlarm">
+                            </TelerikComboBox>
+                        </div>
+                    </div>
+                </CardBody>
+            </TelerikCard>
+        </div>
+
+        <!-- Executors -->
+        <div class="col ">
+            <TelerikCard Class="h-100">
+                <CardHeader Class="py-1 px-2">
+                    <CardTitle>@Localizer["WorkOrder_Executors"]</CardTitle>
+                </CardHeader>
+                <CardBody Class="p-2">
+                    <div class="field-group">
+                        <label>@Localizer[nameof(WorkOrder.AssignedPerson)]:</label>
+                            <TelerikComboBox Data="@ListPersons"
+                                             Value="@WorkOrder.AssignedPerson"
+                                             Placeholder="@Localizer["WorkOrder_SelectPerson"]"
+                                             ValueChanged="@((string name) => OnAssignedPersonChanged(name))"
+                                             Width="100%"
+                                             ReadOnly=@(isEditable == false || !UserState.HasPermission(PermissionType.WO_SET_AssignedPerson))
+                                             ShowClearButton=true
+                                             Filterable="true"
+                                             FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                             Size="@cb_size">
+                            </TelerikComboBox>
+                    </div>
+                    <div class="field-group" >
+                            <label>@Localizer[nameof(WorkOrder.DepName)]:</label>
+                                <TelerikComboBox Data="@ListDepartments"
+                                                 Value="@WorkOrder.DepName"
+                                                 ValueField="Name"
+                                                 TextField="Name"
+                                                 Placeholder="@Localizer["Scheduler_SelectDepartment"]"
+                                                 ValueChanged="@((string name) => OnDepartmentChanged(name))"
+                                                 Width="100%"
+                                                 ReadOnly=@(isEditable == false)
+                                                 Filterable="true"
+                                                 FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                                 ShowClearButton=true
+                                             Size="@cb_size">
+                                                 
+                                </TelerikComboBox>
+                    </div>
+                    <div class="field-group">
+                            <label>@Localizer[nameof(WorkOrder.TakePersons)]:</label>
+                        <div class="field-value">@(string.IsNullOrEmpty(WorkOrder.TakePersons) ? @Localizer["WorkOrder_NotSpecified"] : takePersons)</div>
+                    </div>
+                </CardBody>
+            </TelerikCard>
+        </div>
+
+        <!-- Dates -->
+        <div class="col ">
+            <TelerikCard Class="h-100">
+                <CardHeader Class="py-1 px-2">
+                    <CardTitle>@Localizer["WorkOrder_Dates"]</CardTitle>
+                </CardHeader>
+                <CardBody Class="p-2">
+                    <div class="dates-grid">
+                        <div class="date-item">
+                                <label class="@DatesAlarm">@Localizer[nameof(WorkOrder.StartDate)]:</label>
+                                <TelerikDateTimePicker @bind-Value="@WorkOrder.StartDate"
+                                                       OnChange="@(OnDateChanged)"
+                                                       Width="100%"
+                                                       Size="@cb_size"
+                                                       ReadOnly=@(isEditable == false)
+                                                       Class="@DatesAlarm"
+                                                       Format="@dateTimeFormat"
+                                                       >
+                                    <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="5"/>
+                                                       </TelerikDateTimePicker>
+                        </div>
+                        <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.EndDate)]:</label>
+                                <TelerikDateTimePicker @bind-Value="@WorkOrder.EndDate"
+                                                       OnChange="@(OnDateChanged)"
+                                                       Width="100%"
+                                                       Size="@cb_size"
+                                                       ReadOnly=@(isEditable == false)
+                                                       Class="@DatesAlarm"
+                                                       Format="@dateTimeFormat"
+                                                       >
+                                    <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="5" />
+                                </TelerikDateTimePicker>
+                        </div>
+                        <div class="date-item">
+                            <label>@Localizer[nameof(WorkOrder.AddDate)]:</label>
+                            <div class="date-value">@FormatDateTime(WorkOrder.AddDate)</div>
+                        </div>
+                        <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.TakeDate)]:</label>
+                            <div class="date-value">@FormatDateTime(WorkOrder.TakeDate)</div>
+                        </div>
+                        <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.CloseDate)]:</label>
+                            <div class="date-value">@FormatDateTime(WorkOrder.CloseDate)</div>
+                        </div>
+                        <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.PersonTakeDate)]:</label>
+                            <div class="date-value">@FormatDateTime(WorkOrder.PersonTakeDate)</div>
+                        </div>
+                    </div>
+                </CardBody>
+            </TelerikCard>
+        </div>
+       
+    </div>
+
+    <!-- Statistics -->
+    <TelerikCard Class="stats-card">
+        <CardHeader>
+            <CardTitle>@Localizer["WorkOrder_Statistics"]</CardTitle>
+        </CardHeader>
+        <CardBody>
+            <div class="stats-grid">
+                <div class="stat-item" @onclick="ToggleActivities" style="cursor: pointer;">
+                    <div class="stat-number">@(WorkOrder.ActCount ?? 0)</div>
+                    <div class="stat-label">@Localizer[nameof(WorkOrder.ActCount)]</div>
+                </div>
+                <div class="stat-item" @onclick="ToggleFiles" style="cursor: pointer;">
+                    <div class="stat-number">@(WorkOrder.FileCount ?? 0)</div>
+                    <div class="stat-label">@Localizer[nameof(WorkOrder.FileCount)]</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">@(WorkOrder.PartCount ?? 0)</div>
+                        <div class="stat-label">@Localizer[nameof(WorkOrder.PartCount)]</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">@(WorkOrder.PlanActCount ?? 0)</div>
+                        <div class="stat-label">@Localizer[nameof(WorkOrder.PlanActCount)]</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">@(WorkOrder.IneffectiveCount ?? 0)</div>
+                        <div class="stat-label">@Localizer[nameof(WorkOrder.IneffectiveCount)]</div>
+                </div>
+                <div class="stat-item">
+                        @if (WorkOrder.Cost.HasValue)
+                        {
+                            <span class="cost-amount">@WorkOrder.Cost.Value.ToString("C2", new CultureInfo("pl-PL"))</span>
+                            @* <span class="cost-amount">@WorkOrder.Cost.Value.ToString("C")</span> *@
+                        }
+                        else
+                        {
+                            <span class="cost-amount no-cost">Not specified</span>
+                        }
+                        <div class="stat-label-cost">@Localizer[nameof(WorkOrder.Cost)]</div>
+                </div>
+            </div>
+                @if (isEditable && UserState.HasPermission(PermissionType.AcT_Add))
+                {
+                    <div class="activity-controls">
+                        <TelerikButton OnClick="@AddActivity" Icon="@SvgIcon.Plus" ThemeColor="primary">@Localizer["WorkOrder_AddActivity"]</TelerikButton>
+                    </div>
+                }
+            <div>
+                @if (showActivities)
+                {
+                    <ActivityList @ref="activityListComponent" WorkOrderId="WorkOrder.WorkOrderID" isEditable="@isEditable" />
+                }
+                else if (showFiles)
+                {
+                    <WorkOrderFilesDisplay WorkOrderId="WorkOrder.WorkOrderID" />
+                }
+            </div>
+
+        </CardBody>
+    </TelerikCard>
+
+    <TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="500px">
+        <WindowTitle>
+                <strong>@Localizer["WorkOrder_AddActivity"]</strong>
+        </WindowTitle>
+            <WindowActions>
+                <WindowAction Name="Close" />
+            </WindowActions>
+        <WindowContent>
+            <AddActivityForm WorkOrderID="@WorkOrder.WorkOrderID" OnActivityAdded="HandleActivityAdded" RecommendedStart="@lastActivityDate"/>
+        </WindowContent>
+    </TelerikWindow>
+
+    <!-- Modification Information -->
+    @if (WorkOrder.ModDate.HasValue || !string.IsNullOrEmpty(WorkOrder.ModPerson))
+    {
+        <TelerikCard Class="modification-card">
+            <CardHeader>
+                <CardTitle>@Localizer["WorkOrder_RecentChanges"]</CardTitle>
+            </CardHeader>
+            <CardBody>
+                <div class="modification-info">
+                    <div class="field-group mod">
+                        <label>@Localizer["WorkOrder_ChangeDate"]</label>
+                        <div class="field-value">@FormatDateTime(WorkOrder.ModDate)</div>
+                    </div>
+                    <div class="field-group mod">
+                        <label>@Localizer["WorkOrder_ModifiedBy"]</label>
+                        <div class="field-value">@(string.IsNullOrEmpty(WorkOrder.ModPerson) ? "Not specified" : WorkOrder.ModPerson)</div>
+                    </div>
+                </div>
+            </CardBody>
+        </TelerikCard>
+    }
+    }
+    else
+    {
+    <p class="error">@Localizer["WorkOrder_NoWorkOrderFound"]@WorkOrder?.WorkOrderID</p>
+    }
+
+</div>
+
+
+
+
+@code {
+    [Parameter] public WorkOrder? WorkOrder { get; set; }
+    [Parameter] public List<string>? ListPersons { get; set; }
+    [Parameter] public bool isEditable { get; set; } = false;
+    [Parameter] public EventCallback<bool> OnStateChanged { get; set; }
+    [Parameter] public EventCallback<WorkOrder> NeedReloadModel { get; set; }
+    [Parameter] public Person? currentUser { get; set; }
+    [Parameter] public bool isScheduler { get; set; } = false; // Indicates if this component is used in the scheduler context
+    private ActivityList? activityListComponent;
+    // private int listTypeForCategory = 1;
+    // private int listTypeForLevel = 2;
+    // private int listTypeForReason = 3;
+    // private int listTypeForState = 4;
+    // private int listTypeForDepartment = 5;
+    private string notAssigned = "Not assigned";
+    private string notSpecified = "Not specified";
+    private string dateTimeFormat = "dd.MM.yyyy HH:mm";
+    private string CategoryAlarm = string.Empty;
+    private string DeviceAlarm = string.Empty;
+    private string DescriptionAlarm = string.Empty;
+    private string LevelAlarm = string.Empty;
+    private string ReasonAlarm = string.Empty;
+    private string DatesAlarm = string.Empty;
+    private bool showActivities = false;
+    private bool showFiles = false;
+    private bool IsAddActivityWindowVisible { get; set; } = false;
+    private bool isNewWorkOrder = false;  
+    private List<Device>? ListDevices { get; set; } = new List<Device>();
+    private Device? selectedDevice;
+    private List<WODict> ListCategories = new List<WODict>();
+    private List<WODict> ListDepartments = new List<WODict>();
+    private List<WODict> ListLevels = new List<WODict>();
+    private List<WODict> ListReasons = new List<WODict>();
+    private DateTime? lastActivityDate;
+    private string takePersons = string.Empty;
+    private string StateColor = string.Empty;
+    private string cb_size = "sm";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isNewWorkOrder = WorkOrder?.WorkOrderID == 0;
+        ListDevices = await apiService.GetAllDevicesAsync();
+        ListLevels =  await apiService.GetWOLevels();
+        ListDepartments =  await apiService.GetWODepartments();
+        StateColor = await apiService.GetStateColor(WorkOrder?.WorkOrderID);
+        if (isNewWorkOrder) {
+            WorkOrder.EndDate = WorkOrder.StartDate?.AddHours(1);
+            DeviceAlarm = string.IsNullOrWhiteSpace(WorkOrder?.AssetNo) ? "bg-warning" : string.Empty;
+        }
+
+        takePersons = ParseTakePersons(WorkOrder?.TakePersons);
+        selectedDevice = ListDevices?.FirstOrDefault(d => d.MachineID == WorkOrder?.MachineID);
+        if (selectedDevice != null && selectedDevice.CategoryID != null)
+        {
+            ListReasons = await apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            ListCategories = await apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
+        }
+        else
+        {
+            ListReasons = await apiService.GetWOReasons();
+            ListCategories =  await apiService.GetWOCategories();
+        }
+        
+        if (ListPersons == null )
+        {
+            ListPersons = new List<string>();
+            if (!string.IsNullOrEmpty(WorkOrder?.AssignedPerson))
+                ListPersons.Add(WorkOrder.AssignedPerson) ;
+
+        }        
+
+        if (!isValidDates())
+        {
+            DatesAlarm = "bg-warning";
+        }
+
+        if (string.IsNullOrEmpty(WorkOrder?.WODesc))
+        {
+            DescriptionAlarm = "bg-warning";
+        }
+
+        if (string.IsNullOrEmpty(WorkOrder?.WOLevel))
+        {
+            LevelAlarm = "bg-warning";
+        }
+
+        if (string.IsNullOrEmpty(WorkOrder?.WOReason))
+        {
+            ReasonAlarm = "bg-warning";
+        }
+
+        if (string.IsNullOrEmpty(WorkOrder?.WOCategory))
+        {
+            CategoryAlarm = "bg-warning";
+        }
+
+        if (isNewWorkOrder && WorkOrder != null)
+        {
+            WorkOrder.AddDate = DateTime.Now;
+            WorkOrder.ModDate = DateTime.Now;
+        }
+        isValidWorkOrder();
+    }
+    public void AddActivity()
+    {
+        var lastActivity = activityListComponent?.activities?.OrderByDescending(a => a.AddDate).FirstOrDefault();
+        lastActivityDate = (lastActivity?.AddDate + TimeSpan.FromMinutes(60 * (double)(lastActivity?.WorkLoad ?? 0)) ) ?? null;
+        IsAddActivityWindowVisible = true;    
+    }
+    private string ParseTakePersons(string? TakePersons)
+    {
+        var takePersonsIDs = TakePersons?.Split('#') ?? Array.Empty<string>();
+        takePersons = string.Empty;
+        foreach(var id in takePersonsIDs)
+        {
+            if (int.TryParse(id, out int personId) && personId > 0)
+            {
+                var person = apiService.GetPersonByIDCached(personId);
+                if (person != null)
+                {
+                    takePersons += $"{person.Name}, ";
+                }
+            }
+        }
+        takePersons = takePersons.TrimEnd(',', ' ');
+        return takePersons;
+    }
+    private async Task HandleActivityAdded(Models.Activity newActivity)
+    {
+        if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
+        {
+            IsAddActivityWindowVisible = false;
+            if (WorkOrder != null)
+            {
+                await apiService.RefreshWorkOrderInCacheAsync(WorkOrder.WorkOrderID);
+                var updatedWorkOrder = await apiService.GetWorkOrderByIdCachedAsync(WorkOrder.WorkOrderID);
+                if (updatedWorkOrder != null)
+                {
+                    WorkOrder.UpdateFrom(updatedWorkOrder);
+                }
+                var task = activityListComponent?.RefreshActivitiesAsync();
+                if (task != null)
+                {
+
+                    await task;
+                }
+
+                await NeedReloadModel.InvokeAsync(WorkOrder);
+            }            
+        }
+        else
+        {
+            Console.WriteLine("Failed to add activity.");
+
+            IsAddActivityWindowVisible = false;
+
+        }
+    }
+
+    public async Task Refresh()
+    {
+        await LoadData();
+        StateHasChanged();
+    }
+
+    #region Event Handlers
+    private void OnAssignedPersonChanged(object newValue)
+    {
+        var personName = newValue as string;
+        if (WorkOrder != null)
+        {
+            WorkOrder.AssignedPerson = personName ?? string.Empty;
+        }
+        isValidWorkOrder();
+    }
+
+    private void OnDescriptionChanged()
+    {
+        if (WorkOrder != null && !string.IsNullOrWhiteSpace(WorkOrder.WODesc))
+        {
+            DescriptionAlarm = string.Empty;
+        }
+        else
+        {
+            DescriptionAlarm = "bg-warning";
+        }
+        isValidWorkOrder();
+    }
+
+    private async Task OnDeviceChanged(int devId)
+    {
+        var device = ListDevices?.FirstOrDefault(d => d.MachineID == devId);
+        if (WorkOrder != null && device != null)
+        {
+            selectedDevice = device;
+            WorkOrder.AssetNo = device.AssetNo; 
+            WorkOrder.DeviceCategory = device.DeviceCategory;
+            WorkOrder.DeviceCategoryID = device.CategoryID;
+            WorkOrder.MachineID = device.MachineID;
+            ListReasons = await apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            ListCategories = await apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            DeviceAlarm = string.Empty;
+        }else
+        {
+            DeviceAlarm = "bg-warning";
+        }
+        isValidWorkOrder();
+    }
+
+    private void ToggleActivities()
+    {
+        showActivities = !showActivities;
+        if (showActivities)
+        {
+            showFiles = false;
+        }
+    }
+
+    private void ToggleFiles()
+    {
+        showFiles = !showFiles;
+        if (showFiles)
+        {
+            showActivities = false;
+        }
+    }
+
+    private void OnCategoryChanged(int newValue)
+    {
+        var categoryName = ListCategories?.FirstOrDefault(c => c.Id == newValue)?.Name;
+        if (WorkOrder != null && !string.IsNullOrEmpty(categoryName))
+        {
+            WorkOrder.WOCategory = categoryName;
+            WorkOrder.CategoryID = newValue;
+        }
+        if (string.IsNullOrEmpty(categoryName))
+            CategoryAlarm = "bg-warning";
+        else CategoryAlarm = string.Empty;
+        isValidWorkOrder();
+    }
+
+    private void OnDepartmentChanged(string? newValue)
+    {
+        if (WorkOrder != null)
+        {
+            WorkOrder.DepName = newValue ?? string.Empty;
+        }
+        isValidWorkOrder();
+    }
+
+    private void OnLevelChanged(int? newValue)
+    {
+        var levelName = ListLevels?.FirstOrDefault(l => l.Id == newValue)?.Name;
+        if (WorkOrder != null && !string.IsNullOrEmpty(levelName))
+        {
+            WorkOrder.WOLevel = levelName;
+            WorkOrder.LevelID = newValue;
+        }
+
+        if (string.IsNullOrEmpty(levelName) || levelName == notSpecified)
+            LevelAlarm = "bg-warning";
+        else LevelAlarm = string.Empty;
+        isValidWorkOrder();
+    }
+
+    private void OnReasonChanged(int? newValue)
+    {
+        var reasonName = ListReasons?.FirstOrDefault(r => r.Id == newValue)?.Name;
+        if (WorkOrder != null && !string.IsNullOrEmpty(reasonName))
+        {
+            WorkOrder.WOReason = reasonName;
+            WorkOrder.ReasonID = newValue;
+        }
+
+        if (string.IsNullOrEmpty(reasonName) || reasonName == notSpecified)
+            ReasonAlarm = "bg-warning";
+        else ReasonAlarm = string.Empty;
+        isValidWorkOrder();
+    }
+
+    private void OnDateChanged()
+    {
+        if (!isValidDates())
+        {
+            DatesAlarm = "bg-warning";
+        }
+        else
+        {
+            DatesAlarm = string.Empty;
+        }
+        isValidWorkOrder();
+    }
+        
+    #endregion Event Handlers
+
+    private string FormatDateTime(DateTime? dateTime)
+    {
+        if (!dateTime.HasValue)
+            return @Localizer["WorkOrder_NotSpecified"];
+
+        return dateTime.Value.ToString("dd.MM.yyyy HH:mm");
+    }
+
+    private bool isValidDates()
+    {
+        var v1 = !isScheduler || WorkOrder?.StartDate != null ;
+        var v2 = !isScheduler || WorkOrder?.StartDate != DateTime.MinValue;
+        var v3 = !isScheduler || WorkOrder?.EndDate != null;
+        var v4 = !isScheduler || WorkOrder?.EndDate != DateTime.MinValue;
+        var v5 = (!isScheduler && (WorkOrder?.StartDate == null || WorkOrder?.EndDate == null)) 
+        || WorkOrder?.StartDate <= WorkOrder?.EndDate;
+        return isEditable && v1 && v2 && v3 && v4 && v5;
+              
+    }
+
+    private bool isValidWorkOrder()
+    {
+        var isValid =  WorkOrder != null &&
+               string.IsNullOrEmpty(DescriptionAlarm) &&
+               string.IsNullOrEmpty(DeviceAlarm) &&
+               string.IsNullOrEmpty(CategoryAlarm) &&
+               string.IsNullOrEmpty(LevelAlarm) &&
+               string.IsNullOrEmpty(ReasonAlarm) &&
+               isValidDates();
+               if (isValid) OnStateChanged.InvokeAsync(isValid);
+        return isValid;
+    }
+}
+
