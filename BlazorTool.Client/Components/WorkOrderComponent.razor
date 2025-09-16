@@ -387,8 +387,8 @@
     {
         isNewWorkOrder = WorkOrder?.WorkOrderID == 0;
         ListDevices = await apiService.GetAllDevicesAsync();
-        ListLevels =  apiService.GetWOLevels();
-        ListDepartments =  apiService.GetWODepartments();
+        ListLevels =  await apiService.GetWOLevels();
+        ListDepartments =  await apiService.GetWODepartments();
         StateColor = await apiService.GetStateColor(WorkOrder?.WorkOrderID);
         if (isNewWorkOrder) {
             WorkOrder.EndDate = WorkOrder.StartDate?.AddHours(1);
@@ -399,13 +399,13 @@
         selectedDevice = ListDevices?.FirstOrDefault(d => d.MachineID == WorkOrder?.MachineID);
         if (selectedDevice != null && selectedDevice.CategoryID != null)
         {
-            ListReasons = apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
-            ListCategories = apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            ListReasons = await apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            ListCategories = await apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
         }
         else
         {
-            ListReasons = apiService.GetWOReasons();
-            ListCategories =  apiService.GetWOCategories();
+            ListReasons = await apiService.GetWOReasons();
+            ListCategories =  await apiService.GetWOCategories();
         }
         
         if (ListPersons == null )
@@ -477,8 +477,6 @@
         if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
         {
             IsAddActivityWindowVisible = false;
-            // Optionally, refresh the activity list or statistics here
-            // For example, re-fetch the work order to update ActCount
             if (WorkOrder != null)
             {
                 await apiService.RefreshWorkOrderInCacheAsync(WorkOrder.WorkOrderID);
@@ -486,7 +484,6 @@
                 if (updatedWorkOrder != null)
                 {
                     WorkOrder.UpdateFrom(updatedWorkOrder);
-                    // takePersons = ParseTakePersons(WorkOrder?.TakePersons);
                 }
                 var task = activityListComponent?.RefreshActivitiesAsync();
                 if (task != null)
@@ -500,13 +497,11 @@
         }
         else
         {
-            // Handle the case where adding the activity failed
             Console.WriteLine("Failed to add activity.");
 
             IsAddActivityWindowVisible = false;
 
         }
-        // You might want to show an error message if success is false
     }
 
     public async Task Refresh()
@@ -545,13 +540,12 @@
         if (WorkOrder != null && device != null)
         {
             selectedDevice = device;
-            WorkOrder.AssetNo = device.AssetNo; //?? or WorkOrder.AssetNo - custom?
+            WorkOrder.AssetNo = device.AssetNo; 
             WorkOrder.DeviceCategory = device.DeviceCategory;
             WorkOrder.DeviceCategoryID = device.CategoryID;
             WorkOrder.MachineID = device.MachineID;
-            ListReasons = apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
-            ListCategories = apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
-            // await OnStateChanged.InvokeAsync();
+            ListReasons = await apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            ListCategories = await apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
             DeviceAlarm = string.Empty;
         }else
         {
@@ -563,7 +557,7 @@
     private void ToggleActivities()
     {
         showActivities = !showActivities;
-        if (showActivities) // Если активности показываются, скрываем файлы
+        if (showActivities)
         {
             showFiles = false;
         }
@@ -572,7 +566,7 @@
     private void ToggleFiles()
     {
         showFiles = !showFiles;
-        if (showFiles) // Если файлы показываются, скрываем активности
+        if (showFiles)
         {
             showActivities = false;
         }
@@ -598,9 +592,6 @@
         {
             WorkOrder.DepName = newValue ?? string.Empty;
         }
-        // if (string.IsNullOrEmpty(departmentName) || departmentName == notAssigned || departmentName == "All")
-        //     DepAlarm = "bg-warning";
-        // else DepAlarm = string.Empty;
         isValidWorkOrder();
     }
 

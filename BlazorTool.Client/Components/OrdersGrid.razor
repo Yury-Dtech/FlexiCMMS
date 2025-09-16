@@ -233,7 +233,7 @@
         await apiService.GetAllDevicesAsync();
         personNames = allPersons.Select(p => p.Name).ToList();
         currentUser = new Person { PersonId = UserState.PersonID ?? 0, Name = UserState.UserName ?? string.Empty };
-        dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
+        dicts = await apiService.GetWODictionariesCached(UserState.PersonID, UserState.LangCode);
         rowStyles = RenderStatesStyle(OrdersForGrid.Select(x => x.StateColor).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct());
     }
 
@@ -347,9 +347,9 @@
         if (WO == null) return "";
         if (UserState.UseOriginalColors)
         {
-            return "state-" + WO.StateColor.TrimStart('#');
+            return "state-" + WO.StateColor?.TrimStart('#');
         }
-        return apiService.ConvertStateColor(WO.WOState);
+        return apiService.ConvertStateColor(WO.WOState ?? "");
     }
 
     private async Task FilterByDateRange(FilterMenuTemplateContext context, string field, string range)

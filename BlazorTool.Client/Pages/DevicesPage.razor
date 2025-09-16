@@ -12,7 +12,7 @@
 
 <BlazorTool.Client.Components.CheckSession ApiService="@ApiService" UserState="@UserState" />
 @_dynamicStyles
-<h3>@Loc["DevicesPage_Title"] (@_devices?.Count())</h3>
+<h4>@Loc["DevicesPage_Title"] (@_devices?.Count())</h4>
 
 @if (_devices == null)
 {
@@ -22,11 +22,11 @@ else
 {
     <TelerikGrid Data="@fullDeviceInfos"
                  Pageable="true"
-                 PageSize="30"
+                 PageSize="25"
                  Sortable="true"
                  FilterMode="@GridFilterMode.FilterMenu"
                  Resizable="true"
-                 Height="calc(100vh - 200px)"
+                 Height="calc(100vh - 120px)"
                  OnRowDoubleClick="@OnRowClickHandler"
                  OnStateChanged="@(async (GridStateEventArgs<FullDeviceInfo> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
                  OnRowRender="@OnRowRenderHandler"
@@ -170,7 +170,7 @@ else
 
         var uniqueColors = fullDeviceInfos
             .Where(d => d.LastStatus != null && !string.IsNullOrEmpty(d.LastStatus.Color))
-            .Select(d => d.LastStatus.Color)
+            .Select(d => d.LastStatus?.Color)
             .Distinct(StringComparer.OrdinalIgnoreCase);
 
         foreach (var color in uniqueColors)

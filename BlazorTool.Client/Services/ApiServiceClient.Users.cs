@@ -93,18 +93,16 @@ namespace BlazorTool.Client.Services
             try
             {
                 var url = $"other/getuserslist?lang={_userState.LangCode}";
-                var sw = System.Diagnostics.Stopwatch.StartNew();
                 var response = await _http.GetFromJsonAsync<ApiResponse<Person>>(url);
-                sw.Stop();
 
                 if (response?.Data != null && response.IsValid)
                 {
                     _personsCache = response.Data;
-                    _logger.LogInformation("Loaded {Count} persons in {Ms} ms.", _personsCache.Count, sw.ElapsedMilliseconds);
+                    _logger.LogInformation("==> Loaded {Count} persons.", _personsCache.Count);
                 }
                 else
                 {
-                    _logger.LogWarning("GetAllPersons: invalid or empty response.");
+                    _logger.LogWarning("==> GetAllPersons: invalid or empty response.");
                 }
             }
             catch (Exception ex)

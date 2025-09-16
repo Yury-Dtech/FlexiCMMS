@@ -50,7 +50,8 @@ builder.Services.AddScoped<ServerAuthTokenService>(sp =>
 
 builder.Services.AddScoped<ServerAuthHeaderHandler>();
 
-builder.Services.AddScoped<UserState>();
+builder.Services.AddSingleton<UserState>();
+//builder.Services.AddScoped<UserState>();
 
 string? internalApiBaseUrl = null;
 

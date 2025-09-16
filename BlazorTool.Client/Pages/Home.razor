@@ -111,7 +111,7 @@
                                 }
                         </span>
                                 <span class="order-title">@Localizer["Home_OrdersForDepartment"]: @myDepartmentOrders.Count() </span>
-                                                <TelerikComboBox Data="@allDepartments" TextField="Department"
+                                                <TelerikComboBox Data="@allDepartmentNames" TextField="Department"
                                                                                  Placeholder="@Localizer["Scheduler_SelectDepartment"]" Filterable="false"
                                                                                  AllowCustom="false" Value="@selectedDepartment"
                                                                                  ValueChanged="@((string dep) => OnDepartmentChanged(dep))"
@@ -232,7 +232,7 @@
     private Guid depsGridKey = Guid.NewGuid();
     private Guid workOrdersWithPersonGridKey = Guid.NewGuid();
     private List<string> workOrderStates = new List<string>();
-    private List<string> allDepartments = new List<string>();
+    private List<string> allDepartmentNames = new List<string>();
     private string selectedDepartment = string.Empty;
     private string loaderText = string.Empty;
     private List<WorkOrder> allOrders = new List<WorkOrder>();
@@ -284,7 +284,7 @@
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
 
-    #region Panes size changed
+    #region Panes 
     private void OnPane1SizeChanged(string size)
     {     
         assignedPaneSize = size;
@@ -312,8 +312,6 @@
         AddSizesToCache();
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
-
-    #endregion panes sizes changes
 
     private void AddSizesToCache()
     {
@@ -398,6 +396,8 @@
         }
     }
 
+    #endregion panes sizes changes
+
     private async Task SaveSectionStatesToChacheAsync()
     {
         var viewSettings = new ViewSettings<object>();
@@ -451,9 +451,9 @@
             {
                 allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
                 allOrders = FilterWorkOrders(allOrders);
-                await ApiClient.GetWODictionaries(UserState.PersonID, UserState.LangCode);
-                allDepartments = ApiClient.GetWODepartments().Select(d => d.Name).ToList();
-                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", ApiClient.GetWODepartments()?.Find(x=>x.Id == UserState?.DepartmentID)?.Name ?? "");
+                var departments = await ApiClient.GetWODepartments();
+                allDepartmentNames = departments.Select(d => d.Name).ToList();
+                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", departments.Find(x=>x.Id == UserState?.DepartmentID)?.Name ?? "");
                 workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
                 MakeContextMenu();
                 await TakeListsOrders();
@@ -653,8 +653,8 @@
         allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
         allOrders = FilterWorkOrders(allOrders);
         await ApiClient.GetWODictionaries(UserState.PersonID, UserState.LangCode);
-        allDepartments = ApiClient.GetWODepartments().Select(d => d.Name).ToList();
-        TakeListsOrders();
+        allDepartmentNames = (await ApiClient.GetWODepartments()).Select(d => d.Name).ToList();
+        await TakeListsOrders();
         HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
         workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
         MakeContextMenu();

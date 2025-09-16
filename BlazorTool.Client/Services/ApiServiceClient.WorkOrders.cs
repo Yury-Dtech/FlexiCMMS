@@ -519,7 +519,7 @@ namespace BlazorTool.Client.Services
             int? departmentId = null;
             if (!string.IsNullOrWhiteSpace(workOrder.DepName))
             {
-                var departments = GetWODepartments();
+                var departments = await GetWODepartments();
                 departmentId = departments.FirstOrDefault(d => d.Name.Equals(workOrder.DepName, StringComparison.OrdinalIgnoreCase))?.Id;
             }
 
@@ -533,7 +533,7 @@ namespace BlazorTool.Client.Services
             int? stateId = null;
             if (!string.IsNullOrWhiteSpace(workOrder.WOState))
             {
-                var states = GetWOStates();
+                var states = await GetWOStates();
                 stateId = states.FirstOrDefault(s => s.Name.Equals(workOrder.WOState, StringComparison.OrdinalIgnoreCase))?.Id;
             }
 
@@ -548,7 +548,7 @@ namespace BlazorTool.Client.Services
             var request = new UpdateWorkOrderRequest
             {
                 WorkOrderID = workOrder.WorkOrderID,
-                PersonID = _userState.PersonID.Value,
+                PersonID = _userState?.PersonID ?? 0,
                 CategoryID = workOrder.CategoryID,
                 LevelID = workOrder.LevelID,
                 ReasonID = workOrder.ReasonID,
@@ -651,7 +651,7 @@ namespace BlazorTool.Client.Services
                 {
                     try
                     {
-                        var departments = GetWODepartments();
+                        var departments = await GetWODepartments();
                         var department = departments.FirstOrDefault(d => d.Name == workOrder.DepName);
                         if (department == null || department.Id <= 0)
                         {

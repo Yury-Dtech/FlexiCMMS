@@ -15,7 +15,7 @@
 <TelerikRootComponent>
 
     
-    @if (!AppState.IsInitialized)
+    @if (!AppState.IsInitialized || !_sessionChecked)
     {
         <div style="position:fixed; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.9); z-index:9999;">
             <TelerikLoader Visible="true" Size="Telerik.Blazor.ThemeConstants.Loader.Size.Large" />
@@ -24,7 +24,6 @@
     }
     else
     {
-        <CheckSession apiService="@ApiClient" UserState="@UserState" />
         <div class="page">
             <div class="sidebar">
                 @if (UserState.IsAuthenticated)
@@ -51,7 +50,7 @@
 </TelerikRootComponent>
     @code{
     private string buildDate = "N/A";
-
+    private bool _sessionChecked = false;
     private string formattedVersion = string.Empty;
     protected override async Task OnInitializedAsync()
     {
@@ -60,8 +59,18 @@
         // Initialize app settings first, which is required for the rest of the app
         await AppState.InitializeAsync();
         await UserState.InitializationTask;
-
         await UserState.LoadUserStateFromCache();
+        if (UserState.IsAuthenticated)
+        {
+            var session = await ApiClient.CheckSessionAsync();
+            if (!session.IsSuccessStatusCode)
+            {
+                await UserState.ClearAsync();
+                Navigation.NavigateTo("/login", true);
+                return;
+            }
+        }
+        _sessionChecked = true;
         formattedVersion = Localizer["MainLayout_Version"];
         // Now that settings are loaded, we can proceed with other initializations
         try
@@ -87,7 +96,6 @@
         // }
 
         Logger.LogInformation($"User [{UserState.UserName}] is authenticated from userState");
-        Logger.LogInformation($"======== DEBUG: Localizer[MainLayout_Version]={Localizer["MainLayout_Version"]}");
         // If on a page other than login, verify session with the server
         // if (!Navigation.Uri.EndsWith("/login", StringComparison.OrdinalIgnoreCase))
         // {

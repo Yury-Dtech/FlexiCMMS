@@ -88,10 +88,10 @@ namespace BlazorTool.Client.Services
             CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
             if (isForceReload || !CultureInfo.CurrentCulture.Name.Equals(cultureInfo.Name, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogInformation("DEBUG: Culture set to {CultureName} in SaveIdentityDataAsync.", cultureInfo.Name);
+                _logger.LogDebug("---> Culture set to {CultureName} in SaveIdentityDataAsync.", cultureInfo.Name);
             }
             await _localStorageService.SetItemAsStringAsync("identityData", JsonConvert.SerializeObject(identityData));
-            _logger.LogInformation("DEBUG: IdentityData saved to local storage. User: {UserName}, Lang: {LangCode}", UserName, LangCode);
+            _logger.LogDebug("---> IdentityData saved to local storage. User: {UserName}, Lang: {LangCode}", UserName, LangCode);
             NotifyStateChanged();
             return isForceReload;
         }
@@ -112,7 +112,7 @@ namespace BlazorTool.Client.Services
                 bool isForceReload = false;
                 if (identityData != null)
                 {
-                    _logger.LogDebug("DEBUG: Loaded LangCode from storage: {LangCode}", identityData.LangCode);
+                    //_logger.LogDebug("DEBUG: Loaded LangCode from storage: {LangCode}", identityData.LangCode);
                     SetUserStateFromIdentityData(identityData);
                     isForceReload = identityData.LangCode != CultureInfo.CurrentCulture.Name;
                     var cultureInfo = new CultureInfo(identityData.LangCode);
@@ -120,14 +120,14 @@ namespace BlazorTool.Client.Services
                     CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
                     if (isForceReload || !CultureInfo.CurrentCulture.Name.Equals(cultureInfo.Name, StringComparison.OrdinalIgnoreCase))
                     {
-                        _logger.LogInformation("DEBUG: Culture set to {CultureName} in LoadIdentityDataFromCacheAsync.", cultureInfo.Name);
+                        _logger.LogDebug("--->  Culture set to {CultureName} in LoadIdentityDataFromCacheAsync.", cultureInfo.Name);
                     }
                 }
                     return isForceReload;
             }
             else
             {
-                _logger.LogWarning("DEBUG: No identityData found in local storage.");
+                //_logger.LogWarning("DEBUG: No identityData found in local storage.");
                 return false; 
             }
         }
@@ -145,6 +145,7 @@ namespace BlazorTool.Client.Services
 
         public async Task ClearAsync()
         {
+            _logger.LogInformation($"---> UserState {UserName} cleared. IdentityData removed from local storage.");
             UserName = null;
             Password = null;
             Token = null;

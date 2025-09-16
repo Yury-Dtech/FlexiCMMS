@@ -232,7 +232,7 @@ else
         OrdersForGrid = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode)).OrderByDescending(o => o.WorkOrderID).ToList();
 
         devices = await apiService.GetAllDevicesAsync();
-        allDepartments = apiService.GetWODepartments().Select(x=>x.Name).ToList();
+        allDepartments = (await apiService.GetWODepartments()).Select(x=>x.Name).ToList();
         personNames = allPersons.Select(p => p.Name).ToList();
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;            

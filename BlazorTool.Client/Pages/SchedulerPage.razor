@@ -482,9 +482,8 @@
         _allOrders = await apiService.GetWorkOrdersAsync(); //from API, not cache
         cellStyles = RenderStatesStyle(_allOrders);
         ApptService.ClearAppointments(); //clear cache
-        await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
-        WOCategories = apiService.GetWOCategories().Select(c => c.Name).ToList();
-        WOStates = apiService.GetWOStates().Select(c => c.Name).ToList();
+        WOCategories = (await apiService.GetWOCategories()).Select(c => c.Name).ToList();
+        WOStates = (await apiService.GetWOStates()).Select(c => c.Name).ToList();
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
         await LoadData();
@@ -502,11 +501,11 @@
         _allAppointments = await ApptService.GetTakenAppointments(_allOrders);
         statuses = GetStatuses(_allAppointments);
         Console.WriteLine($"--- LoadData: _allAppointments loaded. Count: {_allAppointments.Count}");
-        Departments = apiService.GetWODepartments().Select(c => c.Name).Distinct().ToList();
-        DeviceCategories = apiService.GetWOCategories().Select(c => c.Name).Distinct().ToList();
+        Departments = (await apiService.GetWODepartments()).Select(c => c.Name).Distinct().ToList();
+        DeviceCategories = (await apiService.GetWOCategories()).Select(c => c.Name).Distinct().ToList();
         DeviceCategories.Insert(0, "All");
         WO_AssetNo = new List<string> { "All" };
-        WO_AssetNo.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo)).Select(x => x.AssetNo).Distinct().ToList());
+        WO_AssetNo.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo ?? "")).Select(x => x.AssetNo ?? "").Distinct().ToList());
         DisplayAppointments();
         DisplayOrders();
         isLoading = false;
@@ -602,20 +601,20 @@
 
     #region filters
 
-    private async Task OnMultiDepartmentsClosed()
+    private void OnMultiDepartmentsClosed()
     {
         DisplayAppointments();
         SaveFilterStateToCacheAsync();
     }
 
-    private async Task OnAssetNoChanged(string assetNo)
+    private void OnAssetNoChanged(string assetNo)
     {
         selectedAssetNo = assetNo ?? "All";
         DisplayAppointments();
         SaveFilterStateToCacheAsync();
     }
 
-    private async Task OnPersonSelectChanged(object args)
+    private void OnPersonSelectChanged(object args)
     {
         DisplayAppointments();
         SaveFilterStateToCacheAsync();

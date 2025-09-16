@@ -110,6 +110,7 @@ namespace BlazorTool.Controllers
                 string file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SettingsDirectory, user + ".json");
                 var settings = new UserSettings(file);
                 var viewSettings = settings.GetUserSettings<ViewSettings<WorkOrder>>(user, settingsName);
+                Debug.WriteLine($"==> User={user} settings = {settingsName} loaded.");
                 return viewSettings;
             }
             catch (Exception ex)
@@ -142,7 +143,7 @@ namespace BlazorTool.Controllers
                 string file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SettingsDirectory, user + ".json");
                 var settings = new UserSettings(file);
                 settings.SaveUserSettings(user, settingsName, viewSettings);
-                //Console.WriteLine($"View settings saved for user: {user}");
+                Debug.WriteLine($"==> User={user} settings = {settingsName} saved.");
                 return Ok();
             }
             catch (Exception ex)

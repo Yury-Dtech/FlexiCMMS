@@ -59,12 +59,12 @@ namespace BlazorTool.Client.Services
                 return new List<WODict>();
             }
         }
-        public List<WODict> GetWODictionariesCached()
+        public async Task<List<WODict>> GetWODictionariesCached(int? personID = null, string? lang = null)
         {
-            //if (_dictCache.Count == 0)
-            //{//is need cache with personID and lang ?
-            //    _dictCache = GetWODictionaries(personID, lang).Result;
-            //}
+            if (_dictCache.Count == 0)
+            {//is need cache with personID and lang ?
+                _dictCache = await GetWODictionaries(personID ?? _userState.PersonID, lang ?? _userState.LangCode);
+            }
             return _dictCache;
 
         }
@@ -80,19 +80,19 @@ namespace BlazorTool.Client.Services
 
         public string ConvertStateColor(string state)
         {
-            var states = GetWOStates();
+            var states = GetWOStatesCached();
             var stateId = states.FirstOrDefault(s => s.Name == state)?.Id;
             return GetColorByStateId(stateId ?? 0);
         }
 
-        public List<WODict> GetWOCategories()
+        public async Task<List<WODict>> GetWOCategories()
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Category)
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Category)
                 .Distinct()
                 .ToList();
         }
 
-        public List<WODict> GetWOCategoriesByDeviceCategory(int devCategoryId)
+        public async Task<List<WODict>> GetWOCategoriesByDeviceCategory(int devCategoryId)
         {
 
             //var dics = GetWODictionariesCached();
@@ -107,44 +107,51 @@ namespace BlazorTool.Client.Services
             //    Console.WriteLine("===............."+item.Name);
             //}
             //Console.WriteLine();
-            return GetWODictionariesCached().Where(d => d.ListType == (int)WOListTypeEnum.Category
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Category
                                                     && (d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null))
                 .Distinct()
                 .ToList();
         }
 
-        public List<WODict> GetWOStates()
+        public async Task<List<WODict>> GetWOStates()
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.State)
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.State)
                 .Distinct()
                 .ToList();
         }
 
-        public List<WODict> GetWOLevels()
+        public List<WODict> GetWOStatesCached()
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Level)
+            return _dictCache.Where(d => d.ListType == (int)WOListTypeEnum.State)
                 .Distinct()
                 .ToList();
         }
 
-        public List<WODict> GetWOReasons()
+        public async Task<List<WODict>> GetWOLevels()
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Reason)
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Level)
                 .Distinct()
                 .ToList();
         }
 
-        public List<WODict> GetWOReasonsByDeviceCategory(int devCategoryId)
+        public async Task<List<WODict>> GetWOReasons()
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Reason
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Reason)
+                .Distinct()
+                .ToList();
+        }
+
+        public async Task<List<WODict>> GetWOReasonsByDeviceCategory(int devCategoryId)
+        {
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Reason
             && (d.MachineCategoryID == devCategoryId || d.MachineCategoryID == null))
                 .Distinct()
                 .ToList();
         }
 
-        public List<WODict> GetWODepartments()
+        public async Task<List<WODict>> GetWODepartments()
         {
-            return (GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Department)
+            return (await GetWODictionariesCached()).Where(d => d.ListType == (int)WOListTypeEnum.Department)
                 .Distinct()
                 .ToList();
         }
