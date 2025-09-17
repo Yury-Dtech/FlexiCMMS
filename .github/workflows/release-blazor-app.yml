@@ -43,6 +43,8 @@ jobs:
           --output ./publish \
           --self-contained false \
           --no-build
+          -p:PublishTrimmed=false \
+          -p:BlazorEnableCompression=false
 
     - name: 🗜️ Create ZIP Archive
       run: |
