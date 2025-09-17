@@ -42,7 +42,7 @@ jobs:
           --configuration Release \
           --output ./publish \
           --self-contained false \
-          --no-build
+          --no-build \
           -p:PublishTrimmed=false \
           -p:BlazorEnableCompression=false
 
