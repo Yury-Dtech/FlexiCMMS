@@ -9,6 +9,7 @@
         <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
         <PublishTrimmed>false</PublishTrimmed>
         <BlazorEnableCompression>false</BlazorEnableCompression>
+        <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
