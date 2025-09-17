@@ -20,6 +20,9 @@ jobs:
       with:
         dotnet-version: '8.0.x'
         
+    - name: 🧩 Install WebAssembly Workload
+      run: dotnet workload install wasm-tools
+      
 # 👇 private NuGet-source Telerik from secrets
     - name: 🔐 Add Telerik NuGet Feed
       run: |
