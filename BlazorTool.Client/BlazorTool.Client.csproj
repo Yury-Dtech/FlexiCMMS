@@ -41,6 +41,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="wwwroot\js\utility.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Update="Resources\TelerikMessages.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>TelerikMessages.Designer.cs</LastGenOutput>

@@ -106,9 +106,39 @@
 
     private string GetLangSuffix()
     {
-        var lang = (UserState?.LangCode ?? System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName) ?? "en";
-        if (lang.Length > 2) lang = lang[..2];
-        return "_" + lang.ToLowerInvariant();
+        try
+        {
+            // Prefer explicit user setting
+            var langRaw = UserState?.LangCode;
+            if (string.IsNullOrWhiteSpace(langRaw))
+            {
+                // Fallback to CurrentUICulture.Name (e.g. pl-PL, en-US)
+                langRaw = System.Globalization.CultureInfo.CurrentUICulture?.Name
+                          ?? System.Globalization.CultureInfo.CurrentCulture?.Name
+                          ?? "en";
+            }
+            var two = ToTwoLetter(langRaw);
+            return "_" + two;
+        }
+        catch
+        {
+            return "_en";
+        }
+    }
+
+    private static string ToTwoLetter(string? cultureName)
+    {
+        if (string.IsNullOrWhiteSpace(cultureName)) return "en";
+        // Cut at first dash
+        var dash = cultureName.IndexOf('-');
+        var basePart = dash > 0 ? cultureName[..dash] : cultureName;
+        if (basePart.Length > 2) basePart = basePart[..2];
+        // Validate a–z
+        basePart = new string(basePart
+            .Where(ch => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z')
+            .ToArray());
+        if (basePart.Length == 0) return "en";
+        return basePart.ToLowerInvariant();
     }
 
     private async Task<bool> TryLoadFromCache(string key, double? lat, double? lng)
