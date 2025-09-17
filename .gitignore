@@ -396,3 +396,5 @@ gha-creds-*.json
 /Install_Pl.html
 /Install_Pl.pdf
 /publish_log.txt
+/.github/workflows/release-blazor-app.yml
+/.github/workflows/build-blazor-publish-artifact.yml
