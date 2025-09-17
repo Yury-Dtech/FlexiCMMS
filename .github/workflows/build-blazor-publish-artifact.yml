@@ -18,7 +18,7 @@ jobs:
     - name: ⚙️ Setup .NET 8
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '8.0.0'
         
 # 👇 private NuGet-source Telerik from secrets
     - name: 🔐 Add Telerik NuGet Feed
