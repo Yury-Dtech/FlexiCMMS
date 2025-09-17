@@ -6,7 +6,7 @@ Niniejsza instrukcja opisuje wdrożenie aplikacji FlexiCMMS na serwerze Linux. M
 
 *   Serwer Linux (np. Ubuntu 20.04+ lub Debian 10+).
 *   Dostęp SSH do serwera.
-*   Opublikowane archiwum ZIP aplikacji (`FlexiCMMS.zip`).
+*   Opublikowane archiwum ZIP aplikacji (`flexicmms.zip`).
 *   W przypadku wdrożenia *bez Nginx*, wymagany jest plik certyfikatu `.pfx` (`blazortool.pfx`) dla HTTPS.
 
 ---
@@ -15,7 +15,7 @@ Niniejsza instrukcja opisuje wdrożenie aplikacji FlexiCMMS na serwerze Linux. M
 
 1.  **Przenieś niezbędne pliki na serwer:**
     Skopiuj następujące pliki do katalogu domowego użytkownika na serwerze (np. `/home/youruser/`):
-    *   Archiwum ZIP aplikacji: `FlexiCMMS.zip`
+    *   Archiwum ZIP aplikacji: `flexicmms.zip`
     *   **Wybierz jeden skrypt wdrożeniowy:**
         *   Do wdrożenia *z Nginx*: `deploy_flexicmms_nginx.sh`
         *   Do wdrożenia *bez Nginx*: `deploy_flexicmms_NoNginx.sh`
@@ -58,14 +58,14 @@ Uruchom wybrany skrypt z uprawnieniami superużytkownika. Skrypt poprosi o adres
     sudo ./deploy_flexicmms_nginx.sh
     ```
     Podczas wykonywania skrypt poprosi o podanie:
-    *   Rzeczywistego adresu serwera API (np. `http://10.1.40.128:1122/api/v1/`). Skrypt automatycznie doda ukośnik końcowy, jeśli go brakuje.
+    *   Rzeczywistego adresu serwera API (np. `http://10.1.41.122:1122/api/v1/`). Skrypt automatycznie doda ukośnik końcowy, jeśli go brakuje.
     *   Nazwy domeny lub adresu IP dla Nginx (np. `example.com` lub `192.168.1.100`).
 
 *   **Do wdrożenia bez Nginx:**
     ```bash
     sudo ./deploy_flexicmms_NoNginx.sh
     ```
-    Podczas wykonywania skrypt poprosi o podanie rzeczywistego adresu serwera API. Upewnij się, że wprowadzasz go w prawidłowym formacie (np. `http://10.1.40.128:1122/api/v1/`). Skrypt automatycznie doda ukośnik końcowy, jeśli go brakuje.
+    Podczas wykonywania skrypt poprosi o podanie rzeczywistego adresu serwera API. Upewnij się, że wprowadzasz go w prawidłowym formacie (np. `http://10.1.41.122:1122/api/v1/`). Skrypt automatycznie doda ukośnik końcowy, jeśli go brakuje.
 
 ---
 

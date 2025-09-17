@@ -6,7 +6,7 @@ This guide describes the deployment of the FlexiCMMS application on a Linux serv
 
 *   Linux server (e.g., Ubuntu 20.04+ or Debian 10+).
 *   SSH access to the server.
-*   Your published application ZIP archive (`FlexiCMMS.zip`).
+*   Your published application ZIP archive (`flexicmms.zip`).
 *   If deploying *without Nginx*, a `.pfx` certificate file (`blazortool.pfx`) for HTTPS is required.
 
 ---
@@ -15,7 +15,7 @@ This guide describes the deployment of the FlexiCMMS application on a Linux serv
 
 1.  **Transfer necessary files to the server:**
     Copy the following files to your user's home directory on your server (e.g., `/home/youruser/`):
-    *   Application ZIP archive: `FlexiCMMS.zip`
+    *   Application ZIP archive: `flexicmms.zip`
     *   **Choose one deployment script:**
         *   For deployment *with Nginx*: `deploy_flexicmms_nginx.sh`
         *   For deployment *without Nginx*: `deploy_flexicmms_NoNginx.sh`
@@ -58,14 +58,14 @@ Run the chosen script with superuser privileges. The script will prompt you for 
     sudo ./deploy_flexicmms_nginx.sh
     ```
     During execution, the script will ask you to enter:
-    *   The actual API server address (e.g., `http://10.1.40.128:1122/api/v1/`). The script will automatically add a trailing slash if it's missing.
+    *   The actual API server address (e.g., `http://10.1.41.122:1122/api/v1/`). The script will automatically add a trailing slash if it's missing.
     *   The domain name or IP address for Nginx (e.g., `example.com` or `192.168.1.100`).
 
 *   **For deployment without Nginx:**
     ```bash
     sudo ./deploy_flexicmms_NoNginx.sh
     ```
-    During execution, the script will ask you to enter the actual API server address. Make sure you enter it in the correct format (e.g., `http://10.1.40.128:1122/api/v1/`). The script will automatically add a trailing slash if it's missing.
+    During execution, the script will ask you to enter the actual API server address. Make sure you enter it in the correct format (e.g., `http://10.1.41.122:1122/api/v1/`). The script will automatically add a trailing slash if it's missing.
 
 ---
 
