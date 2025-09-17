@@ -82,7 +82,7 @@
                 </CheckBoxFilterMenuTemplate>
             </FilterMenuTemplate>
         </GridColumn>
-        <GridColumn Field="@nameof(WorkOrder.AssignedPerson)" Resizable="true" Title="@Localizer[nameof(WorkOrder.AssignedPerson)]">
+        <GridColumn Filterable="@ShowAssignedColumnFilter" Field="@nameof(WorkOrder.AssignedPerson)" Resizable="true" Title="@Localizer[nameof(WorkOrder.AssignedPerson)]">
             <FilterMenuTemplate>
                 <CheckBoxFilterMenuTemplate Values="@allPersons.Select(x => x.Name).ToList()"
                                           context="@context"
@@ -201,7 +201,7 @@
     [Parameter] public List<ContextMenuItem> MenuItems { get; set; }
     [Parameter] public EventCallback<ContextMenuItemClickEventArgs<WorkOrder>> OnMenuItemClick { get; set; }
     [Parameter] public EventCallback<ContextMenuItemClickEventArgs<WorkOrder>> OnRowContextMenu { get; set; }
-
+    [Parameter] public bool ShowAssignedColumnFilter { get; set; } = true;
     private TelerikContextMenu<ContextMenuItem> ContextMenuRef { get; set; }
     private WorkOrder SelectedRecord { get; set; }
     private Person currentUser { get; set; } = new Person();

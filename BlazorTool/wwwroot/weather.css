@@ -1,0 +1,10 @@
+.weather-widget{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:1px 6px 1px 4px;margin-right:10px;border:1px solid #b9d4ff;border-radius:16px;background:linear-gradient(135deg,#e6f2ff,#ffffff);color:#123;max-width:100%;white-space:nowrap;cursor:pointer}
+.weather-widget:hover{box-shadow:0 0 4px #7fb5ff}
+.weather-widget .ww-ico{width:24px;height:24px}
+.weather-widget .ww-city{font-size:12px;font-weight:500;opacity:.85;max-width:120px;overflow:hidden;text-overflow:ellipsis; padding-right:1rem;}
+.weather-widget .ww-temp{font-weight:600;font-size:13px}
+.weather-widget .ww-cond{font-size:12px;opacity:.85;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.weather-widget .ww-sun{font-size:11px;opacity:.7}
+.weather-widget .ww-daylen{font-size:11px;opacity:.6}
+.weather-error{color:#b00;font-size:10px}
+.weather-loading{opacity:.6}

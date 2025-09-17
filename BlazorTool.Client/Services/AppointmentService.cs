@@ -58,14 +58,14 @@ namespace BlazorTool.Client.Services
             return _appointments.FirstOrDefault(x => x.AppointmentId == id);
         }
 
-        public async Task AddAppointment(SchedulerAppointment appointment)
-        {
-            //na razie nie dodajemy nowych zadań, tylko aktualizujemy istniejące
+        //public async Task AddAppointment(SchedulerAppointment appointment)
+        //{
+        //    //na razie nie dodajemy nowych zadań, tylko aktualizujemy istniejące
 
-            //appointment.AppointmentId = 0;
-            //_appointments.Add(appointment);
-            //await _apiServiceClient.SaveWorkOrderAsync((WorkOrder)appointment);
-        }
+        //    //appointment.AppointmentId = 0;
+        //    //_appointments.Add(appointment);
+        //    //await _apiServiceClient.SaveWorkOrderAsync((WorkOrder)appointment);
+        //}
 
         public async Task<SchedulerAppointment> RefreshAppointmentById(int appId)
         {

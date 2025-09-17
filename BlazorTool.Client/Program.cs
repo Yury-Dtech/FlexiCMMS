@@ -54,6 +54,12 @@ builder.Services.AddHttpClient("ServerApi", client =>
 })
 .AddHttpMessageHandler<AuthHeaderHandler>();
 
+// Weather API client (no auth header handler needed)
+builder.Services.AddHttpClient("WeatherApi", client =>
+{
+    client.BaseAddress = new Uri("https://api.weatherapi.com/v1/");
+});
+
 builder.Services.AddScoped<ApiServiceClient>(sp =>
     new ApiServiceClient(sp.GetRequiredService<IHttpClientFactory>().CreateClient("ServerApi"), 
     sp.GetRequiredService<UserState>(),

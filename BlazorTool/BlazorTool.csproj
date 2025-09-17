@@ -33,6 +33,9 @@
     <Content Update="wwwroot\app.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\weather.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Target Name="CopyChangelogToWwwRoot" BeforeTargets="Build">
     <ItemGroup>

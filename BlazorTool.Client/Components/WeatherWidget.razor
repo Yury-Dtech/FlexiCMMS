@@ -1,0 +1,268 @@
+﻿@using BlazorTool.Client.Services
+@inject IHttpClientFactory HttpClientFactory
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject UserState UserState
+
+<div class="weather-widget" title="Local weather (click to refresh)" @onclick="ForceRefreshAsync">
+    @if (_error != null)
+    {
+        <span class="weather-error" title="error">@_error</span>
+    }
+    else if (_data == null || _isRefreshing)
+    {
+        <span class="weather-loading">@(_isRefreshing ? "⟳" : "...")</span>
+    }
+    else
+    {
+        <img src="@BuildIconUrl(_data.Current.Condition.Icon)" alt="icon" class="ww-ico" />
+        @if (!string.IsNullOrWhiteSpace(_data.City))
+        {
+            <span class="ww-city" title="City">@_data.City </span>
+        }
+        <span class="ww-temp">@_data.Current.TempC.ToString("0.#")°C</span>
+        <span class="ww-cond" title="@_data.Current.Condition.Text">@_data.Current.Condition.Text</span>
+        <span style="padding-left: 1rem;">@IconHtmlHelper.GetIcon("sunrise.gif", 15)</span>
+        <span class="ww-sun" title="Sunrise / Sunset">↑ @_data.Astronomy.Astronomy.Astro.Sunrise ↓ @_data.Astronomy.Astronomy.Astro.Sunset</span>
+        @* <span class="ww-daylen" title="Day length">@_dayLength</span> *@
+    }
+</div>
+
+@code {
+    private WeatherResult? _data;
+    private string? _error;
+    private string? _dayLength;
+    private bool _requested;
+    private bool _isRefreshing;
+    private double? _lastLat; private double? _lastLng; private bool _usedAutoIp;
+
+    private const string CacheKeyGeo = "weather_cache_geo";
+    private const string CacheKeyAuto = "weather_cache_auto";
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(15);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_requested)
+        {
+            _requested = true;
+            await InitialLoadAsync();
+        }
+    }
+
+    private async Task InitialLoadAsync()
+    {
+        try
+        {
+            var hasGeo = await JS.InvokeAsync<bool>("BlazorToolWeather.isSupported");
+            if (hasGeo)
+            {
+                var coords = await JS.InvokeAsync<GeoResult>("BlazorToolWeather.getLocation");
+                _lastLat = coords.lat; _lastLng = coords.lng; _usedAutoIp = false;
+                if (!await TryLoadFromCache(CacheKeyGeo + GetLangSuffix(), coords.lat, coords.lng))
+                {
+                    await LoadWeather(coords.lat, coords.lng, cacheKey: CacheKeyGeo + GetLangSuffix());
+                }
+            }
+            else
+            {
+                _usedAutoIp = true;
+                if (!await TryLoadFromCache(CacheKeyAuto + GetLangSuffix(), null, null))
+                {
+                    await LoadWeatherByAutoIp(CacheKeyAuto + GetLangSuffix());
+                }
+            }
+        }
+        catch
+        {
+            _usedAutoIp = true;
+            if (!await TryLoadFromCache(CacheKeyAuto + GetLangSuffix(), null, null))
+            {
+                await LoadWeatherByAutoIp(CacheKeyAuto + GetLangSuffix());
+            }
+        }
+    }
+
+    private async Task ForceRefreshAsync()
+    {
+        if (_isRefreshing) return;
+        _isRefreshing = true; _error = null;
+        StateHasChanged();
+        try
+        {
+            if (_usedAutoIp || !_lastLat.HasValue || !_lastLng.HasValue)
+            {
+                await LoadWeatherByAutoIp(CacheKeyAuto + GetLangSuffix());
+            }
+            else
+            {
+                await LoadWeather(_lastLat.Value, _lastLng.Value, cacheKey: CacheKeyGeo + GetLangSuffix());
+            }
+        }
+        finally
+        {
+            _isRefreshing = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetLangSuffix()
+    {
+        var lang = (UserState?.LangCode ?? System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName) ?? "en";
+        if (lang.Length > 2) lang = lang[..2];
+        return "_" + lang.ToLowerInvariant();
+    }
+
+    private async Task<bool> TryLoadFromCache(string key, double? lat, double? lng)
+    {
+        try
+        {
+            var cache = await LocalStorage.GetItemAsync<WeatherCacheEntry>(key);
+            if (cache == null) return false;
+            if (DateTime.UtcNow - cache.StoredUtc > CacheDuration) return false;
+            if (lat.HasValue && lng.HasValue && cache.Lat.HasValue && cache.Lng.HasValue)
+            {
+                if (Math.Abs(cache.Lat.Value - lat.Value) > 0.15 || Math.Abs(cache.Lng.Value - lng.Value) > 0.15)
+                    return false;
+            }
+            _data = cache.Data;
+            _dayLength = cache.DayLength;
+            return true;
+        }
+        catch { return false; }
+        finally { StateHasChanged(); }
+    }
+
+    private async Task StoreCache(string key, WeatherResult data, string dayLength, double? lat, double? lng)
+    {
+        try
+        {
+            var entry = new WeatherCacheEntry
+            {
+                Data = data,
+                DayLength = dayLength,
+                Lat = lat,
+                Lng = lng,
+                StoredUtc = DateTime.UtcNow
+            };
+            await LocalStorage.SetItemAsync(key, entry);
+        }
+        catch { }
+    }
+
+    private async Task LoadWeatherByAutoIp(string cacheKey)
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("WeatherApi");
+            const string apiKey = "c7a4b97d6e2446b592994537251709";
+            var lang = GetLangSuffix()[1..];
+            var currentUrl = $"current.json?key={apiKey}&q=auto:ip&aqi=no&lang={lang}";
+            var astroUrl = $"astronomy.json?key={apiKey}&q=auto:ip";
+            var current = await client.GetFromJsonAsync<CurrentWeatherResponse>(currentUrl);
+            var astronomy = await client.GetFromJsonAsync<AstronomyResponse>(astroUrl);
+            if (current == null || astronomy == null)
+            {
+                _error = "No data";
+            }
+            else
+            {
+                if (DateTime.TryParse(astronomy.Astronomy.Astro.Sunrise, out var sr) && DateTime.TryParse(astronomy.Astronomy.Astro.Sunset, out var ss))
+                {
+                    astronomy.Astronomy.Astro.Sunset = ss.ToString("HH:mm");
+                    astronomy.Astronomy.Astro.Sunrise = sr.ToString("HH:mm");
+                }
+                _data = new WeatherResult { Current = current.Current, Astronomy = astronomy, City = current.Location?.Name };
+                _dayLength = CalcDayLength(astronomy.Astronomy.Astro.Sunrise, astronomy.Astronomy.Astro.Sunset);
+                await StoreCache(cacheKey, _data, _dayLength ?? string.Empty, null, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        StateHasChanged();
+    }
+
+    private async Task LoadWeather(double lat, double lng, string cacheKey)
+    {
+        try
+        {
+            var client = HttpClientFactory.CreateClient("WeatherApi");
+            const string apiKey = "c7a4b97d6e2446b592994537251709";
+            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+            var coord = $"{lat.ToString(invariant)},{lng.ToString(invariant)}";
+            var lang = GetLangSuffix()[1..];
+            var currentUrl = $"current.json?key={apiKey}&q={coord}&aqi=no&lang={lang}";
+            var astroUrl = $"astronomy.json?key={apiKey}&q={coord}";
+
+            var current = await client.GetFromJsonAsync<CurrentWeatherResponse>(currentUrl);
+            var astronomy = await client.GetFromJsonAsync<AstronomyResponse>(astroUrl);
+            if (current == null || astronomy == null)
+            {
+                _error = "No data";
+            }
+            else
+            {
+                if (DateTime.TryParse(astronomy.Astronomy.Astro.Sunrise, out var sr) && DateTime.TryParse(astronomy.Astronomy.Astro.Sunset, out var ss))
+                {
+                    astronomy.Astronomy.Astro.Sunset = ss.ToString("HH:mm");
+                    astronomy.Astronomy.Astro.Sunrise = sr.ToString("HH:mm");
+                }
+                _data = new WeatherResult { Current = current.Current, Astronomy = astronomy, City = current.Location?.Name };
+                _dayLength = CalcDayLength(astronomy.Astronomy.Astro.Sunrise, astronomy.Astronomy.Astro.Sunset);
+                await StoreCache(cacheKey, _data, _dayLength ?? string.Empty, lat, lng);
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        StateHasChanged();
+    }
+
+    private string BuildIconUrl(string icon)
+    {
+        if (string.IsNullOrWhiteSpace(icon)) return string.Empty;
+        if (icon.StartsWith("//")) return "https:" + icon;
+        if (!icon.StartsWith("http")) return "https://" + icon.TrimStart('/');
+        return icon;
+    }
+
+    private string CalcDayLength(string sunrise, string sunset)
+    {
+        if (DateTime.TryParse(sunrise, out var sr) && DateTime.TryParse(sunset, out var ss))
+        {
+
+            var len = ss - sr;
+            if (len.TotalMinutes > 0)
+            {
+                var totalMinutes = (int)len.TotalMinutes;
+                var hours = totalMinutes / 60;
+                var minutes = totalMinutes % 60;
+                return $"{hours:00}:{minutes:00}"; // HH:mm
+            }
+        }
+        return string.Empty;
+    }
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private class GeoResult { public double lat { get; set; } public double lng { get; set; } }
+
+    private class WeatherResult { public CurrentWeather Current { get; set; } = default!; public AstronomyResponse Astronomy { get; set; } = default!; public string? City { get; set; } }
+
+    private class CurrentWeatherResponse { public Location? Location { get; set; } public CurrentWeather Current { get; set; } = default!; }
+
+    private class Location { [System.Text.Json.Serialization.JsonPropertyName("name")] public string Name { get; set; } = string.Empty; }
+
+    private class CurrentWeather { [System.Text.Json.Serialization.JsonPropertyName("temp_c")] public double TempC { get; set; } public Condition Condition { get; set; } = default!; }
+
+    private class Condition { public string Text { get; set; } = string.Empty; public string Icon { get; set; } = string.Empty; }
+
+    private class AstronomyResponse { public Astronomy Astronomy { get; set; } = default!; }
+
+    private class Astronomy { public Astro Astro { get; set; } = default!; }
+
+    private class Astro { public string Sunrise { get; set; } = string.Empty; public string Sunset { get; set; } = string.Empty; }
+
+    private class WeatherCacheEntry { public WeatherResult Data { get; set; } = default!; public string DayLength { get; set; } = string.Empty; public double? Lat { get; set; } public double? Lng { get; set; } public DateTime StoredUtc { get; set; } }
+}

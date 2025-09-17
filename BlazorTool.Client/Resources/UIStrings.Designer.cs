@@ -1339,6 +1339,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to My page.
+        /// </summary>
+        public static string My_Page {
+            get {
+                return ResourceManager.GetString("My_Page", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Activities.
         /// </summary>
         public static string NavMenu_Activities {

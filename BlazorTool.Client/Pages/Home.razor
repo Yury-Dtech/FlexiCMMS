@@ -19,7 +19,7 @@
 <TelerikSplitter Class="home-splitter" Width="100%" Height="100%" Orientation="SplitterOrientation.Vertical">
     <SplitterPanes>
             
-        <TelerikLoaderContainer  Visible="@isDataLoading" Text="@Localizer["Scheduler_LoadingOrders"]" Size="@Telerik.Blazor.ThemeConstants.Loader.Size.Large">
+        <TelerikLoaderContainer Visible="@isDataLoading" Text="@Localizer["Scheduler_LoadingOrders"]" Size="@Telerik.Blazor.ThemeConstants.Loader.Size.Large">
         </TelerikLoaderContainer>
 
         <SplitterPane Min="@minPanelSize" Size="@(assignedCollapsed ? minPanelSize : assignedPaneSize)" SizeChanged="@OnPane1SizeChanged" Collapsible="false">
@@ -41,7 +41,7 @@
                 @if (UserState.HasPermission(PermissionType.WO_Add)) {
                         <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrder">@Localizer["Scheduler_AddNew"]</TelerikButton>
                         }
-                            <TelerikButton  Title="@Localizer["Scheduler_ReloadAllData"]" OnClick="@HardReloadDataAsync">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
+                            <TelerikButton Title="@Localizer["Scheduler_ReloadAllData"]" OnClick="@HardReloadDataAsync">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
 
                         </div>
                                                 </div>
@@ -50,7 +50,7 @@
                                                    OrdersForGrid="@myAssignedOrders"
                                                    workOrderStates="@workOrderStates"
                                                    PageSize="20"
-                                                   
+                                                   ShowAssignedColumnFilter="false"
                                                    @ref="@AssignedGrid"
                                                    UseVirtualScrollMode="true"
                                                    ShowSearchBar = "false"
@@ -183,10 +183,9 @@
                            ThemeColor="@ThemeConstants.Loader.ThemeColor.Tertiary"
                            Type="@LoaderType.InfiniteSpinner" />
 
-@if(false){<p>@loaderText</p>}
 </div>
 
-<TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="500px">
+<TelerikWindow @bind-Visible="IsAddActivityWindowVisible" Modal="true" Width="650px">
         <WindowTitle>
                 <strong>@Localizer["WorkOrder_AddActivity"]</strong>
         </WindowTitle>
@@ -194,7 +193,7 @@
                 <WindowAction Name="Close" />
         </WindowActions>
         <WindowContent>
-                <AddActivityForm WorkOrderID="@selectedWorkOrder.WorkOrderID" OnActivityAdded="HandleActivityAdded" />
+                <AddActivityForm WorkOrderID="@(selectedWorkOrder?.WorkOrderID ?? 0)" OnActivityAdded="HandleActivityAdded" />
         </WindowContent>
 </TelerikWindow>
 
@@ -212,21 +211,20 @@
     private SectionCollapseStates _sectionStates = new();
 
     // Размеры панелей для TelerikSplitter
-    private string assignedPaneSize;
-    private string takenPaneSize;
-    private string deptPaneSize;
-    private string withPersonPaneSize;
+    private string assignedPaneSize = string.Empty;
+    private string takenPaneSize = string.Empty;
+    private string deptPaneSize = string.Empty;
+    private string withPersonPaneSize = string.Empty;
     private string minPanelSize = "40px";
 
     private List<WorkOrder> myAssignedOrders = new List<WorkOrder>();
     private List<WorkOrder> myDepartmentOrders = new List<WorkOrder>();
     private List<WorkOrder> myTakenWorkOrders = new List<WorkOrder>();
     private List<WorkOrder> myWorkOrdersWithPerson = new List<WorkOrder>();
-    private OrdersGrid TakenGrid;
-    private OrdersGrid AssignedGrid;
-    private OrdersGrid DepsGrid;
-    private OrdersGrid WithPersonGrid;
-    private SplitterPane assignedPane;
+    private OrdersGrid? TakenGrid;
+    private OrdersGrid? AssignedGrid;
+    private OrdersGrid? DepsGrid;
+    private OrdersGrid? WithPersonGrid;
     private Guid takenGridKey = Guid.NewGuid();
     private Guid assignedGridKey = Guid.NewGuid();
     private Guid depsGridKey = Guid.NewGuid();
@@ -242,9 +240,9 @@
     private bool IsAddActivityWindowVisible = false;
     private bool LoaderVisible = false;
     private bool HaveAnyTakenOrders = false;
-    private List<ContextMenuItem> myAssignedOrdersMenuItems;
-    private List<ContextMenuItem> myTakenWorkOrdersMenuItems;
-    private List<ContextMenuItem> myDepartmentOrdersMenuItems;
+    private List<ContextMenuItem> myAssignedOrdersMenuItems = new List<ContextMenuItem>();
+    private List<ContextMenuItem> myTakenWorkOrdersMenuItems = new List<ContextMenuItem>();
+    private List<ContextMenuItem> myDepartmentOrdersMenuItems = new List<ContextMenuItem>();
     private string MenuPositionX = "50%";
     private string MenuPositionY = "50%";
 
@@ -252,7 +250,7 @@
     private bool takenCollapsed = false;
     private bool deptCollapsed = false;
     private bool workOrdersWithPersonCollapsed = false;
-    private System.Threading.Timer _saveStateTimer;
+    private System.Threading.Timer? _saveStateTimer;
     private const int SaveStateDelay = 500; // ms
     #endregion Fields
     #region Spoilers
@@ -453,7 +451,8 @@
                 allOrders = FilterWorkOrders(allOrders);
                 var departments = await ApiClient.GetWODepartments();
                 allDepartmentNames = departments.Select(d => d.Name).ToList();
-                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", departments.Find(x=>x.Id == UserState?.DepartmentID)?.Name ?? "");
+                var defaultDepartment = departments.Find(x => x.Id == UserState?.DepartmentID)?.Name ?? string.Empty;
+                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", defaultDepartment);
                 workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
                 MakeContextMenu();
                 await TakeListsOrders();
@@ -474,7 +473,7 @@
         {
             return;
         }
-        Console.WriteLine($"[NAV] Home.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        Console.WriteLine($"Home.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
         await base.OnInitializedAsync();
     }
 
@@ -483,7 +482,7 @@
         _assignedGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(AssignedGridSettingsKey);
         _takenGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(TakenGridSettingsKey);
         _departmentGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(DepartmentGridSettingsKey);
-        _workOrdersWithPersonGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(WithPersonGridSettingsKey); ;
+        _workOrdersWithPersonGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(WithPersonGridSettingsKey);
     }
 
     private async Task ApplyDataGridSettings()
@@ -497,30 +496,32 @@
     private async Task HandleMenuItemClick(ContextMenuItemClickEventArgs<WorkOrder> args)
     {
         var workOrder = args.Item;
-        var command = args.MenuItem.CommandName;
-        MenuPositionX = (args.MenuItem.CursorX).ToString() + "px";
-        MenuPositionY = (args.MenuItem.CursorY - 70).ToString() + "px";
+        var command = args.MenuItem?.CommandName;
+        MenuPositionX = (args.MenuItem?.CursorX ?? 0).ToString() + "px";
+        MenuPositionY = (args.MenuItem?.CursorY - 70 ?? 0).ToString() + "px";
         loaderText = Localizer["Wait_a_moment"];
+        
+        if (workOrder == null || string.IsNullOrEmpty(command))
+        {
+            LoaderVisible = false;
+            return;
+        }
+
         switch (command)
         {
             case "AddActivity":
-                if (workOrder == null)
-                {
-                    LoaderVisible = false;
-                    return;
-                }
                 selectedWorkOrder = workOrder;
                 IsAddActivityWindowVisible = true;
                 break;
             case "TakeOrder":
                 if (HaveAnyTakenOrders) return;
                 LoaderVisible = true;
-                var result = await ApiClient.TakeWorkOrderAsync(workOrder, UserState.PersonID);
+                await ApiClient.TakeWorkOrderAsync(workOrder, UserState.PersonID);
                 break;
             case "AssignToMyself":
-                if (workOrder == null || workOrder.AssignedPerson == UserState.UserName) return;
+                if (workOrder.AssignedPerson == UserState.UserName) return;
                 LoaderVisible = true;
-                workOrder.AssignedPerson = UserState.UserName;
+                workOrder.AssignedPerson = UserState.UserName ?? string.Empty;
                 await ApiClient.UpdateWorkOrderAsync(workOrder);
                 break;
             case "OpenOrder":
@@ -552,7 +553,7 @@
         StateHasChanged();
     }
 
-    private async Task OnOrderChanged(SchedulerAppointment app)
+    private async Task OnOrderChanged(SchedulerAppointment? app)
     {
         if (app == null) return;
         await RefreshDataAsync();
@@ -612,7 +613,7 @@
             myDepartmentOrdersMenuItems.Add(new ContextMenuItem { Text = Localizer["NoActionsAvailable"], CommandName = "NoActionsAvailable", Icon = SvgIcon.CancelOutline });
         }
     }
-
+    //for debugging
     private void ConsoleLogOrder(string listName, List<WorkOrder> orders)
     {
         Console.WriteLine($"========== Logging orders for: {listName} ================");
@@ -625,7 +626,7 @@
 
     private List<WorkOrder> FilterWorkOrders(List<WorkOrder> orders)
     {
-        return new List<WorkOrder>( orders
+        return new List<WorkOrder>(orders
             .Where(o => o.CloseDate == null)
             .OrderByDescending(o => o.ModDate)
             .ToList());
@@ -634,14 +635,14 @@
     private void AddNewOrder()
     {
         AssignedGrid?.AddNewOrderWindow();
-        TakeListsOrders();
+        // No need to call TakeListsOrders here since it will be called in RefreshDataAsync which is called after the order is added
     }
 
     public async Task RefreshDataAsync()
     {
         allOrders = await ApiClient.GetWorkOrdersCachedAsync();
         allOrders = FilterWorkOrders(allOrders);
-        TakeListsOrders();
+        await TakeListsOrders();
         HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
         await InvokeAsync(StateHasChanged);
     }
@@ -662,7 +663,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleActivityAdded(Models.Activity newActivity)
+    private async Task HandleActivityAdded(Models.Activity? newActivity)
     {
         if (newActivity != null) //------<------------- NOWA AKTYWNOŚĆ
         {

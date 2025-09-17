@@ -33,13 +33,16 @@
             </div>
 
             <main>
-                <div class="top-row ">
+                <div class="top-row" style="display:flex;align-items:center;gap:14px;justify-content: space-between;">
+                    <div><WeatherWidget /></div>
+                    <div style="display:flex; justify-content:end; align-items:center;gap:14px;">
                     @if (UserState.IsAuthenticated)
                     {
                         <span class="user-name">@Localizer["MainLayout_Hello"] @UserState.UserName!</span>
                         <button class="btn btn-link logout-button" @onclick="Logout">@Localizer["MainLayout_Logout"]</button>
                     }
-                    <a href="changelog">@formattedVersion</a>
+                        <a href="changelog">@formattedVersion</a>
+                    </div>
                 </div>
                 <article class="content ">
                     @Body
@@ -88,37 +91,7 @@
 
         Logger.LogInformation("DEBUG: UserState InitializationTask awaited. Current UI Culture: {Culture}", CultureInfo.CurrentUICulture.Name);
 
-        // If user state is not authenticated locally, redirect to login
-        // if (!UserState.IsAuthenticated)
-        // {
-        //     Navigation.NavigateTo("/login");
-        //     return;
-        // }
-
         Logger.LogInformation($"User [{UserState.UserName}] is authenticated from userState");
-        // If on a page other than login, verify session with the server
-        // if (!Navigation.Uri.EndsWith("/login", StringComparison.OrdinalIgnoreCase))
-        // {
-        //     try
-        //     {
-        //         var response = await ApiClient.CheckSessionAsync();
-        //         if (!response.IsSuccessStatusCode)
-        //         {
-        //             Server session expired or invalid, clear local state and redirect
-        //             Logger.LogWarning($"[{UserState.UserName}] == Session check failed with status code: {response.StatusCode}");
-        //             await UserState.ClearAsync();
-        //             Navigation.NavigateTo("/login");
-        //         }
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Handle potential network errors or API unavailability
-        //         Logger.LogError(ex, "Failed to check session for user {UserName}", UserState.UserName);
-        //         Console.WriteLine($"Failed to check session: {ex.Message}");
-        //         await UserState.ClearAsync();
-        //         Navigation.NavigateTo("/login");
-        //     }
-        // }
     }
 
     private async Task Logout()

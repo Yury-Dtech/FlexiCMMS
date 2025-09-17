@@ -202,9 +202,7 @@
                           ViewChanged="@OnViewChanged"
                           AllowCreate="true"
                           AllowUpdate="true"
-                          OnCreate="@OnCreateAppointment"
                           OnUpdate="@OnUpdateAppointment"
-                          OnDelete="@OnDeleteAppointment"
                           OnEdit="@EditHandler"
                           OnCellRender="@OnSchedulerCellRender"
                           ConfirmDelete="true"
@@ -445,7 +443,7 @@
     private bool showCustomTimelineInputs = false;
     private List<Resource> statuses = new List<Resource>();
     private ViewSettings<WorkOrder> _viewSettings = new ViewSettings<WorkOrder>();
-    private System.Threading.Timer _saveStateTimer;
+    private System.Threading.Timer? _saveStateTimer;
     private const int SaveStateDelay = 800; // ms
     private TelerikNotification NotificationReference { get; set; } = null!;
     private bool showNewActivityForm = false;
@@ -524,7 +522,7 @@
         StateHasChanged();
         allUsers = await apiService.GetUsersInfoList();
         Console.WriteLine($"--- HardLoadData: allUsers loaded. Count: {allUsers.Count}");
-        PersonsNames = allUsers.Select(c => c.Name).ToList();
+        PersonsNames = allUsers.Select(c => c.Name ?? string.Empty).ToList();
         PersonsNames.Insert(0, Person.NotAssigned.Name);
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
@@ -564,7 +562,7 @@
             _allOrders.AddRange(ordersForPerson.Where(x => _allOrders.All(o => o.WorkOrderID != x.WorkOrderID))); //ensure no duplicates
         }
         DeviceNames = new List<string>();
-        DeviceNames.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo)).Select(x => x.AssetNo).Distinct().ToList());
+        DeviceNames.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo)).Select(x => x.AssetNo ?? string.Empty).Distinct().ToList());
         activities = await apiService.GetCachedActivitiesByWO(_allOrders);
         _allAppointments = ConvertAppointmentsFromActivities(activities);
         _allAppointments.AddRange(ConvertAppointmentsFromWorkOrders(_allOrders));
@@ -629,7 +627,7 @@
         await HardLoadData();
     }
 
-    private async Task OnAssetNoClosed()
+    private void OnAssetNoClosed()
     {
         DisplayAppointments();
     }
@@ -644,18 +642,12 @@
     private List<ActivityAppointment> FilterAppointments()
     {
         var filteredAppointments = new List<ActivityAppointment>(_allAppointments);
-        // if (selectedDepartments.Any())
-        // {
-        //     Filter appointments based on the selected department. Take Workorders for selected departments and take activities for these workorders
 
-        //     TODO: filter by departments of the work orders
-        // }
         if (selectedDevices.Any() && !selectedDevices.Contains("All"))
         {
             // Filter appointments based on the selected asset number
-            var filteredOrders = _allOrders.Where(o => selectedDevices.Contains(o.AssetNo)).Select(o => o.WorkOrderID).ToList();
+            var filteredOrders = _allOrders.Where(o => selectedDevices.Contains(o.AssetNo ?? string.Empty)).Select(o => o.WorkOrderID).ToList();
             filteredAppointments = filteredAppointments.Where(a => filteredOrders.Contains(a.WorkOrderID)).ToList();
-            //TODO : filter by asset number of the work orders
         }
         if (selectedPersonIDs != null && selectedPersonIDs.Count > 0)
         {
@@ -721,57 +713,36 @@
 
     #region Scheduler
     // ==== Scheduler CUD handlers ====
-    private async Task OnCreateAppointment(SchedulerCreateEventArgs args)
-    {
+    // private async Task OnCreateAppointment(SchedulerCreateEventArgs args)
+    // {
 
-        // if (args.Item is ActivityAppointment newAppt && SchedulerRef != null)
-        // {
-        //     var result = await ApptService.UpdateAppointment(newAppt);
-        //     if (result.IsValid)
-        //     {
-        //         _allAppointments.Add(newAppt);
-        //         Appointments.Add(newAppt);
-        //         Console.WriteLine($"--- OnCreateAppointment: New appointment created. AssignedPerson: {newAppt.AssignedPerson}");
-        //     }
-        //     else
-        //     {
-        //         Console.WriteLine($"Failed to create appointment: {string.Join(", ", result.Errors)}");
-        //     }
-        //     SchedulerRef?.Rebind();
-        // }
-    }
+    //     if (args.Item is ActivityAppointment newAppt && SchedulerRef != null)
+    //     {
+    //         var result = await ApptService.UpdateAppointment(newAppt);
+    //         if (result.IsValid)
+    //         {
+    //             _allAppointments.Add(newAppt);
+    //             Appointments.Add(newAppt);
+    //             Console.WriteLine($"--- OnCreateAppointment: New appointment created. AssignedPerson: {newAppt.AssignedPerson}");
+    //         }
+    //         else
+    //         {
+    //             Console.WriteLine($"Failed to create appointment: {string.Join(", ", result.Errors)}");
+    //         }
+    //         SchedulerRef?.Rebind();
+    //     }
+    // }
 
-    private async Task OnUpdateAppointment(SchedulerUpdateEventArgs args)
+    private void OnUpdateAppointment(SchedulerUpdateEventArgs args)
     {
         Console.WriteLine("--- OnUpdateAppointment called.");
         if (!UserState.HasPermission(PermissionType.WO_Edit)) return;
 
         AppointmentToUpdate = args.Item as ActivityAppointment;
+        if (AppointmentToUpdate == null) return;
         if (AppointmentToUpdate.IsWorkOrder) return;
         UpdateEventArgs = args;
         ShowConfirmUpdateDialog = true;
-    }
-
-    private async Task OnDeleteAppointment(SchedulerDeleteEventArgs args)
-    {
-
-        // if (args.Item is ActivityAppointment delAppt)
-        // {
-        //     var result = await ApptService.RemoveAppointment(delAppt);
-        //     if (!result.IsValid)
-        //     {
-        //         string errors = string.Join(Environment.NewLine, result.Errors);
-        //         popupMessage = errors ?? Localizer["Scheduler_FailedToCloseAppointment"];
-        //         PopupRef?.Show();
-        //         Console.WriteLine($"Failed to delete appointment: {string.Join(", ", result.Errors)}");
-        //         return; // Exit if deletion failed
-        //     }
-        //     //UntakenOrders.Add(result.Data);
-        //     _allAppointments.RemoveAll(a => a.AppointmentId == delAppt.AppointmentId);
-        //     await LoadData();
-        //     SchedulerRef?.Rebind();
-
-        // }
     }
 
     private async Task OnConfirmUpdate(bool confirmed)
@@ -784,22 +755,22 @@
             if (editedAppointment.IsWorkOrder)
             {
                 return; // For now, do not allow editing work orders via scheduler
-                var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
-                if (index != -1)
-                {
-                    var upd_WO = await apiService.UpdateWorkOrderAsync(editedAppointment.GetWorkOrder() ?? new WorkOrder());
-                    _allAppointments[index] = new ActivityAppointment(upd_WO.Data);
-                }
-                else
-                {
-                    return;
-                }
-                //Save WO to Server
-                WOEditFormShown = false;
-                DisplayAppointments();
+                // var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
+                // if (index != -1)
+                // {
+                //     var upd_WO = await apiService.UpdateWorkOrderAsync(editedAppointment.GetWorkOrder() ?? new WorkOrder());
+                //     _allAppointments[index] = new ActivityAppointment(upd_WO.Data);
+                // }
+                // else
+                // {
+                //     return;
+                // }
+                // //Save WO to Server
+                // WOEditFormShown = false;
+                // DisplayAppointments();
             }
             else //update activity
-            { //TODO: check permissions for activity edit
+            { 
                 var ids = editedAppointment.ActPersons.Split('#').Where(id => int.TryParse(id, out _)).Select(int.Parse).ToList();
                 if (ids.Count == 0 || !ids.Contains(UserState.PersonID ?? -1))
                 {
@@ -833,7 +804,7 @@
                     {
                         _allAppointments[index] = editedAppointment;
                     }
-                    DisplayAppointments();//TODO refresh view acts
+                    DisplayAppointments();
                     SchedulerRef?.Rebind();
                 }
                 else
@@ -937,6 +908,7 @@
             newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(1); //end of WorkDay
         }
 
+        if (item == null) return;
         if (item.IsWorkOrder)
         {
             WOEditFormShown = true;
@@ -1301,7 +1273,13 @@
         }
         else
         {
-            //TODO: popup provide error message?
+            NotificationReference.Show(new NotificationModel
+            {
+                Text = "Activity is null",
+                ThemeColor = ThemeConstants.Notification.ThemeColor.Error,
+                CloseAfter = 3000,
+                Icon = SvgIcon.WarningCircle
+            });
         }
         StateHasChanged();
     }
@@ -1367,8 +1345,8 @@
             {
                 var status = new Resource
                 {
-                    Text = s,
-                    Value = s,
+                    Text = s ?? string.Empty,
+                    Value = s ?? string.Empty,
                     Color = orders.FirstOrDefault(a => a.WOState == s)?.StateColor ?? "LightGray"
                 };
                 resources.Add(status);

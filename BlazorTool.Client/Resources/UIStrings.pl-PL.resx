@@ -1118,9 +1118,6 @@
   <data name="Scheduler_ShowActivities" xml:space="preserve">
     <value> Pokaż aktywności</value>
   </data>
-  <data name="ConfirmUpdate" xml:space="preserve">
-    <value>Potwierdź aktualizację</value>
-  </data>
   <data name="Settings_Language" xml:space="preserve">
     <value>Język interfejsu</value>
   </data>
@@ -1129,5 +1126,11 @@
   </data>
   <data name="WorkDayEnd" xml:space="preserve">
     <value>Początek dnia pracy</value>
+  </data>
+  <data name="ConfirmUpdate" xml:space="preserve">
+    <value>Potwierdź aktualizację</value>
+  </data>
+  <data name="My_Page" xml:space="preserve">
+    <value>Moja strona</value>
   </data>
 </root>

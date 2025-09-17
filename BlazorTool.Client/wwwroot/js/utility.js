@@ -10,3 +10,22 @@ window.BlazorTool = {
         }
     }
 };
+
+window.BlazorToolWeather = {
+    isSupported: function(){
+        return !!navigator.geolocation;
+    },
+    getLocation: function () {
+        return new Promise(function (resolve, reject) {
+            if (!navigator.geolocation) {
+                reject('Geolocation unsupported');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            }, function (err) {
+                reject(err.message || 'Geolocation error');
+            }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 });
+        });
+    }
+};

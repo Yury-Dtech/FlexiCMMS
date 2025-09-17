@@ -1,7 +1,5 @@
 ﻿using BlazorTool.Client.Models;
-using System.Diagnostics;
 using System.Net.Http.Json;
-using Microsoft.Extensions.Logging;
 
 namespace BlazorTool.Client.Services
 
@@ -88,7 +86,7 @@ namespace BlazorTool.Client.Services
                 return (false, $"An unexpected error occurred: {ex.Message}");
             }
         }
-        
+
         public async Task<ApiResponse<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data)
         {
             try
@@ -156,13 +154,12 @@ namespace BlazorTool.Client.Services
                     {
                         return new SingleResponse<TResponse>
                         {
-                            Data = default,
                             IsValid = false,
                             Errors = errorResponse.Errors
                         };
                     }
                 }
-                catch {  }
+                catch { }
 
                 return new SingleResponse<TResponse>
                 {
@@ -198,7 +195,7 @@ namespace BlazorTool.Client.Services
                     return (false, "API address is invalid. " + response.ReasonPhrase);
                 }
                 var wrapper = await response.Content.ReadFromJsonAsync<SimpleResponse>();
-                return (wrapper.Success,wrapper.Message);
+                return (wrapper?.Success ?? false, wrapper?.Message ?? string.Empty);
             }
             catch (HttpRequestException ex)
             {
