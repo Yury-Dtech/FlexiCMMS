@@ -23,19 +23,16 @@ jobs:
     - name: 🧩 Install WebAssembly Workload
       run: dotnet workload install wasm-tools
       
-# 👇 private NuGet-source Telerik from secrets
     - name: 🔐 Add Telerik NuGet Feed
       run: |
-        echo "=== Adding NuGet source ==="
         dotnet nuget add source "https://nuget.telerik.com/v3/index.json" \
           --name "telerik" \
           --username "api-key" \
           --password "${{ secrets.TELERIK_API_KEY }}" \
           --store-password-in-clear-text
-        echo "Telerik source added successfully."
-          
+
     - name: 📦 Restore solution
-      run: dotnet restore --runtime linux-x64
+      run: dotnet restore
 
     - name: 🏗️ Build solution (Release)
       run: dotnet build --configuration Release --no-restore
@@ -45,18 +42,16 @@ jobs:
         dotnet publish ./BlazorTool/BlazorTool.csproj \
           --configuration Release \
           --output ./publish \
-          --runtime linux-x64 \
-          --self-contained false \
           --no-build
 
     - name: 🗜️ Create ZIP Archive
       run: |
         cd publish
-        zip -r ../BlazorApp-Hosted-linux-x64.zip .
+        zip -r ../BlazorApp-Hosted.zip .
 
     - name: 📤 Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: BlazorApp-Hosted-Publish
-        path: BlazorApp-Hosted-linux-x64.zip
+        path: BlazorApp-Hosted.zip
         retention-days: 5
