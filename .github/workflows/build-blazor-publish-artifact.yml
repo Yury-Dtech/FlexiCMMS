@@ -37,8 +37,15 @@ jobs:
     - name: 🏗️ Build solution (Release)
       run: dotnet build --configuration Release --no-restore
 
-    - name: 🚀 Publish Server project (включает Client автоматически)
-      # Публикуем SERVER проект — он включает в себя публикацию Client
+    - name: 🚀 Publish Blazor Client first (for static assets)
+      run: |
+        dotnet publish ./BlazorTool.Client/BlazorTool.Client.csproj \
+          --configuration Release \
+          --runtime linux-x64 \
+          --self-contained false \
+          --output ./ClientPublish
+
+    - name: 🚀 Publish Server project (Hosted Blazor WASM)
       run: |
         dotnet publish ./BlazorTool/BlazorTool.csproj \
           --configuration Release \
