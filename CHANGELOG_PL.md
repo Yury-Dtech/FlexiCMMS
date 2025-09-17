@@ -1,3 +1,18 @@
+## 2025-09-17
+
+### Nowe Funkcje
+- **Widget Pogody**: Dodano nowy widget pogodowy do głównego layoutu. Automatycznie wykrywa on lokalizację użytkownika, aby wyświetlić aktualne warunki pogodowe, temperaturę oraz godziny wschodu i zachodu słońca. Dane są buforowane w celu zminimalizowania liczby wywołań API.
+- **Ulepszenia Interfejsu Użytkownika**:
+    - Link nawigacyjny "Main" został zmieniony na "Moja strona" dla większej przejrzystości.
+    - Na stronie głównej ukryto filtr kolumny "Przypisana osoba" dla listy osobistych zleceń pracy użytkownika, ponieważ był on zbędny.
+    - Okno "Dodaj aktywność" jest teraz szersze, co zapewnia więcej miejsca na zawartość formularza.
+
+### Naprawiono / Ulepszenia
+- **Stabilność Harmonogramu**: Zrefaktoryzowano logikę aktualizacji terminów na stronie Aktywności. Bezpośrednie tworzenie i usuwanie z harmonogramu jest teraz wyłączone na rzecz okien modalnych, co zapobiega przypadkowym modyfikacjom i poprawia stabilność.
+- **Jakość Kodu**: Wprowadzono liczne drobne ulepszenia w całej aplikacji, w tym dodano sprawdzanie wartości null i udoskonalono logikę na stronach Głównej i Aktywności, aby zapobiec potencjalnym błędom w czasie działania.
+- **CI/CD**: Zaktualizowano i usprawniono przepływ pracy GitHub Actions do budowania i publikowania aplikacji w celu zapewnienia większej niezawodności.
+- **Dokumentacja**: Zaktualizowano przewodniki instalacyjne o nowe informacje i dodano wersje PDF do dostępu offline.
+
 ## 2025-09-15..16
 
 ### Wydajność i Stabilność

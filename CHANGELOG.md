@@ -1,3 +1,18 @@
+## 2025-09-17
+
+### Features
+- **Weather Widget**: Added a new weather widget to the main layout. It automatically detects the user's location to display current weather conditions, temperature, and sunrise/sunset times. The data is cached to minimize API calls.
+- **UI Enhancements**:
+    - The main navigation link "Main" has been renamed to "My Page" for better clarity.
+    - On the Home page, the "Assigned Person" column filter has been hidden for the user's personal work order list, as it is redundant.
+    - The "Add Activity" window is now wider, providing more space for the form content.
+
+### Fixed / Improvements
+- **Scheduler Stability**: Refactored the appointment update logic on the Activities page. Direct creation and deletion from the scheduler are now disabled in favor of modal dialogs.
+- **Code Quality**: Made numerous small improvements across the application, including adding null checks and refining logic in the Home and Activities pages to prevent potential runtime errors.
+- **CI/CD**: The GitHub Actions workflow for building and publishing the application has been updated and streamlined for better reliability.
+- **Documentation**: Updated installation guides with new information and added PDF versions for offline access.
+
 ## 2025-09-15..16
 
 ### Performance & Stability

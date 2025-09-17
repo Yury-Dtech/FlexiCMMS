@@ -89,7 +89,8 @@
                         <Template>
                             <div style="display: flex; align-items: center;">
                                 <label class="k-label k-form-label" style="min-width:@minWidthLabel; margin-right: 10px;">@Localizer["ActivityList_Description"]:</label>
-                                <TelerikEditor  @bind-Value="@ActivityFormModel.Description" Tools="@customTools" Width="100%" />
+                                <TelerikTextArea @bind-Value="ActivityFormModel.Description" Rows="5" Placeholder="@Localizer["ActivityList_Description_Placeholder"]" />
+                                @* <TelerikEditor  @bind-Value="@ActivityFormModel.Description" Tools="@customTools" Width="100%" /> *@
                             </div>
                             <ValidationMessage For="@(() => ActivityFormModel.Description)" />
                         </Template>
