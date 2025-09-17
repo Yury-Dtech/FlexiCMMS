@@ -24,9 +24,9 @@ jobs:
     # 👇 private NuGet-source Telerik from secrets
     - name: 🔐 Add Telerik NuGet Feed
       run: |
-        dotnet nuget add source "${{ secrets.TELERIK_NUGET_URL }}" \
+        dotnet nuget add source "https://nuget.telerik.com/v3/index.json" \
           --name telerik \
-          --username "api-key-placeholder" \
+          --username "api-key" \
           --password "${{ secrets.TELERIK_API_KEY }}" \
           --store-password-in-clear-text
 
@@ -41,7 +41,6 @@ jobs:
         dotnet publish ./BlazorTool/BlazorTool.csproj \
           --configuration Release \
           --output ./publish \
-          --runtime linux-x64 \
           --self-contained false \
           --no-build
 
