@@ -44,7 +44,6 @@ jobs:
         dotnet publish ./BlazorTool/BlazorTool.csproj \
           --configuration Release \
           --output ./publish \
-          --self-contained false \
           --no-build
 
     - name: 🗜️ Create ZIP Archive
