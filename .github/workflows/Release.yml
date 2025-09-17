@@ -42,9 +42,7 @@ jobs:
           --configuration Release \
           --output ./publish \
           --self-contained false \
-          --no-build \
-          -p:PublishTrimmed=false \
-          -p:BlazorEnableCompression=false
+          --no-build
 
     - name: 🗜️ Create ZIP Archive
       run: |
