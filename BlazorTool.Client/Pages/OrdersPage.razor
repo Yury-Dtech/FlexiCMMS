@@ -60,16 +60,26 @@ else
         </div>
         <div><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
         <div class="refresh-timer">
+            <div style="display:flex; align-items: center; gap:3px; display: @timerSetVisibility">
+                <label>@Localizer["OrdersPage_RefreshInterval"]:</label>
+                <TelerikNumericTextBox @bind-Value="@TimerInterval"
+                                       Min="1"
+                                       Max="60"
+                                       Width="80px"
+                                       OnChange="@(OnTimerIntervalChanged)"
+                                       Size="sm"/>
+                <span>@Localizer["OrdersPage_Minutes"]</span>
+            </div>
             <Timer @ref="hardReloadTimer"
                    Interval="@HardReloadInterval"
                    OnTick="HardLoadDataTick"
                    AutoStart="true"
                    FireImmediately="false"
                    SkipIfBusy="true"
-                   JitterMilliseconds="750"
+                   JitterMilliseconds="0"
                    SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
                 <ChildContent Context="ctx">
-                    <div style="font-size: 0.8rem; opacity:0.6;">
+                    <div class="clickable-timer" onclick="@OnTimerClick">
                         Next update in: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
                         Last update: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
                     </div>
@@ -169,13 +179,15 @@ else
     private string MenuPositionY { get; set; } = "50%";
     private WorkOrder selectedWorkOrder = new WorkOrder();
     private bool IsAddActivityWindowVisible { get; set; } = false;
-    private const int TimerInterval = 1;//minutes
+    private int TimerInterval { get; set; } = 5;//minutes
     private BlazorTool.Client.Components.Timer? hardReloadTimer;
-    private TimeSpan HardReloadInterval { get; set; } = TimeSpan.FromMinutes(TimerInterval);
+    private TimeSpan HardReloadInterval { get; set; }
     public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
+    private string timerSetVisibility = "none";
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine($"[NAV] OrdersPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
         await base.OnInitializedAsync();
     }
 
@@ -188,6 +200,7 @@ else
             Console.WriteLine("______Initialized ORDERS PAGE");
             _viewSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(ViewSettingsKey);
             RestoreCustomFilterState();
+            HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
 
             await UserState.InitializationTask; // Ensure UserState is loaded
             if (!UserState.IsAuthenticated)
@@ -278,6 +291,7 @@ else
     {
         _viewSettings.SetCustomFilter("selectedDeviceIds", selectedDeviceIds);
         _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedDeviceCategory);
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
         await ViewSettingsService.SaveSettingsAsync(ViewSettingsKey, _viewSettings);
     }
 
@@ -285,6 +299,7 @@ else
     {
         selectedDeviceIds = _viewSettings.GetCustomFilter("selectedDeviceIds", new List<int>());
         selectedDeviceCategory = _viewSettings.GetCustomFilter("selectedDeviceCategory", "All");
+        TimerInterval = _viewSettings.GetCustomFilter("TimerInterval", 5);
     }
 
     private IEnumerable<Device> GetFilteredDevices()
@@ -450,6 +465,24 @@ else
 		}
 			IsAddActivityWindowVisible = false;
 	}
+
+    private async Task OnTimerIntervalChanged()
+    {        
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        await SaveStateAsync();
+        if (hardReloadTimer != null)
+        {
+            await hardReloadTimer.RestartAsync();
+        }
+    }
+
+    private void OnTimerClick()
+    {
+        if (string.IsNullOrEmpty(timerSetVisibility))
+            timerSetVisibility = "none";
+        else
+            timerSetVisibility = string.Empty;
+    }
 
     private void ShowNotification(string message, NotificationTypeEnum type)
     {

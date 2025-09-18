@@ -1582,6 +1582,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to minutes.
+        /// </summary>
+        public static string OrdersPage_Minutes {
+            get {
+                return ResourceManager.GetString("OrdersPage_Minutes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Month.
         /// </summary>
         public static string OrdersPage_Month {
@@ -1605,6 +1614,15 @@ namespace BlazorTool.Client.Resources {
         public static string OrdersPage_Quarter {
             get {
                 return ResourceManager.GetString("OrdersPage_Quarter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh interval.
+        /// </summary>
+        public static string OrdersPage_RefreshInterval {
+            get {
+                return ResourceManager.GetString("OrdersPage_RefreshInterval", resourceCulture);
             }
         }
         

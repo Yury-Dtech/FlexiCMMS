@@ -1130,10 +1130,16 @@
   <data name="My_Page" xml:space="preserve">
     <value>Moja strona</value>
   </data>
+  <data name="New_Orders" xml:space="preserve">
+    <value>nowych zleceń</value>
+  </data>
   <data name="ConfirmUpdate" xml:space="preserve">
     <value>Potwierdź aktualizację</value>
   </data>
-  <data name="New_Orders" xml:space="preserve">
-    <value>nowych zleceń</value>
+  <data name="OrdersPage_RefreshInterval" xml:space="preserve">
+    <value>Interwał odświeżania</value>
+  </data>
+  <data name="OrdersPage_Minutes" xml:space="preserve">
+    <value>minut</value>
   </data>
 </root>

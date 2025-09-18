@@ -1,6 +1,6 @@
 ﻿@* Reusable timer component for Blazor WASM / Server *@
 @code {
-    private PeriodicTimer? _timer;
+    private System.Threading.Timer? _timer;
     private CancellationTokenSource? _cts;
     private DateTimeOffset _startedAt;
     private DateTimeOffset? _lastTickAt;
@@ -10,6 +10,7 @@
     private System.Threading.Timer? _uiTimer;
     private TimeSpan? _lastTickDuration;
     private double _avgTickMs; // simple moving average in ms
+    private bool _disposed;
 
     public class TimerSnapshot
     {
@@ -24,7 +25,7 @@
         public TimeSpan? AverageTickDuration { get; init; }
     }
 
-    [Parameter] public TimeSpan Interval { get; set; } = TimeSpan.FromSeconds(30);
+    [Parameter] public TimeSpan Interval { get; set; } = TimeSpan.FromSeconds(60);
     // Pause flag (external control)
     [Parameter] public bool Paused { get; set; }
     // Fire callback on each tick (no overlapping unless AllowOverlap = true)
@@ -58,7 +59,7 @@
         StartedAt = _startedAt,
         LastTickAt = _lastTickAt,
         TickCount = _tickCount,
-        IsRunning = _timer != null && _cts is { IsCancellationRequested: false } && !Paused,
+        IsRunning = _timer != null && !_disposed && !Paused,
         IsBusy = _isBusy,
         Interval = Interval,
         TimeLeft = GetTimeLeft(),
@@ -89,6 +90,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        if (Interval.Minutes <1)
+        {
+            Interval = TimeSpan.FromMinutes(1);
+        }
         // Restart if interval changed while running
         if (_timer != null && _previousInterval != Interval)
         {
@@ -125,9 +130,9 @@
     private async Task StartInternalAsync()
     {
         await StopInternalAsync(); // safety
+        _disposed = false;
         _previousInterval = Interval;
         _cts = new CancellationTokenSource();
-        _timer = new PeriodicTimer(Interval);
         _startedAt = DateTimeOffset.UtcNow;
         _lastTickAt = null;
         _tickCount = 0;
@@ -135,11 +140,7 @@
         _lastTickDuration = null;
         _avgTickMs = 0;
         StartUiTimer();
-        _ = RunLoopAsync(_cts.Token); // fire & forget loop
-        if (FireImmediately)
-        {
-            _ = TriggerTickAsync();
-        }
+        _timer = new System.Threading.Timer(async _ => await TimerTickAsync(), null, FireImmediately ? TimeSpan.Zero : Interval, Interval);
         if (OnStarted.HasDelegate)
         {
             await OnStarted.InvokeAsync();
@@ -168,6 +169,7 @@
 
     private async Task StopInternalAsync()
     {
+        _disposed = true;
         try
         {
             _cts?.Cancel();
@@ -175,7 +177,7 @@
         }
         catch { }
         _cts = null;
-        _timer?.Dispose();
+        try { _timer?.Dispose(); } catch { }
         _timer = null;
         try { _uiTimer?.Dispose(); } catch { }
         _uiTimer = null;
@@ -186,25 +188,10 @@
         StateHasChanged();
     }
 
-    private async Task RunLoopAsync(CancellationToken token)
+    private async Task TimerTickAsync()
     {
-        try
-        {
-            while (!token.IsCancellationRequested && _timer != null)
-            {
-                if (!await _timer.WaitForNextTickAsync(token)) break;
-                if (Paused) continue; // skip while paused
-                await TriggerTickAsync();
-            }
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            if (OnError.HasDelegate)
-            {
-                await OnError.InvokeAsync(ex);
-            }
-        }
+        if (_disposed || Paused) return;
+        await InvokeAsync(async () => await TriggerTickAsync());
     }
 
     private async Task TriggerTickAsync()

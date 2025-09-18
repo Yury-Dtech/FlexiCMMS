@@ -532,7 +532,7 @@
   </data>
   <data name="ActivityList_HoursAbbreviation" xml:space="preserve">
     <value>h</value>
-    <comment>&#x8;</comment>
+    <comment>h</comment>
   </data>
   <data name="ActivityList_LoadingActivities" xml:space="preserve">
     <value>Loading activities...</value>
@@ -1143,5 +1143,11 @@
   </data>
   <data name="New_Orders" xml:space="preserve">
     <value>new orders</value>
+  </data>
+  <data name="OrdersPage_RefreshInterval" xml:space="preserve">
+    <value>Refresh interval</value>
+  </data>
+  <data name="OrdersPage_Minutes" xml:space="preserve">
+    <value>minutes</value>
   </data>
 </root>

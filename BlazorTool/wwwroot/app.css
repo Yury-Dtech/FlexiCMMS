@@ -64,7 +64,24 @@ h1:focus {
     margin-left: auto;
     padding-right:20px;
 }
+.clickable-timer {
+    /* Стили по умолчанию (не обязательны, если они уже заданы инлайново) */
+    font-size: 0.8rem;
+    opacity: 0.6;
+    /* Добавьте плавность перехода для hover-эффектов */
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    /* Убедитесь, что курсор меняется */
+    cursor: pointer;
+}
 
+    .clickable-timer:hover {
+        /* Измените прозрачность на меньшую (ближе к 1) для "подсветки" */
+        opacity: 1;
+        /* Или добавьте фоновый цвет */
+        /* background-color: #f0f0f0; */ /* Пример светло-серого фона */
+        /* Можно добавить небольшую тень для акцента */
+        /* box-shadow: 0 0 2px rgba(0,0,0,0.2); */
+    }
 .warning-popup {
     background-color: #f7b86a;
     border: 1px solid #e0e0e0; /* ?????? ????? ????? */
