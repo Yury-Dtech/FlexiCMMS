@@ -143,7 +143,7 @@
         _timer = new System.Threading.Timer(async _ => await TimerTickAsync(), null, FireImmediately ? TimeSpan.Zero : Interval, Interval);
         if (OnStarted.HasDelegate)
         {
-            await OnStarted.InvokeAsync();
+            await OnStarted.InvokeAsync(null);
         }
         StateHasChanged();
     }
@@ -183,7 +183,7 @@
         _uiTimer = null;
         if (OnStopped.HasDelegate)
         {
-            await OnStopped.InvokeAsync();
+            await OnStopped.InvokeAsync(null);
         }
         StateHasChanged();
     }
@@ -210,7 +210,7 @@
             }
             if (OnTick.HasDelegate)
             {
-                await OnTick.InvokeAsync();
+                await OnTick.InvokeAsync(null);
             }
             if (TickAsync is not null)
             {
