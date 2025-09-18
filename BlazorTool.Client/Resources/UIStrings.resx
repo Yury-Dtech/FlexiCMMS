@@ -1141,4 +1141,7 @@
   <data name="My_Page" xml:space="preserve">
     <value>My page</value>
   </data>
+  <data name="New_Orders" xml:space="preserve">
+    <value>new orders</value>
+  </data>
 </root>

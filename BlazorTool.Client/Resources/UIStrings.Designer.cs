@@ -1411,6 +1411,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to new orders.
+        /// </summary>
+        public static string New_Orders {
+            get {
+                return ResourceManager.GetString("New_Orders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New order.
         /// </summary>
         public static string NewOrder {

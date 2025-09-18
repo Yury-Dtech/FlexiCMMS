@@ -101,40 +101,40 @@
         <div class="orders-grid-container">
                 <div class="order-header d-flex align-items-center">
                         <span class="collapse-toggle" @onclick="@(() => ToggleSpoiler(nameof(deptPaneSize)))">
-                                @if(deptCollapsed)
-                                {
-                                        <TelerikButton Icon="@SvgIcon.Plus" Rounded="sm" Size="sm"></TelerikButton>
-                                }
-                                else
-                                {
-                                        <TelerikButton Icon="@SvgIcon.Minus" Rounded="sm" Size="sm"></TelerikButton>
-                                }
+                            @if(deptCollapsed)
+                            {
+                                    <TelerikButton Icon="@SvgIcon.Plus" Rounded="sm" Size="sm"></TelerikButton>
+                            }
+                            else
+                            {
+                                    <TelerikButton Icon="@SvgIcon.Minus" Rounded="sm" Size="sm"></TelerikButton>
+                            }
                         </span>
-                                <span class="order-title">@Localizer["Home_OrdersForDepartment"]: @myDepartmentOrders.Count() </span>
-                                                <TelerikComboBox Data="@allDepartmentNames" TextField="Department"
-                                                                                 Placeholder="@Localizer["Scheduler_SelectDepartment"]" Filterable="false"
-                                                                                 AllowCustom="false" Value="@selectedDepartment"
-                                                                                 ValueChanged="@((string dep) => OnDepartmentChanged(dep))"
-                                                                                 Width="250px"
-                                                                                 Size="sm">
-                                                </TelerikComboBox>
+                        <span class="order-title">@Localizer["Home_OrdersForDepartment"]: @myDepartmentOrders.Count() </span>
+                        <TelerikComboBox Data="@allDepartmentNames" TextField="Department"
+                                                            Placeholder="@Localizer["Scheduler_SelectDepartment"]" Filterable="false"
+                                                            AllowCustom="false" Value="@selectedDepartment"
+                                                            ValueChanged="@((string dep) => OnDepartmentChanged(dep))"
+                                                            Width="250px"
+                                                            Size="sm">
+                        </TelerikComboBox>
                         </div>
                 <div class="grid-content @(deptCollapsed ? "collapsed-content" : "")">
-                                <OrdersGrid @key="@depsGridKey"
-                                                   OrdersForGrid="@myDepartmentOrders"
-                                                   workOrderStates="@workOrderStates"
-                                                   @ref="@DepsGrid"
-                                                   PageSize="10"
-                                                   ShowSearchBar = "false"
-                                                   UseVirtualScrollMode="false"
-                                                   isLoading="@isDataLoading"
-                                                   OnOrderChanged="@((app) => OnOrderChanged(app))"
-                                                   OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _departmentGridSettings.GridState = args.GridState; await SaveStateAsync(DepartmentGridSettingsKey, _departmentGridSettings); })"
-                                                   MenuItems="@myDepartmentOrdersMenuItems"
-                                                   OnMenuItemClick="@HandleMenuItemClick"
-                                                   OnRowContextMenu="@OnRowContextMenuClick"
-                                                   />
-                                           </div>
+                    <OrdersGrid @key="@depsGridKey"
+                                OrdersForGrid="@myDepartmentOrders"
+                                workOrderStates="@workOrderStates"
+                                @ref="@DepsGrid"
+                                PageSize="10"
+                                ShowSearchBar = "false"
+                                UseVirtualScrollMode="false"
+                                isLoading="@isDataLoading"
+                                OnOrderChanged="@((app) => OnOrderChanged(app))"
+                                OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _departmentGridSettings.GridState = args.GridState; await SaveStateAsync(DepartmentGridSettingsKey, _departmentGridSettings); })"
+                                MenuItems="@myDepartmentOrdersMenuItems"
+                                OnMenuItemClick="@HandleMenuItemClick"
+                                OnRowContextMenu="@OnRowContextMenuClick"
+                                />
+                </div>
                         </div>
         </SplitterPane>
 
@@ -155,18 +155,18 @@
                         </div>
                 <div class="grid-content @(workOrdersWithPersonCollapsed ? "collapsed-content" : "")">
                                 <OrdersGrid @key="@workOrdersWithPersonGridKey"
-                                                   @ref="@WithPersonGrid"
-                                                   OrdersForGrid="@myWorkOrdersWithPerson"
-                                                   workOrderStates="@workOrderStates"
-                                                   ShowSearchBar = "false"
-                                                   PageSize="10"
-                                                   UseVirtualScrollMode="false"
-                                                   isLoading="@isDataLoading"
-                                                   OnOrderChanged="@((app) => OnOrderChanged(app))"
-                                                   MenuItems="@myDepartmentOrdersMenuItems"
-                                                   OnMenuItemClick="@HandleMenuItemClick"
-                                                   OnRowContextMenu="@OnRowContextMenuClick"
-                                                   OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _workOrdersWithPersonGridSettings.GridState = args.GridState; await SaveStateAsync(WithPersonGridSettingsKey, _workOrdersWithPersonGridSettings); })" />
+                                        @ref="@WithPersonGrid"
+                                        OrdersForGrid="@myWorkOrdersWithPerson"
+                                        workOrderStates="@workOrderStates"
+                                        ShowSearchBar = "false"
+                                        PageSize="10"
+                                        UseVirtualScrollMode="false"
+                                        isLoading="@isDataLoading"
+                                        OnOrderChanged="@((app) => OnOrderChanged(app))"
+                                        MenuItems="@myDepartmentOrdersMenuItems"
+                                        OnMenuItemClick="@HandleMenuItemClick"
+                                        OnRowContextMenu="@OnRowContextMenuClick"
+                                        OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _workOrdersWithPersonGridSettings.GridState = args.GridState; await SaveStateAsync(WithPersonGridSettingsKey, _workOrdersWithPersonGridSettings); })" />
                 </div>
                         </div>
         </SplitterPane>

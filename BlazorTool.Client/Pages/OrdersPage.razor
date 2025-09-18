@@ -16,7 +16,6 @@
 @inject ViewSettingsService ViewSettingsService
 
 <CheckSession apiService="@apiService" UserState="@UserState" />
-@* <label>@Localizer["OrdersPage_Devices"]</label> *@
 
 @if (isDevicesLoading)
 {
@@ -24,21 +23,16 @@
 }
 else
 {
+    <TelerikNotification @ref="@NotificationReference" Class="my-telerik-notification"
+                         HorizontalPosition="@NotificationHorizontalPosition.Center"
+                         VerticalPosition="@NotificationVerticalPosition.Top" />
     <div class="filter-controls-row">
         <div>
-            @* <TelerikRadioGroup Data="@TagModes"
-                               @bind-Value="@TagMode"
-                               ValueField="@nameof(Tags.Mode)"
-                               TextField="@nameof(Tags.Description)"
-                               Layout="RadioGroupLayout.Horizontal">
-            </TelerikRadioGroup> *@
-
             <label>@Localizer["OrdersPage_Devices"]</label>
             <TelerikMultiSelect Data="@devices"
                               @bind-Value="@selectedDeviceIds"
                               ValueField="@nameof(Device.MachineID)"
                               TextField="@nameof(Device.AssetNo)"
-                              TagMode="@TagMode"
                               MaxAllowedTags="@MaxAllowedTags"
                               Placeholder="@Localizer["OrdersPage_SelectDevices"]"
                               AutoClose="false"
@@ -64,8 +58,24 @@ else
             </TelerikComboBox>
             </div>
         </div>
-        <div><TelerikButton OnClick="@HardLoadData" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
-
+        <div><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+        <div class="refresh-timer">
+            <Timer @ref="hardReloadTimer"
+                   Interval="@HardReloadInterval"
+                   OnTick="HardLoadDataTick"
+                   AutoStart="true"
+                   FireImmediately="false"
+                   SkipIfBusy="true"
+                   JitterMilliseconds="750"
+                   SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
+                <ChildContent Context="ctx">
+                    <div style="font-size: 0.8rem; opacity:0.6;">
+                        Next update in: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
+                        Last update: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
+                    </div>
+                </ChildContent>
+            </Timer>
+        </div>
     </div>
 }
 
@@ -100,7 +110,7 @@ else
 		<WindowAction Name="Close" />
 	</WindowActions>
 	<WindowContent>
-		<AddActivityForm WorkOrderID="@(selectedWorkOrder?.WorkOrderID ?? 0)" OnActivityAdded="HandleActivityAdded" />
+		<AddActivityForm WorkOrderID="@(selectedWorkOrder.WorkOrderID)" OnActivityAdded="HandleActivityAdded" />
 	</WindowContent>
 </TelerikWindow>
 
@@ -113,15 +123,14 @@ else
               >
     <div class="popup-dep" style="text-align: center; padding:20px; ">
         <EditForm Model="@selectedWorkOrder" OnValidSubmit="@(async () => {await apiService.UpdateWorkOrderAsync(selectedWorkOrder); PopupRef?.Hide();})">
-        <span><p>@Localizer["WorkOrder_OrderNo"] @selectedWorkOrder?.WorkOrderID</p></span>
+        <span><p>@Localizer["WorkOrder_OrderNo"] @selectedWorkOrder.WorkOrderID</p></span>
             <TelerikComboBox Data="@allDepartments"
-                             @bind-Value="@selectedWorkOrder.DepName"
-                             Placeholder=@Localizer["Scheduler_SelectDepartment"]
+                             @bind-Value="@(selectedWorkOrder.DepName )"
+                             Placeholder="@Localizer["Scheduler_SelectDepartment"]"
                              Width="180px"
                              Filterable="true" />
             <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
                 <TelerikButton ButtonType="ButtonType.Submit">@Localizer["Move"]</TelerikButton>
-                @* <TelerikButton ButtonType="ButtonType.Reset"  OnClick="@(() => PopupRef?.Hide())">Cancel</TelerikButton> *@
             </div>
         </EditForm>
     </div>
@@ -131,7 +140,7 @@ else
 
 @code {
     private string ViewSettingsKey = ViewSettingsService.SettingsKeys["OrdersPage"];
-    private ViewSettings<WorkOrder> _viewSettings;
+    private ViewSettings<WorkOrder> _viewSettings = new();
     private TelerikPopup? PopupRef { get; set; }
     private bool isOrdersLoading = false;
     private bool isDevicesLoading = false;
@@ -151,17 +160,19 @@ else
     private List<string> allDepartments = new List<string>();
     private List<WODict> dicts = new List<WODict>();
     private Person currentUser = new Person();
-    private OrdersGrid ordersGrid;
-    private MultiSelectTagMode TagMode { get; set; } = MultiSelectTagMode.Single;
+    private OrdersGrid ordersGrid = new ();
     private int? MaxAllowedTags { get; set; }
     private bool hasInitialized = false;
     private List<ContextMenuItem> MenuItems = new List<ContextMenuItem>();
     private bool HaveAnyTakenOrders = false;
     private string MenuPositionX { get; set; } = "50%";
     private string MenuPositionY { get; set; } = "50%";
-    private WorkOrder? selectedWorkOrder = new WorkOrder();
+    private WorkOrder selectedWorkOrder = new WorkOrder();
     private bool IsAddActivityWindowVisible { get; set; } = false;
-
+    private const int TimerInterval = 1;//minutes
+    private BlazorTool.Client.Components.Timer? hardReloadTimer;
+    private TimeSpan HardReloadInterval { get; set; } = TimeSpan.FromMinutes(TimerInterval);
+    public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine($"[NAV] OrdersPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
@@ -184,13 +195,12 @@ else
                 Navigation.NavigateTo("/login");
             }            
             await HardLoadData();
-            
+
             await LoadData();
 
             MakeContextMenu();
 
             await InvokeAsync(StateHasChanged);
-            // Apply the state after the data is loaded and the grids are rendered
             if (ordersGrid != null) await ordersGrid.ApplyStateAsync(_viewSettings.GridState);
         }
     }
@@ -217,15 +227,17 @@ else
         var filteredDevices = GetFilteredDevices();
         OrdersForGrid = await GetFilteredOrders(filteredDevices);
         HaveAnyTakenOrders = (await apiService.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
-        //OrdersForGrid = OrdersForGrid.OrderByDescending(o => o.WorkOrderID).ToList();
         isOrdersLoading = false;
         StateHasChanged();
     }
 
-    private async Task HardLoadData()
+    private async Task HardLoadData(bool showLoading = true)
     {
-        isDevicesLoading = true;
+        if (showLoading)
+        {
+            isDevicesLoading = true;
             StateHasChanged();
+        }
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allPersons = await apiService.GetAllPersons();
 
@@ -241,15 +253,31 @@ else
         deviceCategories?.Insert(0, "All");
         deviceTypes = devices.Select(d => d.Type).Distinct().ToList();
         deviceTypes?.Insert(0, "All");
-        isDevicesLoading = false;
-        StateHasChanged();
+        if (showLoading)
+        {
+            isDevicesLoading = false;
+            StateHasChanged();
+            if (hardReloadTimer != null)
+            {
+                await hardReloadTimer.RestartAsync(); // reset interval after manual reload
+            }
+        }
+    }
+
+    private async Task HardLoadDataTick()
+    {
+        var old_count = OrdersForGrid.Count();
+        await HardLoadData(false); // silent refresh
+        var new_count = OrdersForGrid.Count();
+        if (new_count == old_count) return; // no change, skip
+        await LoadData(); // reapply filters
+        ShowNotification($"{new_count - old_count} {Localizer["New_Orders"]}", NotificationTypeEnum.Info); 
     }
 
     private async Task SaveStateAsync()
     {
         _viewSettings.SetCustomFilter("selectedDeviceIds", selectedDeviceIds);
         _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedDeviceCategory);
-        _viewSettings.SetCustomFilter("TagMode", TagMode);
         await ViewSettingsService.SaveSettingsAsync(ViewSettingsKey, _viewSettings);
     }
 
@@ -257,8 +285,6 @@ else
     {
         selectedDeviceIds = _viewSettings.GetCustomFilter("selectedDeviceIds", new List<int>());
         selectedDeviceCategory = _viewSettings.GetCustomFilter("selectedDeviceCategory", "All");
-        TagMode = _viewSettings.GetCustomFilter("TagMode", MultiSelectTagMode.Single);
-
     }
 
     private IEnumerable<Device> GetFilteredDevices()
@@ -294,19 +320,26 @@ else
         return result;
     }
 
-    private async Task OnOrderChanged(SchedulerAppointment? editedAppointment)
+    private void OnOrderChanged(SchedulerAppointment? editedAppointment)
     {
         if (editedAppointment == null) return;
 
         var index = OrdersForGrid.FindIndex(x => x.WorkOrderID == editedAppointment.AppointmentId);
-        OrdersForGrid.RemoveAt(index);
-        OrdersForGrid.Insert(index, editedAppointment);
+        if (index >=0)
+        {
+            OrdersForGrid.RemoveAt(index);
+            OrdersForGrid.Insert(index, editedAppointment);
+        }
+        else //new appointment
+        {
+            OrdersForGrid.Add(editedAppointment);
+        }
+
         ordersGrid.RefreshGrid();
         StateHasChanged();
     }
 
     #region Filter events
-    //Select devices from MultiSelect
     private async Task OnMultiValueClosed()
     {
         selectedDevices = devices.Where(d => selectedDeviceIds.Contains(d.MachineID)).ToList();
@@ -334,18 +367,6 @@ else
     }
     #endregion
 
-    private List<Tags> TagModes { get; set; } = new List<Tags>()
-    {
-        new Tags { Mode = MultiSelectTagMode.Single, Description = "Compact" },
-        new Tags { Mode = MultiSelectTagMode.Multiple, Description = "Extended" }
-    };
-
-    private class Tags
-    {
-        public MultiSelectTagMode Mode { get; set; }
-        public string Description { get; set; }
-    }
-
     private void MakeContextMenu()
     {
         string addActivityText = Localizer["WorkOrder_AddActivity"];
@@ -369,7 +390,7 @@ else
         if(UserState.CanHaveManyActiveTake || !HaveAnyTakenOrders)
         {
             MenuItems.Add(new ContextMenuItem { Text = takeOrderText, CommandName = "TakeOrder", Icon = SvgIcon.Hand });
-        }		
+        }
     }
 
     private async Task HandleMenuItemClick(ContextMenuItemClickEventArgs<WorkOrder> args)
@@ -411,9 +432,7 @@ else
                 ordersGrid?.OpenWorkOrderWindow(workOrder);
                 break;
         }
-
-		// await LoadData();
-	}
+    }
 
     private async Task HandleActivityAdded(Models.Activity newActivity)
 	{
@@ -427,9 +446,51 @@ else
 		}
 		else
 		{
-			// Handle the case where adding the activity failed
 			Console.WriteLine("Failed to add activity.");
 		}
 			IsAddActivityWindowVisible = false;
 	}
+
+    private void ShowNotification(string message, NotificationTypeEnum type)
+    {
+        switch (type)
+        {
+            case NotificationTypeEnum.Success:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.CheckCircle
+                });
+                break;
+            case NotificationTypeEnum.Error:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Error,
+                    CloseAfter = 5000,
+                    Icon = SvgIcon.WarningCircle
+                });
+                break;
+            case NotificationTypeEnum.Info:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
+                    CloseAfter = 5000,
+                    Icon = SvgIcon.InfoCircle
+                });
+                break;
+            case NotificationTypeEnum.Warning:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.ExclamationCircle
+                });
+                break;
+        }
+    }
 }

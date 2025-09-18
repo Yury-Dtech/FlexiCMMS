@@ -426,7 +426,8 @@
 
     async Task OnRowContextMenuHandler(GridRowClickEventArgs args)
     {
-        SelectedRecord = args.Item as WorkOrder;
+        if (args == null || args.Item == null) return;
+        SelectedRecord = (args.Item as WorkOrder) ?? new ();
         var mouseEventArgs = args.EventArgs as MouseEventArgs;
         if (mouseEventArgs != null)
         {

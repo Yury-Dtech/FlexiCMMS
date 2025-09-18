@@ -59,6 +59,12 @@ h1:focus {
     padding-block: 10px;
     padding-inline-start: 10px;
 }
+
+.refresh-timer {
+    margin-left: auto;
+    padding-right:20px;
+}
+
 .warning-popup {
     background-color: #f7b86a;
     border: 1px solid #e0e0e0; /* ?????? ????? ????? */

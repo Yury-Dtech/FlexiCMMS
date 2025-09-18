@@ -53,7 +53,7 @@ namespace BlazorTool.Client.Services
                 // В случае ошибки, устанавливаем значения по умолчанию, чтобы не блокировать UI
                 Settings = new ApplicationSettings
                 {
-                    ApplicationName = "BlazorTool (Offline)",
+                    ApplicationName = "FlexiCMMS (Offline)",
                     ApiBaseUrl = "",
                 };
             }

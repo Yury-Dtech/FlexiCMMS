@@ -1127,10 +1127,13 @@
   <data name="WorkDayEnd" xml:space="preserve">
     <value>Początek dnia pracy</value>
   </data>
+  <data name="My_Page" xml:space="preserve">
+    <value>Moja strona</value>
+  </data>
   <data name="ConfirmUpdate" xml:space="preserve">
     <value>Potwierdź aktualizację</value>
   </data>
-  <data name="My_Page" xml:space="preserve">
-    <value>Moja strona</value>
+  <data name="New_Orders" xml:space="preserve">
+    <value>nowych zleceń</value>
   </data>
 </root>

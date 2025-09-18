@@ -4,13 +4,9 @@
 @inject UserState UserState
 
 <div class="weather-widget" title="Local weather (click to refresh)" @onclick="ForceRefreshAsync">
-    @if (_error != null)
+    @if (_data == null || _isRefreshing)
     {
-        <span class="weather-error" title="error">@_error</span>
-    }
-    else if (_data == null || _isRefreshing)
-    {
-        <span class="weather-loading">@(_isRefreshing ? "⟳" : "...")</span>
+        <span class="weather-loading">…</span>
     }
     else
     {
@@ -19,18 +15,16 @@
         {
             <span class="ww-city" title="City">@_data.City </span>
         }
-        <span class="ww-temp">@_data.Current.TempC.ToString("0.#")°C</span>
+        <span class="ww-temp">@_data.Current.Temp_C.ToString("0.#")°C</span>
         <span class="ww-cond" title="@_data.Current.Condition.Text">@_data.Current.Condition.Text</span>
         <span style="padding-left: 1rem;">@IconHtmlHelper.GetIcon("sunrise.gif", 15)</span>
         <span class="ww-sun" title="Sunrise / Sunset">↑ @_data.Astronomy.Astronomy.Astro.Sunrise ↓ @_data.Astronomy.Astronomy.Astro.Sunset</span>
-        @* <span class="ww-daylen" title="Day length">@_dayLength</span> *@
     }
 </div>
 
 @code {
     private WeatherResult? _data;
-    private string? _error;
-    private string? _dayLength;
+    private string? _dayLength; // not shown currently
     private bool _requested;
     private bool _isRefreshing;
     private double? _lastLat; private double? _lastLng; private bool _usedAutoIp;
@@ -79,23 +73,21 @@
                 await LoadWeatherByAutoIp(CacheKeyAuto + GetLangSuffix());
             }
         }
+        if (_data == null) { /* hide entirely by leaving placeholder empty */ }
+        StateHasChanged();
     }
 
     private async Task ForceRefreshAsync()
     {
         if (_isRefreshing) return;
-        _isRefreshing = true; _error = null;
+        _isRefreshing = true;
         StateHasChanged();
         try
         {
             if (_usedAutoIp || !_lastLat.HasValue || !_lastLng.HasValue)
-            {
-                await LoadWeatherByAutoIp(CacheKeyAuto + GetLangSuffix());
-            }
+                await LoadWeatherByAutoIp(CacheKeyAuto + GetLangSuffix(), force:true);
             else
-            {
-                await LoadWeather(_lastLat.Value, _lastLng.Value, cacheKey: CacheKeyGeo + GetLangSuffix());
-            }
+                await LoadWeather(_lastLat.Value, _lastLng.Value, cacheKey: CacheKeyGeo + GetLangSuffix(), force:true);
         }
         finally
         {
@@ -108,35 +100,24 @@
     {
         try
         {
-            // Prefer explicit user setting
             var langRaw = UserState?.LangCode;
             if (string.IsNullOrWhiteSpace(langRaw))
-            {
-                // Fallback to CurrentUICulture.Name (e.g. pl-PL, en-US)
                 langRaw = System.Globalization.CultureInfo.CurrentUICulture?.Name
                           ?? System.Globalization.CultureInfo.CurrentCulture?.Name
                           ?? "en";
-            }
             var two = ToTwoLetter(langRaw);
             return "_" + two;
         }
-        catch
-        {
-            return "_en";
-        }
+        catch { return "_en"; }
     }
 
     private static string ToTwoLetter(string? cultureName)
     {
         if (string.IsNullOrWhiteSpace(cultureName)) return "en";
-        // Cut at first dash
         var dash = cultureName.IndexOf('-');
         var basePart = dash > 0 ? cultureName[..dash] : cultureName;
         if (basePart.Length > 2) basePart = basePart[..2];
-        // Validate a–z
-        basePart = new string(basePart
-            .Where(ch => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z')
-            .ToArray());
+        basePart = new string(basePart.Where(char.IsLetter).ToArray());
         if (basePart.Length == 0) return "en";
         return basePart.ToLowerInvariant();
     }
@@ -158,7 +139,6 @@
             return true;
         }
         catch { return false; }
-        finally { StateHasChanged(); }
     }
 
     private async Task StoreCache(string key, WeatherResult data, string dayLength, double? lat, double? lng)
@@ -178,75 +158,52 @@
         catch { }
     }
 
-    private async Task LoadWeatherByAutoIp(string cacheKey)
+    private async Task LoadWeatherByAutoIp(string cacheKey, bool force=false)
     {
         try
         {
-            var client = HttpClientFactory.CreateClient("WeatherApi");
-            const string apiKey = "c7a4b97d6e2446b592994537251709";
-            var lang = GetLangSuffix()[1..];
-            var currentUrl = $"current.json?key={apiKey}&q=auto:ip&aqi=no&lang={lang}";
-            var astroUrl = $"astronomy.json?key={apiKey}&q=auto:ip";
-            var current = await client.GetFromJsonAsync<CurrentWeatherResponse>(currentUrl);
-            var astronomy = await client.GetFromJsonAsync<AstronomyResponse>(astroUrl);
-            if (current == null || astronomy == null)
-            {
-                _error = "No data";
-            }
-            else
-            {
-                if (DateTime.TryParse(astronomy.Astronomy.Astro.Sunrise, out var sr) && DateTime.TryParse(astronomy.Astronomy.Astro.Sunset, out var ss))
-                {
-                    astronomy.Astronomy.Astro.Sunset = ss.ToString("HH:mm");
-                    astronomy.Astronomy.Astro.Sunrise = sr.ToString("HH:mm");
-                }
-                _data = new WeatherResult { Current = current.Current, Astronomy = astronomy, City = current.Location?.Name };
-                _dayLength = CalcDayLength(astronomy.Astronomy.Astro.Sunrise, astronomy.Astronomy.Astro.Sunset);
-                await StoreCache(cacheKey, _data, _dayLength ?? string.Empty, null, null);
-            }
+            var (current, astronomy) = await FetchViaServer(null, null);
+            if (current == null || astronomy == null) return; // silent fail
+            NormalizeSunTimes(astronomy);
+            _data = new WeatherResult { Current = current.Current!, Astronomy = astronomy, City = current.Location?.Name };
+            _dayLength = CalcDayLength(astronomy.Astronomy.Astro.Sunrise, astronomy.Astronomy.Astro.Sunset);
+            await StoreCache(cacheKey, _data, _dayLength ?? string.Empty, null, null);
         }
-        catch (Exception ex)
-        {
-            _error = ex.Message;
-        }
-        StateHasChanged();
+        catch { if(!force){} }
     }
 
-    private async Task LoadWeather(double lat, double lng, string cacheKey)
+    private async Task LoadWeather(double lat, double lng, string cacheKey, bool force=false)
     {
         try
         {
-            var client = HttpClientFactory.CreateClient("WeatherApi");
-            const string apiKey = "c7a4b97d6e2446b592994537251709";
-            var invariant = System.Globalization.CultureInfo.InvariantCulture;
-            var coord = $"{lat.ToString(invariant)},{lng.ToString(invariant)}";
-            var lang = GetLangSuffix()[1..];
-            var currentUrl = $"current.json?key={apiKey}&q={coord}&aqi=no&lang={lang}";
-            var astroUrl = $"astronomy.json?key={apiKey}&q={coord}";
+            var (current, astronomy) = await FetchViaServer(lat, lng);
+            if (current == null || astronomy == null) return;
+            NormalizeSunTimes(astronomy);
+            _data = new WeatherResult { Current = current.Current!, Astronomy = astronomy, City = current.Location?.Name };
+            _dayLength = CalcDayLength(astronomy.Astronomy.Astro.Sunrise, astronomy.Astronomy.Astro.Sunset);
+            await StoreCache(cacheKey, _data, _dayLength ?? string.Empty, lat, lng);
+        }
+        catch { if(!force){} }
+    }
 
-            var current = await client.GetFromJsonAsync<CurrentWeatherResponse>(currentUrl);
-            var astronomy = await client.GetFromJsonAsync<AstronomyResponse>(astroUrl);
-            if (current == null || astronomy == null)
-            {
-                _error = "No data";
-            }
-            else
-            {
-                if (DateTime.TryParse(astronomy.Astronomy.Astro.Sunrise, out var sr) && DateTime.TryParse(astronomy.Astronomy.Astro.Sunset, out var ss))
-                {
-                    astronomy.Astronomy.Astro.Sunset = ss.ToString("HH:mm");
-                    astronomy.Astronomy.Astro.Sunrise = sr.ToString("HH:mm");
-                }
-                _data = new WeatherResult { Current = current.Current, Astronomy = astronomy, City = current.Location?.Name };
-                _dayLength = CalcDayLength(astronomy.Astronomy.Astro.Sunrise, astronomy.Astronomy.Astro.Sunset);
-                await StoreCache(cacheKey, _data, _dayLength ?? string.Empty, lat, lng);
-            }
-        }
-        catch (Exception ex)
+    private async Task<(CurrentWeatherResponse? current, AstronomyResponse? astronomy)> FetchViaServer(double? lat, double? lng)
+    {
+        var client = HttpClientFactory.CreateClient("ServerHost");
+        var lang = GetLangSuffix()[1..];
+        string qs = lat.HasValue ? $"lat={lat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}&lng={lng!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)}&lang={lang}" : $"lang={lang}";
+        var current = await client.GetFromJsonAsync<CurrentWeatherResponse>($"api/v1/weather/current?{qs}");
+        var astronomy = await client.GetFromJsonAsync<AstronomyResponse>($"api/v1/weather/astronomy?{qs}");
+        return (current, astronomy);
+    }
+
+    private void NormalizeSunTimes(AstronomyResponse astronomy)
+    {
+        // Keep original logic EXACTLY as requested
+        if (DateTime.TryParse(astronomy.Astronomy.Astro.Sunrise, out var sr) && DateTime.TryParse(astronomy.Astronomy.Astro.Sunset, out var ss))
         {
-            _error = ex.Message;
+            astronomy.Astronomy.Astro.Sunset = ss.ToString("HH:mm");
+            astronomy.Astronomy.Astro.Sunrise = sr.ToString("HH:mm");
         }
-        StateHasChanged();
     }
 
     private string BuildIconUrl(string icon)
@@ -261,14 +218,11 @@
     {
         if (DateTime.TryParse(sunrise, out var sr) && DateTime.TryParse(sunset, out var ss))
         {
-
             var len = ss - sr;
             if (len.TotalMinutes > 0)
             {
                 var totalMinutes = (int)len.TotalMinutes;
-                var hours = totalMinutes / 60;
-                var minutes = totalMinutes % 60;
-                return $"{hours:00}:{minutes:00}"; // HH:mm
+                return $"{totalMinutes / 60:00}:{totalMinutes % 60:00}";
             }
         }
         return string.Empty;
@@ -280,18 +234,13 @@
 
     private class WeatherResult { public CurrentWeather Current { get; set; } = default!; public AstronomyResponse Astronomy { get; set; } = default!; public string? City { get; set; } }
 
-    private class CurrentWeatherResponse { public Location? Location { get; set; } public CurrentWeather Current { get; set; } = default!; }
-
-    private class Location { [System.Text.Json.Serialization.JsonPropertyName("name")] public string Name { get; set; } = string.Empty; }
-
-    private class CurrentWeather { [System.Text.Json.Serialization.JsonPropertyName("temp_c")] public double TempC { get; set; } public Condition Condition { get; set; } = default!; }
-
+    private class CurrentWeatherResponse { public Location? Location { get; set; } public CurrentWeather? Current { get; set; } }
+    private class Location { public string? Name { get; set; } }
+    private class CurrentWeather { public double Temp_C { get; set; } public Condition Condition { get; set; } = default!; }
     private class Condition { public string Text { get; set; } = string.Empty; public string Icon { get; set; } = string.Empty; }
 
     private class AstronomyResponse { public Astronomy Astronomy { get; set; } = default!; }
-
     private class Astronomy { public Astro Astro { get; set; } = default!; }
-
     private class Astro { public string Sunrise { get; set; } = string.Empty; public string Sunset { get; set; } = string.Empty; }
 
     private class WeatherCacheEntry { public WeatherResult Data { get; set; } = default!; public string DayLength { get; set; } = string.Empty; public double? Lat { get; set; } public double? Lng { get; set; } public DateTime StoredUtc { get; set; } }

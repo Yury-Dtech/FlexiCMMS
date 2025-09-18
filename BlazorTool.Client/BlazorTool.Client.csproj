@@ -42,7 +42,7 @@
 
   <ItemGroup>
     <Content Update="wwwroot\js\utility.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
