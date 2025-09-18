@@ -14,6 +14,10 @@
 
 <BlazorTool.Client.Components.CheckSession ApiService="@ApiClient" UserState="@UserState" />
 
+<TelerikNotification @ref="@NotificationReference" Class="my-telerik-notification"
+                         HorizontalPosition="@NotificationHorizontalPosition.Center"
+                         VerticalPosition="@NotificationVerticalPosition.Top" />
+
 <div class="main-page-root-container">
         
 <TelerikSplitter Class="home-splitter" Width="100%" Height="100%" Orientation="SplitterOrientation.Vertical">
@@ -41,9 +45,38 @@
                 @if (UserState.HasPermission(PermissionType.WO_Add)) {
                         <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrder">@Localizer["Scheduler_AddNew"]</TelerikButton>
                         }
-                            <TelerikButton Title="@Localizer["Scheduler_ReloadAllData"]" OnClick="@HardReloadDataAsync">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
+                            <TelerikButton Title="@Localizer["Scheduler_ReloadAllData"]" OnClick="@(async()=> await HardReloadDataAsync(true))">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
 
                         </div>
+
+                        @* Timer *@
+        <div class="refresh-timer">
+             <div style="display:flex; line-height: 1rem; align-items: center; gap: 3px; padding-right: 0.5rem; display: @timerSetVisibility">
+                <label style="text-align: end; padding-right:5px;">@Localizer["OrdersPage_RefreshInterval"]:</label>
+                <TelerikNumericTextBox @bind-Value="@TimerInterval"
+                                       Min="1"
+                                       Max="60"
+                                       Width="80px"
+                                       OnChange="@(OnTimerIntervalChanged)"
+                                       Size="sm"/>
+                <span style="padding-right:10px;">@Localizer["OrdersPage_Minutes"]</span>
+            </div>
+            <Timer @ref="hardReloadTimer"
+                   Interval="@HardReloadInterval"
+                   OnTick="HardLoadDataTick"
+                   AutoStart="true"
+                   FireImmediately="false"
+                   SkipIfBusy="true"
+                   JitterMilliseconds="0"
+                   SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
+                <ChildContent Context="ctx">
+                    <div class="clickable-timer" @onclick="@OnTimerClick">
+                        Next update in: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
+                        Last update: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
+                    </div>
+                </ChildContent>
+            </Timer>
+        </div>
                                                 </div>
                 <div class="grid-content @(assignedCollapsed ? "collapsed-content" : "")">
                                 <OrdersGrid @key="@assignedGridKey"
@@ -252,6 +285,11 @@
     private bool workOrdersWithPersonCollapsed = false;
     private System.Threading.Timer? _saveStateTimer;
     private const int SaveStateDelay = 500; // ms
+    private int TimerInterval { get; set; } = 5;//minutes
+    private BlazorTool.Client.Components.Timer? hardReloadTimer;
+    private TimeSpan HardReloadInterval { get; set; }
+    public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
+    private string timerSetVisibility = "none";
     #endregion Fields
     #region Spoilers
     private void ToggleSpoiler(string pane)
@@ -400,6 +438,7 @@
     {
         var viewSettings = new ViewSettings<object>();
         viewSettings.SetCustomFilter("sectionStates", _sectionStates);
+        viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
         await ViewSettingsService.SaveSettingsAsync(SectionStatesKey, viewSettings);
     }
 
@@ -444,6 +483,8 @@
             var sectionStateSettings = await ViewSettingsService.LoadSettingsAsync<object>(SectionStatesKey);
             _sectionStates = sectionStateSettings.GetCustomFilter<object, SectionCollapseStates>("sectionStates") ?? new SectionCollapseStates();
             RestoreSectionStates(); // Restore section states (collapsed or not) and sizes
+            TimerInterval = _assignedGridSettings.GetCustomFilter("TimerInterval", 5);
+            HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
 
             if (UserState.IsAuthenticated)
             {
@@ -474,6 +515,7 @@
             return;
         }
         Console.WriteLine($"Home.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
         await base.OnInitializedAsync();
     }
 
@@ -647,10 +689,13 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HardReloadDataAsync()
+    private async Task HardReloadDataAsync(bool? showLoading = true)
     {
-        isDataLoading = true;
-        await InvokeAsync(StateHasChanged);
+        if (showLoading == true)
+        {
+            isDataLoading = true;
+            await InvokeAsync(StateHasChanged);
+        }
         allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
         allOrders = FilterWorkOrders(allOrders);
         await ApiClient.GetWODictionaries(UserState.PersonID, UserState.LangCode);
@@ -659,8 +704,15 @@
         HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
         workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
         MakeContextMenu();
-        isDataLoading = false;
-        await InvokeAsync(StateHasChanged);
+        if (showLoading == true)
+        {
+            isDataLoading = false;
+            await InvokeAsync(StateHasChanged);
+            if (hardReloadTimer != null)
+            {
+                await hardReloadTimer.RestartAsync(); // reset interval after manual reload
+            }
+        }
     }
 
     private async Task HandleActivityAdded(Models.Activity? newActivity)
@@ -708,6 +760,77 @@
         if (_saveStateTimer is not null)
         {
             await _saveStateTimer.DisposeAsync();
+        }
+    }
+
+    private async Task HardLoadDataTick()
+    {
+        var old_count = myAssignedOrders.Count();
+        await HardReloadDataAsync(false); // silent refresh
+        var new_count = myAssignedOrders.Count();
+        if (new_count == old_count) return; // no change, skip
+        ShowNotification($"{new_count - old_count} {Localizer["New_Orders"]}", NotificationTypeEnum.Info); 
+    }
+
+    private async Task OnTimerIntervalChanged()
+    {
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        _assignedGridSettings.SetCustomFilter("TimerInterval", TimerInterval);
+        await SaveSectionStatesToChacheAsync();
+        if (hardReloadTimer != null)
+        {
+            await hardReloadTimer.RestartAsync();
+        }
+    }
+
+    private void OnTimerClick()
+    {
+        if (string.IsNullOrEmpty(timerSetVisibility))
+            timerSetVisibility = "none";
+        else
+            timerSetVisibility = string.Empty;
+    }
+
+    private void ShowNotification(string message, NotificationTypeEnum type)
+    {
+        switch (type)
+        {
+            case NotificationTypeEnum.Success:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.CheckCircle
+                });
+                break;
+            case NotificationTypeEnum.Error:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Error,
+                    CloseAfter = 5000,
+                    Icon = SvgIcon.WarningCircle
+                });
+                break;
+            case NotificationTypeEnum.Info:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
+                    CloseAfter = 5000,
+                    Icon = SvgIcon.InfoCircle
+                });
+                break;
+            case NotificationTypeEnum.Warning:
+                NotificationReference.Show(new NotificationModel
+                {
+                    Text = message,
+                    ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                    CloseAfter = 3000,
+                    Icon = SvgIcon.ExclamationCircle
+                });
+                break;
         }
     }
 }

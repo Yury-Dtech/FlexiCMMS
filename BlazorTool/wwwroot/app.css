@@ -62,7 +62,8 @@ h1:focus {
 
 .refresh-timer {
     margin-left: auto;
-    padding-right:20px;
+    padding-right: 20px;
+    display: inline-flex
 }
 .clickable-timer {
     /* Стили по умолчанию (не обязательны, если они уже заданы инлайново) */
@@ -72,6 +73,7 @@ h1:focus {
     transition: opacity 0.2s ease, background-color 0.2s ease;
     /* Убедитесь, что курсор меняется */
     cursor: pointer;
+    min-width:max-content;
 }
 
     .clickable-timer:hover {

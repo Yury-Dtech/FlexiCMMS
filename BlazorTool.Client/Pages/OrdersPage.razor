@@ -59,8 +59,10 @@ else
             </div>
         </div>
         <div><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+      
+        @* Timer *@
         <div class="refresh-timer">
-            <div style="display:flex; align-items: center; gap:3px; display: @timerSetVisibility">
+            <div style="display:flex; line-height: 1rem; align-items: center; gap: 3px; padding-right: 0.5rem; display: @timerSetVisibility">
                 <label>@Localizer["OrdersPage_RefreshInterval"]:</label>
                 <TelerikNumericTextBox @bind-Value="@TimerInterval"
                                        Min="1"
