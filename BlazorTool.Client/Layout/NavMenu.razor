@@ -22,7 +22,7 @@
             </NavLink>
         </div>
         @* Show Orders if user has any WO related permission *@
-        @if (UserState.HasPermission(PermissionType.ADMIN))
+        @if (true || UserState.HasPermission(PermissionType.ADMIN))
         {
             <div class="nav-item">
                 <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="orders">
@@ -43,7 +43,7 @@
                 <span class="p-2">@Localizer["NavMenu_Activities"]</span>
             </NavLink>
         </div>
-        @if (UserState.HasPermission(PermissionType.ADMIN))
+        @if (true || UserState.HasPermission(PermissionType.ADMIN))
         {
         <div class="nav-item">
             <NavLink class="nav-link d-flex align-items-center px-3 py-2" href="devices">

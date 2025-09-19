@@ -40,7 +40,7 @@
                                         <TelerikButton Icon="@SvgIcon.Minus" Rounded="sm" Size="sm"></TelerikButton>
                                 }
                         </span>
-                                                        <span class="order-title">@Localizer["Home_MyAssignedOrders"]: @myAssignedOrders.Count()</span>
+                        <span class="order-title">@Localizer["Home_MyAssignedOrders"]: @AssignedGrid?.FilteredRowsCount</span>
                         <div class="buttons-row"> 
                 @if (UserState.HasPermission(PermissionType.WO_Add)) {
                         <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrder">@Localizer["Scheduler_AddNew"]</TelerikButton>
@@ -110,7 +110,7 @@
                                                 <TelerikButton Icon="@SvgIcon.Minus" Rounded="sm" Size="sm"></TelerikButton>
                                         }
                                 </span>
-                                                        <span class="order-title">@Localizer["Home_MyTakenOrders"]: @myTakenWorkOrders.Count()</span><span class=@(UserState.CanHaveManyActiveTake ? "can-have-many" : "cannot-have-many")>(@(UserState.CanHaveManyActiveTake ? @Localizer["CanHaveManyTakenOrders"] : @Localizer["CannotHaveManyTakenOrders"]))</span>
+                                <span class="order-title">@Localizer["Home_MyTakenOrders"]: @TakenGrid?.FilteredRowsCount</span><span class=@(UserState.CanHaveManyActiveTake ? "can-have-many" : "cannot-have-many")>(@(UserState.CanHaveManyActiveTake ? @Localizer["CanHaveManyTakenOrders"] : @Localizer["CannotHaveManyTakenOrders"]))</span>
                         </div>
                 <div class="grid-content @(takenCollapsed ? "collapsed-content" : "")">
                                         <OrdersGrid @key="@takenGridKey"
@@ -143,7 +143,7 @@
                                     <TelerikButton Icon="@SvgIcon.Minus" Rounded="sm" Size="sm"></TelerikButton>
                             }
                         </span>
-                        <span class="order-title">@Localizer["Home_OrdersForDepartment"]: @myDepartmentOrders.Count() </span>
+                        <span class="order-title">@Localizer["Home_OrdersForDepartment"]: @DepsGrid?.FilteredRowsCount </span>
                         <TelerikComboBox Data="@allDepartmentNames" TextField="Department"
                                                             Placeholder="@Localizer["Scheduler_SelectDepartment"]" Filterable="false"
                                                             AllowCustom="false" Value="@selectedDepartment"
@@ -184,7 +184,7 @@
                                         <TelerikButton Icon="@SvgIcon.Minus" Rounded="sm" Size="sm"></TelerikButton>
                                 }
                         </span>
-                                <span class="order-title">@Localizer["Home_WorkOrdersWithPerson"]: @myWorkOrdersWithPerson.Count()</span>
+                        <span class="order-title">@Localizer["Home_WorkOrdersWithPerson"]: @WithPersonGrid?.FilteredRowsCount</span>
                         </div>
                 <div class="grid-content @(workOrdersWithPersonCollapsed ? "collapsed-content" : "")">
                                 <OrdersGrid @key="@workOrdersWithPersonGridKey"

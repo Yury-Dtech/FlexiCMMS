@@ -6,14 +6,14 @@ namespace BlazorTool.Client.Models
     public class ActivityAppointment : Activity
     {
         public int AppointmentId { get; private set; }
-        public string Title { get; private set; }
+        public string Title { get; private set; } = string.Empty;
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
         public bool IsAllDay { get; set; } = false;
         public WorkOrder? WorkOrder { private get; set; }
         public bool IsWorkOrder { get; set; } = false;
         public int trimTitleSize = 30;
-        public string WOState { get; private set; }
+        public string WOState { get; private set; } = string.Empty;
 
         public ActivityAppointment()
         {

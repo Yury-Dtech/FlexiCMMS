@@ -19,7 +19,7 @@
             -> @String.Join(", ", Persons?.Select(p => p.Name).ToList() ?? new List<string>())
         </div>
         <span class="activity-date" title="@Localizer["ActivityDisplay_DateAdded"]">@ActivityItem.AddDate.ToString("dd.MM.yyyy HH:mm")</span>
-        <span class="activity-workload" title="@Localizer["Cost"]">@(ActivityItem?.Cost.Value.ToString("C2", new CultureInfo("pl-PL")))</span>
+        <span class="activity-workload" title="@Localizer["Cost"]">@(ActivityItem?.Cost?.ToString("C2", new CultureInfo("pl-PL")))</span>
     </div>
 }
 <TelerikWindow @bind-Visible="isActivityDisplayOpened" Modal="true" CloseOnOverlayClick="true">

@@ -91,7 +91,7 @@ else
     </div>
 }
 
-<h3>@Localizer["OrdersPage_Orders"] (@OrdersForGrid.Count)</h3>
+<h3>@Localizer["OrdersPage_Orders"] (@ordersGrid.FilteredRowsCount)</h3>
 <div style="height:80vh">
 @if (isOrdersLoading)
 {
@@ -412,10 +412,11 @@ else
 
     private async Task HandleMenuItemClick(ContextMenuItemClickEventArgs<WorkOrder> args)
     {
+        if (args == null) return;
         var workOrder = args.Item;
-        var command = args.MenuItem.CommandName;
-        MenuPositionX = (args.MenuItem.CursorX).ToString() + "px";
-        MenuPositionY = (args.MenuItem.CursorY - 70).ToString() + "px";
+        var command = args.MenuItem?.CommandName;
+        MenuPositionX = (args.MenuItem?.CursorX).ToString() + "px";
+        MenuPositionY = (args.MenuItem?.CursorY - 70).ToString() + "px";
         if (workOrder == null || string.IsNullOrWhiteSpace(command))
         {
             return;
@@ -437,7 +438,7 @@ else
                 break;
             case "AssignToMyself":
                 if (workOrder.AssignedPerson == UserState.UserName) return;
-                workOrder.AssignedPerson = UserState.UserName;
+                workOrder.AssignedPerson = UserState.UserName ?? "";
                 await apiService.UpdateWorkOrderAsync(workOrder);
                 break;
             case "MoveToDepartment":

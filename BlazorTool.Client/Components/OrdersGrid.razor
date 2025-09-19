@@ -28,7 +28,7 @@
              OnRowRender="@OnRowRenderHandler"
              OnRowDoubleClick="@(args => OnRowClick(args))"
              OnRowContextMenu="@OnRowContextMenuHandler"
-             OnStateChanged="@((GridStateEventArgs<WorkOrder> args) => OnStateChanged.InvokeAsync(args))"
+             OnStateChanged="@(async(GridStateEventArgs<WorkOrder> args)=> await OnGridStateChanged(args))"
              Class="@(ShowSearchBar ? "" : "no-toolbar")"
              >
 
@@ -202,6 +202,7 @@
     [Parameter] public EventCallback<ContextMenuItemClickEventArgs<WorkOrder>> OnMenuItemClick { get; set; }
     [Parameter] public EventCallback<ContextMenuItemClickEventArgs<WorkOrder>> OnRowContextMenu { get; set; }
     [Parameter] public bool ShowAssignedColumnFilter { get; set; } = true;
+    public int FilteredRowsCount { get; set; }
     private TelerikContextMenu<ContextMenuItem> ContextMenuRef { get; set; }
     private WorkOrder SelectedRecord { get; set; }
     private Person currentUser { get; set; } = new Person();
@@ -216,12 +217,12 @@
         set
         {
             _selectedOrder = value;
-            selectedAppointment = value != null ? new SchedulerAppointment(value): null;
+            selectedAppointment = value != null ? new SchedulerAppointment(value): new SchedulerAppointment();
         }
     }
-    private SchedulerAppointment selectedAppointment;
+    private SchedulerAppointment selectedAppointment = new();
     private string dateColumnsize = "9rem";
-    public TelerikGrid<WorkOrder> GridRef { get; set; }
+    public TelerikGrid<WorkOrder> GridRef { get; set; } = new();
     private MarkupString rowStyles = new MarkupString();
 
     private double? lastCursorX;
@@ -239,6 +240,7 @@
 
     protected override void OnParametersSet()
     {
+        FilteredRowsCount = OrdersForGrid.Count;
         rowStyles = RenderStatesStyle(OrdersForGrid.Select(x => x.StateColor).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct());
         base.OnParametersSet();
     }
@@ -456,5 +458,19 @@
             menu.MenuItem.CursorY = lastCursorY ?? 200;
             await OnMenuItemClick.InvokeAsync(menu);
         }
+    }
+
+    async Task OnGridStateChanged(GridStateEventArgs<WorkOrder> args)
+    {
+        await OnStateChanged.InvokeAsync(args);
+        
+        var request = new DataSourceRequest
+        {
+            Filters = args.GridState.FilterDescriptors.ToList()
+        };
+
+        var result = OrdersForGrid.AsQueryable().ToDataSourceResult(request);
+        FilteredRowsCount = (int)result.Total;
+
     }
 }
