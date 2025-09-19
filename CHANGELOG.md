@@ -1,3 +1,15 @@
+## 2025-09-19
+
+### Features
+- **Automatic Data Refresh**: Implemented automatic data refresh with configurable intervals on Home, Activities, and Scheduler pages. Users receive notifications for new orders on Home and Activities pages.
+- **Work Order Device Info**: The Work Order component now displays detailed device information (Location, Place, Device State).
+
+### Fixed / Improvements
+- **Device State & Color Handling**: Improved device state display in WorkOrderComponent with soft color backgrounds and consistent color representation in the DevicesPage grid. Centralized color management in `IconHtmlHelper.cs`.
+- **Timer Component Stability**: Refactored `Timer.razor` for AOT compatibility on Linux servers, replacing `PeriodicTimer` with `System.Threading.Timer` and `Random` with a custom LCG.
+- **Navigation Menu Permissions**: "Orders" and "Devices" links in the navigation menu are now only visible to administrators.
+- **Activity Description Input**: The "Description" field for adding new activities now uses a simpler plain text area (`TelerikTextArea`) instead of a rich text editor.
+
 ## 2025-09-17
 
 ### Features

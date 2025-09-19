@@ -73,6 +73,30 @@
                 @Localizer["ClearFilters"]
             </button>
         </div>
+        <div class="refresh-timer" style="display:flex; align-items:center; gap:6px;">
+            <div style="display:@timerSetVisibility; align-items:center; gap:4px;">
+                <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
+                <TelerikNumericTextBox @bind-Value="@TimerInterval"
+                                        Min="1" Max="60" Width="70px" Size="sm"
+                                        OnChange="@OnTimerIntervalChanged" />
+                <span>@Localizer["OrdersPage_Minutes"]</span>
+            </div>
+            <Timer @ref="autoReloadTimer"
+                    Interval="@HardReloadInterval"
+                    OnTick="HardLoadDataTick"
+                    AutoStart="true"
+                    FireImmediately="false"
+                    SkipIfBusy="true"
+                    JitterMilliseconds="0"
+                    SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
+                <ChildContent Context="ctx">
+                    <div class="clickable-timer" @onclick="@OnTimerClick" style="cursor:pointer; font-size:0.8rem; line-height:1.1rem;">
+                        @Localizer["NextUpdate"]: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
+                        @Localizer["LastUpdate"]: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
+                    </div>
+                </ChildContent>
+            </Timer>
+        </div>
 
     </div>
 </div>
@@ -81,30 +105,6 @@
         <div style="display:flex; flex-direction: row; gap:16px; align-items:center; flex-wrap:wrap;">
             <div><p>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</p></div>
             <div><TelerikButton OnClick="@(async ()=> await HardLoadData())" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
-            <div class="refresh-timer" style="display:flex; align-items:center; gap:6px;">
-                <div style="display:@timerSetVisibility; align-items:center; gap:4px;">
-                    <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
-                    <TelerikNumericTextBox @bind-Value="@TimerInterval"
-                                           Min="1" Max="60" Width="70px" Size="sm"
-                                           OnChange="@OnTimerIntervalChanged" />
-                    <span>@Localizer["OrdersPage_Minutes"]</span>
-                </div>
-                <Timer @ref="autoReloadTimer"
-                       Interval="@HardReloadInterval"
-                       OnTick="HardLoadDataTick"
-                       AutoStart="true"
-                       FireImmediately="false"
-                       SkipIfBusy="true"
-                       JitterMilliseconds="0"
-                       SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
-                    <ChildContent Context="ctx">
-                        <div class="clickable-timer" @onclick="@OnTimerClick" style="cursor:pointer; font-size:0.8rem; line-height:1.1rem;">
-                            @Localizer["NextUpdate"]: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
-                            @Localizer["LastUpdate"]: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
-                        </div>
-                    </ChildContent>
-                </Timer>
-            </div>
             @if (CurrentView == SchedulerView.Timeline)
             {
                 <div class="timeline-options">

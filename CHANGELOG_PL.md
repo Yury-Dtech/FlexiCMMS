@@ -1,3 +1,15 @@
+## 2025-09-19
+
+### Nowe Funkcje
+- **Automatyczne Odświeżanie Danych**: Zaimplementowano automatyczne odświeżanie danych z konfigurowalnymi interwałami na stronach Główna, Aktywności i Harmonogram. Użytkownicy otrzymują powiadomienia o nowych zleceniach na stronach Główna i Aktywności.
+- **Informacje o Urządzeniu w Zleceniu Pracy**: Komponent Zlecenia Pracy wyświetla teraz szczegółowe informacje o urządzeniu (Lokalizacja, Miejsce, Stan Urządzenia).
+
+### Naprawiono / Ulepszenia
+- **Obsługa Stanu Urządzenia i Kolorów**: Ulepszono wyświetlanie stanu urządzenia w komponencie WorkOrderComponent z miękkimi kolorami tła i spójną reprezentacją kolorów w siatce DevicesPage.
+- **Stabilność Komponentu Timera**: Zrefaktoryzowano `Timer.razor` pod kątem kompatybilności AOT na serwerach Linux, zastępując `PeriodicTimer` przez `System.Threading.Timer` i `Random` niestandardowym LCG.
+- **Uprawnienia Menu Nawigacyjnego**: Linki "Zlecenia" i "Urządzenia" w menu nawigacyjnym są teraz widoczne tylko dla administratorów.
+- **Wprowadzanie Opisu Aktywności**: Pole "Opis" do dodawania nowych aktywności używa teraz prostszego pola tekstowego (`TelerikTextArea`) zamiast edytora tekstu sformatowanego.
+
 ## 2025-09-17
 
 ### Nowe Funkcje
@@ -8,8 +20,8 @@
     - Okno "Dodaj aktywność" jest teraz szersze, co zapewnia więcej miejsca na zawartość formularza.
 
 ### Naprawiono / Ulepszenia
-- **Stabilność Harmonogramu**: Zrefaktoryzowano logikę aktualizacji terminów na stronie Aktywności. Bezpośrednie tworzenie i usuwanie z harmonogramu jest teraz wyłączone na rzecz okien modalnych, co zapobiega przypadkowym modyfikacjom i poprawia stabilność.
-- **Jakość Kodu**: Wprowadzono liczne drobne ulepszenia w całej aplikacji, w tym dodano sprawdzanie wartości null i udoskonalono logikę na stronach Głównej i Aktywności, aby zapobiec potencjalnym błędom w czasie działania.
+- **Stabilność Harmonogramu**: Zrefaktoryzowano logikę aktualizacji terminów na stronie Aktywności. Bezpośrednie tworzenie i usuwanie z harmonogramu jest teraz wyłączone na rzecz okien modalnych.
+- **Jakość Kodu**: Wprowadzono liczne drobne ulepszenia w całej aplikacji.
 - **CI/CD**: Zaktualizowano i usprawniono przepływ pracy GitHub Actions do budowania i publikowania aplikacji w celu zapewnienia większej niezawodności.
 - **Dokumentacja**: Zaktualizowano przewodniki instalacyjne o nowe informacje i dodano wersje PDF do dostępu offline.
 
@@ -40,6 +52,7 @@
 - Zaimplementowano lokalizację komponentów Telerik Blazor przy użyciu niestandardowych plików zasobów (`TelerikMessages.resx`, `TelerikMessages.pl-PL.resx`) i niestandardowej usługi `ITelerikStringLocalizer`.
 
 ## 2025-09-09
+
 ### Nowe funkcje
 - Zaimplementowano funkcję edycji aktywności, umożliwiającą użytkownikom modyfikowanie istniejących aktywności.
 - Dodano widok MultiDay do harmonogramu i strony Aktywności, z konfigurowalnymi podziałami slotów i czasem trwania.
@@ -48,7 +61,7 @@
 - Dodano model `UserInfo` i powiązane metody API do pobierania informacji o użytkowniku i filtrowania opartego na działach.
 - Zaimplementowano `UserController` z punktem końcowym `GetUsersList` do pobierania danych użytkowników.
 
-### Naprawione / Ulepszenia
+### Naprawiono / Ulepszenia
 - Zrefaktoryzowano `NewActivityFormComponent` w celu obsługi edycji istniejących aktywności i poprawiono logikę jego inicjalizacji.
 - Zaktualizowano `ActivitiesPage.razor` w celu integracji filtrowania użytkowników, ustawień widoku MultiDay i funkcji edycji aktywności.
 - Ulepszono `ApiServiceClient` o metodę `UpdateActivity`, pobieranie informacji o użytkowniku oraz ulepszone logowanie/buforowanie.
@@ -491,7 +504,6 @@
     - Uzupełniono model `RightMatrix` w celu prawidłowej deserializacji uprawnień użytkownika.
     - Dodano właściwość `Expires` do modelu `IdentityData`.
     - Zrefaktoryzowano `AuthHeaderHandler` w celu użycia `IdentityData` i `ApiResponse<IdentityData>` do zarządzania tokenami.
-    - Zmodyfikowano `IdentityController.cs` w celu zwracania pełnych danych `IdentityData` z zewnętrznego API.
     - Ulepszono `UserState` w celu utrwalania `IdentityData` w `localStorage` i ładowania jej przy uruchomieniu.
     - Zmodyfikowano `Login.razor` w celu jawnego zapisywania `IdentityData` w `UserState` (a tym samym w `localStorage`) po pomyślnym zalogowaniu.
 
@@ -564,7 +576,7 @@
 - Zaimplementowano wyświetlanie zawartości pliku `CHANGELOG.md` na stronie `ChangelogPage.razor`.
 - Skonfigurowano domyślny `HttpClient` w `Program.cs` z `BaseAddress` dla dostępu do plików statycznych.
 - Poprawiono atrybut `Link` w pliku `BlazorTool.Client.csproj` dla `CHANGELOG.md`, aby zapewnić jego prawidłowe umieszczenie w `wwwroot`.
-- Wycofano zmianę `app.UseBlazorFrameworkFiles()` w `BlazorTool/Program.cs`, ponieważ powodowała problemy z ładowaniem aplikacji.
+- Wycofano zmianę `app.UseBlazorFrameworkFiles()` w `BlazorTool/Program.cs` ponieważ powodowała problemy z ładowaniem aplikacji.
 - Ponownie dodano rejestrację `HttpClient` z `BaseAddress` i sprawdzaniem `serverBaseUrl` w `BlazorTool.Client/Program.cs`.
 - **SchedulerPage.razor:**
     - Dodano filtr kategorii urządzeń do siatki nieprzypisanych zleceń.
