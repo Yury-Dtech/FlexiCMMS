@@ -1,4 +1,4 @@
-﻿@* Reusable timer component for Blazor WASM / Server *@
+﻿@* Reusable timer component for Blazor WASM / Server (Stopwatch & Random removed for AOT safety) *@
 @code {
     private System.Threading.Timer? _timer;
     private CancellationTokenSource? _cts;
@@ -11,6 +11,7 @@
     private TimeSpan? _lastTickDuration;
     private double _avgTickMs; // simple moving average in ms
     private bool _disposed;
+    private int _prngState = (int)(DateTime.UtcNow.Ticks & 0x7FFFFFFF);
 
     public class TimerSnapshot
     {
@@ -26,31 +27,18 @@
     }
 
     [Parameter] public TimeSpan Interval { get; set; } = TimeSpan.FromSeconds(60);
-    // Pause flag (external control)
     [Parameter] public bool Paused { get; set; }
-    // Fire callback on each tick (no overlapping unless AllowOverlap = true)
     [Parameter] public EventCallback OnTick { get; set; }
-    // Optional async delegate (alternative to OnTick). If both set, both are awaited (OnTick first)
     [Parameter] public Func<Task>? TickAsync { get; set; }
-    // Start automatically
     [Parameter] public bool AutoStart { get; set; } = true;
-    // Invoke immediately on start (leading edge)
     [Parameter] public bool FireImmediately { get; set; } = true;
-    // Skip a tick if previous still running
     [Parameter] public bool SkipIfBusy { get; set; } = true;
-    // Add small random jitter (+/- milliseconds) to reduce thundering herd
-    [Parameter] public int JitterMilliseconds { get; set; } = 0;
-    // Optional max runtime for one tick - if exceeded, next tick may be skipped (soft)
+    [Parameter] public int JitterMilliseconds { get; set; } = 0; // now only 0..N (только положительный)
     [Parameter] public TimeSpan? SoftTickTimeout { get; set; }
-    // Provide render fragment with current state
     [Parameter] public RenderFragment<TimerSnapshot>? ChildContent { get; set; }
-    // Called when timer stops due to error
     [Parameter] public EventCallback<Exception> OnError { get; set; }
-    // Called when (re)started
     [Parameter] public EventCallback OnStarted { get; set; }
-    // Called when stopped (manually or dispose)
     [Parameter] public EventCallback OnStopped { get; set; }
-    // Доп. параметры для обновления только UI (без вызова OnTick)
     [Parameter] public bool EnableUiUpdates { get; set; } = true;
     [Parameter] public TimeSpan UiUpdateInterval { get; set; } = TimeSpan.FromSeconds(1);
 
@@ -69,11 +57,7 @@
 
     private TimeSpan? GetTimeLeft()
     {
-        if (_lastTickRealTime == null)
-        {
-            // Первый запуск или только стартовали
-            return null;
-        }
+        if (_lastTickRealTime == null) return null;
         var nextTick = _lastTickRealTime.Value + Interval;
         var left = nextTick - DateTimeOffset.UtcNow;
         if (left < TimeSpan.Zero) left = TimeSpan.Zero;
@@ -90,11 +74,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Interval.Minutes <1)
+        if (Interval.TotalMilliseconds < 500)
         {
-            Interval = TimeSpan.FromMinutes(1);
+            Interval = TimeSpan.FromMilliseconds(500);
         }
-        // Restart if interval changed while running
         if (_timer != null && _previousInterval != Interval)
         {
             await RestartAsync();
@@ -109,7 +92,6 @@
             await StartInternalAsync();
         }
 
-        // Обновить частоту UI таймера если нужно
         if (_uiTimer != null && EnableUiUpdates && UiUpdateInterval != _currentUiInterval)
         {
             RestartUiTimer();
@@ -129,7 +111,7 @@
 
     private async Task StartInternalAsync()
     {
-        await StopInternalAsync(); // safety
+        await StopInternalAsync();
         _disposed = false;
         _previousInterval = Interval;
         _cts = new CancellationTokenSource();
@@ -139,13 +121,26 @@
         _lastTickRealTime = DateTimeOffset.UtcNow;
         _lastTickDuration = null;
         _avgTickMs = 0;
+        _prngState = (int)(DateTime.UtcNow.Ticks & 0x7FFFFFFF);
         StartUiTimer();
-        _timer = new System.Threading.Timer(async _ => await TimerTickAsync(), null, FireImmediately ? TimeSpan.Zero : Interval, Interval);
+        _timer = new System.Threading.Timer(TimerCallback, null, FireImmediately ? TimeSpan.Zero : Interval, Interval);
         if (OnStarted.HasDelegate)
         {
             await OnStarted.InvokeAsync(null);
         }
         StateHasChanged();
+    }
+
+    private void TimerCallback(object? state)
+    {
+        if (_disposed || Paused) return;
+        // async void pattern only inside timer callback boundary
+        _ = SafeTriggerAsync();
+    }
+
+    private async Task SafeTriggerAsync()
+    {
+        try { await InvokeAsync(TriggerTickAsync); } catch (Exception ex) { if (OnError.HasDelegate) { try { await OnError.InvokeAsync(ex); } catch { } } }
     }
 
     private void StartUiTimer()
@@ -154,9 +149,8 @@
         _currentUiInterval = UiUpdateInterval;
         _uiTimer = new System.Threading.Timer(async _ =>
         {
-            if (Paused) return;
-            // только визуальное обновление, чтобы TimeLeft уменьшался плавно
-            await InvokeAsync(StateHasChanged);
+            if (_disposed || Paused) return;
+            try { await InvokeAsync(StateHasChanged); } catch { }
         }, null, UiUpdateInterval, UiUpdateInterval);
     }
 
@@ -170,12 +164,7 @@
     private async Task StopInternalAsync()
     {
         _disposed = true;
-        try
-        {
-            _cts?.Cancel();
-            _cts?.Dispose();
-        }
-        catch { }
+        try { _cts?.Cancel(); _cts?.Dispose(); } catch { }
         _cts = null;
         try { _timer?.Dispose(); } catch { }
         _timer = null;
@@ -188,25 +177,27 @@
         StateHasChanged();
     }
 
-    private async Task TimerTickAsync()
+    // Простая LCG для избежания Random.Next (AOT issue)
+    private int NextPrng(int maxExclusive)
     {
-        if (_disposed || Paused) return;
-        await InvokeAsync(async () => await TriggerTickAsync());
+        // LCG параметры (glibc стиль)
+        _prngState = (1103515245 * _prngState + 12345) & 0x7fffffff;
+        if (maxExclusive <= 1) return 0;
+        return _prngState % maxExclusive;
     }
 
     private async Task TriggerTickAsync()
     {
         if (_isBusy && SkipIfBusy) return;
         _isBusy = true;
-        var swSoft = SoftTickTimeout.HasValue ? System.Diagnostics.Stopwatch.StartNew() : null;
-        var swTick = System.Diagnostics.Stopwatch.StartNew();
+        var tickStart = DateTime.UtcNow;
         Exception? error = null;
         try
         {
             if (JitterMilliseconds > 0)
             {
-                var jitter = Random.Shared.Next(-JitterMilliseconds, JitterMilliseconds + 1);
-                if (jitter != 0) await Task.Delay(Math.Max(0, jitter));
+                var jitter = NextPrng(JitterMilliseconds + 1); // 0..JitterMilliseconds
+                if (jitter > 0) await Task.Delay(jitter);
             }
             if (OnTick.HasDelegate)
             {
@@ -225,28 +216,25 @@
             error = ex;
             if (OnError.HasDelegate)
             {
-                await OnError.InvokeAsync(ex);
+                try { await OnError.InvokeAsync(ex); } catch { }
             }
         }
         finally
         {
-            swTick.Stop();
-            _lastTickDuration = swTick.Elapsed;
-            // simple moving average (EMA with alpha=0.2)
-            var elapsedMs = _lastTickDuration.Value.TotalMilliseconds;
+            var elapsed = DateTime.UtcNow - tickStart;
+            _lastTickDuration = elapsed;
+            var elapsedMs = elapsed.TotalMilliseconds;
             _avgTickMs = _avgTickMs == 0 ? elapsedMs : (_avgTickMs * 0.8 + elapsedMs * 0.2);
 
-            _isBusy = false;
-            swSoft?.Stop();
-            // If one tick exceeded soft timeout and skipping is disabled we still safeguard by skipping next tick once
-            if (swSoft != null && SoftTickTimeout.HasValue && swSoft.Elapsed > SoftTickTimeout.Value && !SkipIfBusy)
+            if (SoftTickTimeout.HasValue && elapsed > SoftTickTimeout.Value && !SkipIfBusy)
             {
-                // Force a small cool-down to avoid immediate overlap storm
-                await Task.Delay(100);
+                try { await Task.Delay(100); } catch { }
             }
+
+            _isBusy = false;
             if (error == null)
             {
-                await InvokeAsync(StateHasChanged);
+                try { await InvokeAsync(StateHasChanged); } catch { }
             }
         }
     }

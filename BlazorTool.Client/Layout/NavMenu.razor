@@ -11,7 +11,8 @@
 </div>
 
 <input type="checkbox" title="@Localizer["NavMenu_NavigationMenu"]" class="navbar-toggler" />
-@if(isUserStateReady && UserState.IsAuthenticated == true){
+@if(isUserStateReady && UserState.IsAuthenticated == true)
+{
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="navbar-nav flex-column">
         <div class="nav-item">
