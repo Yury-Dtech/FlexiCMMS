@@ -94,9 +94,33 @@
 <div class="scheduler-page-container">
     <div class="scheduler-container">
         <div class="scheduler-toolbar">
-            <div class="toolbar-left">
+            <div class="toolbar-left" style="display:flex; gap:10px; align-items:center;">
                 <span>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</span>
-                <TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
+                <TelerikButton OnClick="@(async ()=> await HardLoadData())" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
+                <div class="refresh-timer" style="display:flex; align-items:center; gap:6px;">
+                    <div style="display:@timerSetVisibility; align-items:center; gap:4px;">
+                        <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
+                        <TelerikNumericTextBox @bind-Value="@TimerInterval"
+                                               Min="1" Max="60" Width="70px" Size="sm"
+                                               OnChange="@OnTimerIntervalChanged" />
+                        <span>@Localizer["OrdersPage_Minutes"]</span>
+                    </div>
+                    <Timer @ref="autoReloadTimer"
+                           Interval="@HardReloadInterval"
+                           OnTick="HardLoadDataTick"
+                           AutoStart="true"
+                           FireImmediately="false"
+                           SkipIfBusy="true"
+                           JitterMilliseconds="0"
+                           SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
+                        <ChildContent Context="ctx">
+                            <div class="clickable-timer" @onclick="@OnTimerClick" style="cursor:pointer; font-size:0.8rem; line-height:1.1rem;">
+                                @Localizer["NextUpdate"]: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
+                                @Localizer["LastUpdate"]: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
+                            </div>
+                        </ChildContent>
+                    </Timer>
+                </div>
             </div>
 
             <div class="toolbar-right">
@@ -106,7 +130,6 @@
                 </TelerikButton>
 
                 @{
-                    // Определяем класс в зависимости от состояния, чтобы плавно скрывать/показывать панель
                     var settingsMenuClass = showSettings ? "visible" : "";
                 }
                 <div class="settings-menu-container @settingsMenuClass">
@@ -416,7 +439,6 @@
     private List<UserInfo> allUsers = new();
     private List<UserInfo> PersonResources { get; set; } = new();
     private List<int> selectedPersonIDs = new();
-    // private Person selectedPerson = new Person();
     private List<string> PersonsNames = new();
     private List<string> Departments = new();
     private List<string> WOCategories = new();
@@ -430,7 +452,6 @@
     private int? columnWidth = 50; //for TimelineView alt=80
     private int? slotDuration = 60; //in minutes for TimelineView (timeline view)
     private int? slotDivisions = 1; //for TimelineView
-    // Separate slot settings for Day and Week views
     private int? daySlotDuration = 60; //minutes for Day view
     private int? daySlotDivisions = 1;
     private int? weekSlotDuration = 60; //minutes for Week view
@@ -460,6 +481,11 @@
     private bool showSettings { get; set; } = false;
     private ActivityAppointment? AppointmentToUpdate { get; set; }
     private SchedulerUpdateEventArgs? UpdateEventArgs { get; set; }
+    // Auto refresh timer fields
+    private int TimerInterval { get; set; } = 5; // minutes
+    private TimeSpan HardReloadInterval { get; set; }
+    private BlazorTool.Client.Components.Timer? autoReloadTimer;
+    private string timerSetVisibility = "none";
     #endregion 
 
     private int CalculateNumberOfDays(int desiredWorkDays)
@@ -487,12 +513,14 @@
         if (_viewSettings != null)
         {
             RestoreCustomFilterState();
+            TimerInterval = _viewSettings.GetCustomFilter("TimerInterval", 5);
             if (!UserState.HasPermission(PermissionType.ADMIN))
             {
                 if (selectedPersonIDs.Count == 0)
                     selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
             }
         }
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
         var isWASM = JSRuntime is IJSInProcessRuntime;
         Console.WriteLine($"--- Initialized Activities PAGE. WASM = {isWASM}");
         Console.WriteLine($"--- OnInitializedAsync completed.");
@@ -511,15 +539,15 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HardLoadData()
+    private async Task HardLoadData(bool showLoading = true)
     {
         Console.WriteLine("--- HardLoadData started.");
-        isLoading = true;
+        if (showLoading) isLoading = true;
         if (!UserState.IsAuthenticated)
         {
             Navigation.NavigateTo("/login");
         }
-        StateHasChanged();
+        if (showLoading) StateHasChanged();
         allUsers = await apiService.GetUsersInfoList();
         Console.WriteLine($"--- HardLoadData: allUsers loaded. Count: {allUsers.Count}");
         PersonsNames = allUsers.Select(c => c.Name ?? string.Empty).ToList();
@@ -530,7 +558,6 @@
         {
             selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
         }
-        //load all orders and activities for all selected persons
         _allOrders.Clear();
         foreach(var personId in selectedPersonIDs)
         {
@@ -544,17 +571,33 @@
         await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         WOCategories = (await apiService.GetWOCategories()).Select(c => c.Name).ToList();
         WOStates = (await apiService.GetWOStates()).Select(c => c.Name).ToList();
-        await LoadData();
+        await LoadData(showLoading);
 
         Console.WriteLine($"--- HardLoadData completed. Appointments count: {Appointments.Count}");
     }
 
-    //for cached data
-    private async Task LoadData()
+    private async Task HardLoadDataTick()
+    {
+        var oldCount = Appointments.Count;
+        await HardLoadData(false); // silent
+        var newCount = Appointments.Count;
+        if (newCount != oldCount)
+        {
+            NotificationReference.Show(new NotificationModel
+            {
+                Text = $"{newCount - oldCount} {Localizer["New_Orders"]}",
+                ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
+                CloseAfter = 3000,
+                Icon = SvgIcon.InfoCircle
+            });
+        }
+    }
+
+    private async Task LoadData(bool showLoading = true)
     {
         Console.WriteLine("--- LoadData started.");
-        isLoading = true;
-        StateHasChanged();
+        if (showLoading) isLoading = true;
+        if (showLoading) StateHasChanged();
         _allOrders.Clear();
         foreach(var personId in selectedPersonIDs)
         {
@@ -572,8 +615,21 @@
         DeviceCategories = (await apiService.GetWOCategories()).Select(c => c.Name).Distinct().ToList();
         DeviceCategories.Insert(0, "All");
         DisplayAppointments();
-        isLoading = false;
+        if (showLoading) isLoading = false;
         Console.WriteLine($"--- LoadData completed. Appointments count: {Appointments.Count}");
+    }
+
+    private void OnTimerIntervalChanged()
+    {
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
+        _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
+        _ = autoReloadTimer?.RestartAsync();
+    }
+
+    private void OnTimerClick()
+    {
+        timerSetVisibility = string.IsNullOrEmpty(timerSetVisibility) ? "none" : string.Empty;
     }
 
     /// <summary>
@@ -582,10 +638,7 @@
     private void DisplayAppointments()
     {
         Appointments = FilterAppointments();
-
-        // PersonResources should always contain all possible persons for grouping, including "Not assigned".
-        // Filtering by selectedAssignedPersons is handled in FilterAppointments().
-        if (selectedPersonIDs == null || selectedPersonIDs.Count == 0) //show all persons
+        if (selectedPersonIDs == null || selectedPersonIDs.Count == 0)
         {
             PersonResources = new List<UserInfo>(allUsers);
         }
@@ -593,7 +646,6 @@
         {
             PersonResources = allUsers.Where(p => selectedPersonIDs.Contains(p.PersonID)).ToList();
         }
-
         SaveFiltersState();
     }
 
@@ -645,15 +697,12 @@
 
         if (selectedDevices.Any() && !selectedDevices.Contains("All"))
         {
-            // Filter appointments based on the selected asset number
             var filteredOrders = _allOrders.Where(o => selectedDevices.Contains(o.AssetNo ?? string.Empty)).Select(o => o.WorkOrderID).ToList();
             filteredAppointments = filteredAppointments.Where(a => filteredOrders.Contains(a.WorkOrderID)).ToList();
         }
         if (selectedPersonIDs != null && selectedPersonIDs.Count > 0)
         {
-            // Filter appointments based on the selected assigned persons
-            // filteredAppointments = filteredAppointments.Where(a => (!a.IsWorkOrder && a.ActPersons.Split('#').Any(pid => selectedPersonIDs.Contains(int.Parse(pid)))) || (a.IsWorkOrder )).ToList();
-            // || (isNotAssignedSelected && string.IsNullOrEmpty(a.AssignedPerson))).ToList();
+            // future person filtering if needed
         }
 
         if (!ShowWorkOrders)
@@ -676,7 +725,6 @@
         _viewSettings.SetCustomFilter("selectedDepartments", selectedDepartments);
         _viewSettings.SetCustomFilter("CurrentView", CurrentView);
         _viewSettings.SetCustomFilter("CustomDays", numberOfDays);
-        // save custom slot settings for Day/Week/Timeline views
         _viewSettings.SetCustomFilter("daySlotDivisions", daySlotDivisions);
         _viewSettings.SetCustomFilter("daySlotDuration", daySlotDuration);
         _viewSettings.SetCustomFilter("weekSlotDivisions", weekSlotDivisions);
@@ -686,7 +734,7 @@
         _viewSettings.SetCustomFilter("multiDaySlotDivisions", multiDaySlotDivisions);
         _viewSettings.SetCustomFilter("multiDaySlotDuration", multiDaySlotDuration);
         _viewSettings.SetCustomFilter("rowHeight", rowHeight);
-        //timer for delay saving to Server
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);       
     }
 
@@ -697,7 +745,6 @@
         selectedDepartments = _viewSettings.GetCustomFilter("selectedDepartments", new List<string>());
         CurrentView = _viewSettings.GetCustomFilter("CurrentView", SchedulerView.Week);
         numberOfDays = _viewSettings.GetCustomFilter("CustomDays", 7);
-        // restore custom slot settings
         daySlotDivisions = _viewSettings.GetCustomFilter("daySlotDivisions", daySlotDivisions);
         daySlotDuration = _viewSettings.GetCustomFilter("daySlotDuration", daySlotDuration);
         weekSlotDivisions = _viewSettings.GetCustomFilter("weekSlotDivisions", weekSlotDivisions);
@@ -707,32 +754,10 @@
         multiDaySlotDivisions = _viewSettings.GetCustomFilter("multiDaySlotDivisions", multiDaySlotDivisions);
         multiDaySlotDuration = _viewSettings.GetCustomFilter("multiDaySlotDuration", multiDaySlotDuration);
         rowHeight = _viewSettings.GetCustomFilter("rowHeight", rowHeight);
-
     }
     #endregion
 
     #region Scheduler
-    // ==== Scheduler CUD handlers ====
-    // private async Task OnCreateAppointment(SchedulerCreateEventArgs args)
-    // {
-
-    //     if (args.Item is ActivityAppointment newAppt && SchedulerRef != null)
-    //     {
-    //         var result = await ApptService.UpdateAppointment(newAppt);
-    //         if (result.IsValid)
-    //         {
-    //             _allAppointments.Add(newAppt);
-    //             Appointments.Add(newAppt);
-    //             Console.WriteLine($"--- OnCreateAppointment: New appointment created. AssignedPerson: {newAppt.AssignedPerson}");
-    //         }
-    //         else
-    //         {
-    //             Console.WriteLine($"Failed to create appointment: {string.Join(", ", result.Errors)}");
-    //         }
-    //         SchedulerRef?.Rebind();
-    //     }
-    // }
-
     private void OnUpdateAppointment(SchedulerUpdateEventArgs args)
     {
         Console.WriteLine("--- OnUpdateAppointment called.");
@@ -754,22 +779,9 @@
             var editedAppointment = AppointmentToUpdate;
             if (editedAppointment.IsWorkOrder)
             {
-                return; // For now, do not allow editing work orders via scheduler
-                // var index = _allAppointments.FindIndex(a => a.AppointmentId == editedAppointment.AppointmentId && a.IsWorkOrder);
-                // if (index != -1)
-                // {
-                //     var upd_WO = await apiService.UpdateWorkOrderAsync(editedAppointment.GetWorkOrder() ?? new WorkOrder());
-                //     _allAppointments[index] = new ActivityAppointment(upd_WO.Data);
-                // }
-                // else
-                // {
-                //     return;
-                // }
-                // //Save WO to Server
-                // WOEditFormShown = false;
-                // DisplayAppointments();
+                return;
             }
-            else //update activity
+            else
             { 
                 var ids = editedAppointment.ActPersons.Split('#').Where(id => int.TryParse(id, out _)).Select(int.Parse).ToList();
                 if (ids.Count == 0 || !ids.Contains(UserState.PersonID ?? -1))
@@ -812,17 +824,14 @@
                     popupMessage = Localizer["Scheduler_FailedToUpdateAppointment"] + string.Join(", ", result.Errors);
                     PopupRef?.Show();
                     Console.WriteLine($"Failed to update appointment: {string.Join(", ", result.Errors)}");
-                    return; // Exit if update failed
+                    return;
                 }
             }
         }
         else if (UpdateEventArgs != null)
         {
-            // If not confirmed, revert the changes in the scheduler by rebinding
             SchedulerRef?.Rebind();
         }
-
-        // Clear the stored appointment and event args
         AppointmentToUpdate = null;
         UpdateEventArgs = null;
     }
@@ -830,14 +839,6 @@
     {
         CurrentView = view;
         SaveFiltersState();
-    }
-    private void OnDateClick(int day)
-    {
-        // var currentDate = DateTime.Now;
-        // var navigateDate = new DateTime(currentDate.Year, currentDate.Month, day);
-
-        // CurrView = SchedulerView.Day;
-        // SelectedDate = navigateDate;
     }
 
     private async Task OnClearFilters()
@@ -848,11 +849,9 @@
         await LoadData();
     }
 
-    //when order window closed
-    //On create, Update
     async Task RefreshData(ActivityAppointment? editedAppointment)
     {
-        if (editedAppointment == null)//was removed or cancelled NEW
+        if (editedAppointment == null)
         {
             WOEditFormShown = false;
             return;
@@ -872,40 +871,34 @@
         SchedulerRef?.Rebind();
     }
 
-
-    //On click empty slot or appointment
     void EditHandler(SchedulerEditEventArgs args)
     {
-        args.IsCancelled = true;//prevent built-in edit form from showing up
+        args.IsCancelled = true;
         ActivityAppointment item = (args.Item as ActivityAppointment) ?? new ActivityAppointment();
         if (item == null) return;
 
         bool isStartEqualsEnd = args.Start == args.End;
 
-        if (!args.IsNew) // an edit operation, otherwise - an insert operation
+        if (!args.IsNew)
         {
-            //copying is implemented in the appointment model and it is needed because
-            //this is a reference to the data collection so modifying it directly
-            //will immediately modify the data and no cancelling will be possible
             CurrentAppointment = item;
             if (item.IsWorkOrder)
             {
                 WOEditFormShown = true;
             }
-            else //Activity
+            else
             {
                 ShowActivityCard = true;
             }
             return;
         }
-        else //NEW
+        else
         {
             CurrentAppointment = item ?? new ActivityAppointment();
             CurrentAppointment.Start = isStartEqualsEnd ? args.Start.AddHours(8) : args.Start;
-            //end of WorkDay
             CurrentAppointment.End = new DateTime(CurrentAppointment.Start.Value.Year, CurrentAppointment.Start.Value.Month, CurrentAppointment.Start.Value.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
             newActivityInitialStartDate = CurrentAppointment.Start ?? DateTime.Now;
-            newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(1); //end of WorkDay
+            newActivityInitialEndDate = CurrentAppointment.End ?? DateTime.Now.AddHours(1);
         }
 
         if (item == null) return;
@@ -913,7 +906,7 @@
         {
             WOEditFormShown = true;
         }
-        else //Activity NEW
+        else
         {
             FillModelForActivityFromActAppointment(CurrentAppointment);
             var WO_InSlot = _allAppointments.FirstOrDefault(wo => wo.IsWorkOrder && isWOinTimeSlot(wo, newActivityInitialStartDate, newActivityInitialEndDate))?.GetWorkOrder();
@@ -925,16 +918,12 @@
             }
             else
             {
-                CurrentActivityFormModel.EndDate = newActivityInitialEndDate; //end of WorkDay
+                CurrentActivityFormModel.EndDate = newActivityInitialEndDate;
             }
             showNewActivityForm = true;
             StateHasChanged();        
 
         }
-        // if(item.WorkOrderID == 0)
-        // showNewActivityForm = true;
-        // else
-        //     ShowActivityCard = true;
     }
 
     void CancelEditing()
@@ -956,11 +945,11 @@
                 args.Class += " weekend-day";
             }
         }
-        else if (CurrentView == SchedulerView.MultiDay) // Add this block for MultiDayView
+        else if (CurrentView == SchedulerView.MultiDay)
         {
             if (args.Start.DayOfWeek == DayOfWeek.Saturday || args.Start.DayOfWeek == DayOfWeek.Sunday)
             {
-                args.Class += " weekend-day-multiday"; // Custom class for weekend days in MultiDayView
+                args.Class += " weekend-day-multiday";
             }
         }
     }
@@ -1009,7 +998,6 @@
     }
     public class Resource
     {
-        // these are the default field names
         public string Text { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty; // must be a valid CSS string
@@ -1119,21 +1107,19 @@
                 PersonID = UserState.PersonID ?? 0,
                 Cost = CurrentAppointment?.Cost
             };
-            //try to find WorkOrder in this slot
             var WO_ID_InSlot = _allOrders.FirstOrDefault(wo => isWOinTimeSlot(wo, _clickedSlotContext.Start, _clickedSlotContext.End))?.WorkOrderID;
             if (WO_ID_InSlot != null && WO_ID_InSlot != 0)
             {
                 CurrentAppointment = _allAppointments.FirstOrDefault(a => a.WorkOrderID == WO_ID_InSlot && a.IsWorkOrder);
                 CurrentActivityFormModel.WorkOrderID = WO_ID_InSlot ?? 0;
                 CurrentActivityFormModel.DeviceID = CurrentAppointment?.GetWorkOrder()?.MachineID ?? 0;
-                if (CurrentAppointment?.Start?.Date == CurrentAppointment?.End?.Date) //same day)
+                if (CurrentAppointment?.Start?.Date == CurrentAppointment?.End?.Date)
                 {
-                    CurrentActivityFormModel.EndDate = CurrentAppointment?.End ?? newActivityInitialEndDate; //extend endDate to end of WorkOrder
+                    CurrentActivityFormModel.EndDate = CurrentAppointment?.End ?? newActivityInitialEndDate;
                 }
                 else
                 {
-                    //trim to end of the work day
-                    CurrentActivityFormModel.EndDate = new DateTime(CurrentActivityFormModel.ActDate.Year, CurrentActivityFormModel.ActDate.Month, CurrentActivityFormModel.ActDate.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
+                    CurrentActivityFormModel.EndDate = newActivityInitialEndDate;
                 }
             }            
             showNewActivityForm = true;
@@ -1152,13 +1138,12 @@
                 newActivityInitialStartDate = CurrentAppointment.Start ?? DateTime.Now;
             }
 
-            if (CurrentAppointment?.Start?.Date == CurrentAppointment?.End?.Date) //same day)
+            if (CurrentAppointment?.Start?.Date == CurrentAppointment?.End?.Date)
             {
-                newActivityInitialEndDate = CurrentAppointment?.End ?? newActivityInitialStartDate.AddHours(1); //extend endDate to end of WorkOrder
+                newActivityInitialEndDate = CurrentAppointment?.End ?? newActivityInitialStartDate.AddHours(1);
             }
             else
             {
-                //trim to end of the work day
                 newActivityInitialEndDate = new DateTime(newActivityInitialStartDate.Year, newActivityInitialStartDate.Month, newActivityInitialStartDate.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
             }
 
@@ -1167,7 +1152,7 @@
     }
     private void OnEditActivity()
     {
-        if (CurrentAppointment == null || CurrentAppointment.IsWorkOrder) return; //clicked from activity item
+        if (CurrentAppointment == null || CurrentAppointment.IsWorkOrder) return; 
 
         Console.WriteLine($"[{currentUser.Name}]:  Editing activity #{CurrentAppointment.ActivityID} in WO#{CurrentAppointment.WorkOrderID}" );
         FillModelForActivityFromActAppointment(CurrentAppointment);
@@ -1189,18 +1174,18 @@
     private void OnAddWorkOrder()
     {
         Console.WriteLine($"[{currentUser.Name}]:  Adding new work order at {_clickedSlotContext?.Start}");
-        if (_clickedSlotContext != null) //Empty slot
+        if (_clickedSlotContext != null) 
         {
             bool isStartEqualsEnd = _clickedSlotContext.Start == _clickedSlotContext.End;
             var Start = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(8) : _clickedSlotContext.Start;
-            var End = new DateTime(Start.Year, Start.Month, Start.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);//end of WorkDay
+            var End = new DateTime(Start.Year, Start.Month, Start.Day, WorkDayEnd.Hour, WorkDayEnd.Minute, 0);
             CurrentAppointment = new ActivityAppointment()
             {
                 Start = Start,
                 End = End,
                 IsAllDay = false,
                 IsWorkOrder = true,
-                WorkOrderID = 0, //new
+                WorkOrderID = 0, 
                 WorkOrder = new WorkOrder() {WorkOrderID = 0, StartDate = Start, EndDate = End }
             };
             if (_clickedSlotContext.Resources != null && _clickedSlotContext.Resources.Any())
@@ -1218,8 +1203,7 @@
 
     void RefreshData(SchedulerAppointment? editedAppointment)
     {
-        //all changes only in cache
-        if (editedAppointment == null)//was removed or cancelled NEW
+        if (editedAppointment == null)
         {
             WOEditFormShown = false;
             return;
@@ -1374,7 +1358,7 @@
                     Value = order.WorkOrderID.ToString(),
                     Color = color
                 });
-            }
+        }
         }
         return resources;
     }

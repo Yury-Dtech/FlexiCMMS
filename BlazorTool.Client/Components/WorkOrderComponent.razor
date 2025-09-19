@@ -40,7 +40,11 @@
                 </div>
                 <div><strong>Category:</strong> @(WorkOrder.DeviceCategory ?? selectedDevice?.DeviceCategory ?? @Localizer["WorkOrder_NoDevice"])</div>
             </div>
-
+            <div class="device-display-info">
+                <span>@Localizer["Device_LocationName"]: @selectedDevice?.LocationName</span>
+                <span>@Localizer["DeviceDisplay_Place"]: @selectedDevice?.Place</span>
+                <span>@Localizer["DeviceDisplay_DeviceState"]: <span style="color:@(selectedDeviceFullInfo?.LastStatus?.Color ?? "black")">@selectedDeviceFullInfo?.StateName</span></span>
+            </div>
             <div>
                 <span class="badge @StateColor fs-3 shadow">
                     @WorkOrder.WOState
@@ -367,6 +371,7 @@
     private bool showFiles = false;
     private bool IsAddActivityWindowVisible { get; set; } = false;
     private bool isNewWorkOrder = false;  
+    private FullDeviceInfo? selectedDeviceFullInfo { get; set; } = new();
     private List<Device>? ListDevices { get; set; } = new List<Device>();
     private Device? selectedDevice;
     private List<WODict> ListCategories = new List<WODict>();
@@ -401,6 +406,7 @@
         {
             ListReasons = await apiService.GetWOReasonsByDeviceCategory(selectedDevice.CategoryID ?? 0);
             ListCategories = await apiService.GetWOCategoriesByDeviceCategory(selectedDevice.CategoryID ?? 0);
+            selectedDeviceFullInfo = (await apiService.GetListDeviceInfoForGrid(new List<Device>() { selectedDevice })).FirstOrDefault();
         }
         else
         {
@@ -540,6 +546,7 @@
         if (WorkOrder != null && device != null)
         {
             selectedDevice = device;
+            selectedDeviceFullInfo = (await apiService.GetListDeviceInfoForGrid(new List<Device>() { selectedDevice })).FirstOrDefault();
             WorkOrder.AssetNo = device.AssetNo; 
             WorkOrder.DeviceCategory = device.DeviceCategory;
             WorkOrder.DeviceCategoryID = device.CategoryID;
@@ -671,6 +678,20 @@
                isValidDates();
                if (isValid) OnStateChanged.InvokeAsync(isValid);
         return isValid;
+    }
+
+    private string GetStatusClass(FullDeviceInfo _deviceInfo)
+    {
+        if (_deviceInfo?.LastState == null) return "status-unknown";
+
+        return _deviceInfo.LastState.StateID switch
+        {
+            1 => "status-running",
+            2 => "status-stopped",
+            3 => "status-warning",
+            4 => "status-error",
+            _ => "status-unknown"
+        };
     }
 }
 

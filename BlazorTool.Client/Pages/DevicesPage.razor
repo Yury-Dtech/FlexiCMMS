@@ -167,7 +167,8 @@ else
 
         var styleBuilder = new System.Text.StringBuilder();
         styleBuilder.AppendLine("<style>");
-
+        var uniqueStateIds = fullDeviceInfos.Select(s => s.StateID).Distinct().ToList();
+        // var uniqueColors = uniqueStateIds.ForEach()
         var uniqueColors = fullDeviceInfos
             .Where(d => d.LastStatus != null && !string.IsNullOrEmpty(d.LastStatus.Color))
             .Select(d => d.LastStatus?.Color)
@@ -216,12 +217,22 @@ else
     private void OnRowRenderHandler(GridRowRenderEventArgs args)
     {
         var item = args.Item as FullDeviceInfo;
-        if (item != null && item.LastStatus != null && !string.IsNullOrEmpty(item.LastStatus.Color))
-        {
-            args.Class = $"grid-row-color-{item.LastStatus.Color.Replace("#", "")}";
+        if (item != null && item.LastStatus != null && item.LastState?.StateID > 0)
+        {            
+            args.Class = $"grid-row-color-{GetColorNameByDeviceStateID(item.LastState?.StateID ?? 0)}";
         }
     }
-
+    public static string GetColorNameByDeviceStateID(int state)
+    {
+        return state switch
+        {
+            1 => "green",// 1 => "status-running",
+            2 => "darkblue",// 2 => "status-stopped",
+            3 => "yellow",// 3 => "status-warning",
+            4 => "red",// 4 => "status-error",
+            _ => "black"// _ => "status-unknown"
+        };
+    }
     #region filters
    
     

@@ -22,19 +22,19 @@
                 <TelerikButton OnClick="@DeleteAppointment" ButtonType="ButtonType.Button">@DeleteIcon @Localizer["AppointmentEditor_DeleteFromScheduler"]</TelerikButton>
         } *@
 
-        @if (!isWOClosed && UserState.HasPermission(PermissionType.WO_Close))
+        @if (!isNewAppointment && !isWOClosed && UserState.HasPermission(PermissionType.WO_Close))
         {
             <TelerikButton OnClick="@CloseAppointment" ButtonType="ButtonType.Button" ThemeColor="@ThemeConstants.Button.ThemeColor.Warning">@CloseOrderIcon @Localizer["AppointmentEditor_FinishOrder"]</TelerikButton>
         }
     }
 
-    @if (!isCurrentWOTakenByUser 
+    @if (!isCurrentWOTakenByUser && !isNewAppointment
     && (UserState.CanHaveManyActiveTake || !userHaveAnyTakenWorkOrders))
     {
         <TelerikButton OnClick="@OnTakeWorkOrder" ButtonType="ButtonType.Button">@TakeOrderIcon @Localizer["TakeOrder"]</TelerikButton>
     }
 
-    @if(UserState.HasPermission(PermissionType.AcT_Add))
+    @if(UserState.HasPermission(PermissionType.AcT_Add) && !isNewAppointment)
     {
         <TelerikButton OnClick="@(() => WORef?.AddActivity())" ButtonType="ButtonType.Button" ThemeColor="@ThemeConstants.Button.ThemeColor.Primary">@AddAction @Localizer["WorkOrder_AddActivity"]</TelerikButton>
     }

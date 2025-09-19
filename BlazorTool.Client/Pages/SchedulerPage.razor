@@ -75,25 +75,36 @@
         </div>
 
     </div>
-    @* device categories filter *@
-    @* <div style="flex-basis: 32%; flex-shrink:1; display: flex;  flex-grow:0; align-items: center; gap: 1rem;">
-        <label>@Localizer[nameof(WorkOrder.AssetNo)] </label>
-        <div style="min-width:30px">
-            <TelerikComboBox Data="@DeviceCategories" TextField="DeviceType"
-                             Value="@selectedCategory"
-                             Placeholder="@Localizer["Scheduler_SelectDeviceCategory"]" Filterable="true"
-                             ValueChanged="@((string cat) => OnCategoryChanged(cat))">
-            </TelerikComboBox>
-        </div>
-    </div> *@
-
-    @*end device categories filter *@
 </div>
 <div class="scheduler-page-container">
     <div class="scheduler-container">
-        <div style="display:flex; flex-direction: row; gap:10px">
+        <div style="display:flex; flex-direction: row; gap:16px; align-items:center; flex-wrap:wrap;">
             <div><p>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</p></div>
-            <div><TelerikButton OnClick="@HardLoadData" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+            <div><TelerikButton OnClick="@(async ()=> await HardLoadData())" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+            <div class="refresh-timer" style="display:flex; align-items:center; gap:6px;">
+                <div style="display:@timerSetVisibility; align-items:center; gap:4px;">
+                    <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
+                    <TelerikNumericTextBox @bind-Value="@TimerInterval"
+                                           Min="1" Max="60" Width="70px" Size="sm"
+                                           OnChange="@OnTimerIntervalChanged" />
+                    <span>@Localizer["OrdersPage_Minutes"]</span>
+                </div>
+                <Timer @ref="autoReloadTimer"
+                       Interval="@HardReloadInterval"
+                       OnTick="HardLoadDataTick"
+                       AutoStart="true"
+                       FireImmediately="false"
+                       SkipIfBusy="true"
+                       JitterMilliseconds="0"
+                       SoftTickTimeout="@(TimeSpan.FromSeconds(1))">
+                    <ChildContent Context="ctx">
+                        <div class="clickable-timer" @onclick="@OnTimerClick" style="cursor:pointer; font-size:0.8rem; line-height:1.1rem;">
+                            @Localizer["NextUpdate"]: @(ctx.TimeLeft?.ToString("mm':'ss") ?? "-")<br />
+                            @Localizer["LastUpdate"]: @(ctx.LastTickAt?.LocalDateTime.ToLongTimeString() ?? "-")
+                        </div>
+                    </ChildContent>
+                </Timer>
+            </div>
             @if (CurrentView == SchedulerView.Timeline)
             {
                 <div class="timeline-options">
@@ -280,8 +291,6 @@
                     <td class="tooltip-target" title="@order.WODesc">@order?.AssetNo</td>
                     <td class="tooltip-target" title="@order.WODesc">@order?.WOCategory</td>
                     <td class="tooltip-target" title="@order.AddDate">@order?.AddDate?.ToString("dd/MM/yyyy HH:mm")</td>
-                    @* <td class="tooltip-target" title="@order.WODesc">@order?.StartDate</td>
-                    <td class="tooltip-target" title="@order.WODesc">@order?.EndDate</td> *@
                     <td class="state-@order?.StateColor?.TrimStart('#') tooltip-target" title="@order?.WOState">@order?.WOState</td>
                 </RowTemplate>
 
@@ -324,8 +333,6 @@
 
                         </FilterMenuButtonsTemplate>
                     </GridColumn>
-                    @* <GridColumn Field="@nameof(WorkOrder.StartDate)" />
-                    <GridColumn Field="@nameof(WorkOrder.EndDate)" /> *@
                     <GridColumn Field="@nameof(WorkOrder.WOState)" Title="@Localizer[nameof(WorkOrder.WOState)]">
                         <FilterMenuTemplate>
                             <CheckBoxFilterMenuTemplate Values="@WOStates"
@@ -429,6 +436,11 @@
     private ViewSettings<WorkOrder> _viewSettings = new ViewSettings<WorkOrder>();
     private System.Threading.Timer _saveStateTimer;
     private const int SaveStateDelay = 500; // ms
+    // Auto refresh timer
+    private int TimerInterval { get; set; } = 5; // minutes
+    private TimeSpan HardReloadInterval { get; set; }
+    private BlazorTool.Client.Components.Timer? autoReloadTimer;
+    private string timerSetVisibility = "none";
 
     private List<Resource> GetStatuses(List<SchedulerAppointment> appointments)
     {
@@ -468,7 +480,9 @@
         if (_viewSettings != null)
         {
             RestoreCustomFilterState();
+            TimerInterval = _viewSettings.GetCustomFilter("TimerInterval", 5);
         }
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
 
         var isWASM = JSRuntime is IJSInProcessRuntime;
         Console.WriteLine($"--- Initialized SCHEDULER PAGE. WASM = {isWASM}");
@@ -481,48 +495,55 @@
         }
         WorkDayStart = UserState.WorkDayStart ?? WorkDayStart;
         WorkDayEnd = UserState.WorkDayEnd ?? WorkDayEnd;
-        InitializeSaveStateTimer(); // Добавлен вызов инициализации таймера
+        InitializeSaveStateTimer(); 
 
         await HardLoadData();
         await InvokeAsync(StateHasChanged);
         if (_viewSettings != null) await ordersGrid.SetStateAsync(_viewSettings.GridState);
     }
 
-    private async Task HardLoadData()
+    private async Task HardLoadData(bool showLoading = true)
     {
         Console.WriteLine("--- HardLoadData started.");
-        isLoading = true;
-        StateHasChanged();
+        if (showLoading) isLoading = true;
+        if (showLoading) StateHasChanged();
         if (!UserState.IsAuthenticated)
         {
             Navigation.NavigateTo("/login");
             return;
         }
-        // Используем кеш, если он есть
         allPersons = apiService.GetAllPersonsCached();
         if (allPersons == null || allPersons.Count == 0)
             allPersons = await apiService.GetAllPersons();
         Console.WriteLine($"--- HardLoadData: allPersons loaded. Count: {allPersons.Count}");
         PersonsNames = allPersons.Select(c => c.Name).ToList();
         PersonsNames.Insert(0, Person.NotAssigned.Name);
-        _allOrders = await apiService.GetWorkOrdersAsync(); //from API, not cache
+        _allOrders = await apiService.GetWorkOrdersAsync(); 
         cellStyles = RenderStatesStyle(_allOrders);
-        ApptService.ClearAppointments(); //clear cache
+        ApptService.ClearAppointments(); 
         WOCategories = (await apiService.GetWOCategories()).Select(c => c.Name).ToList();
         WOStates = (await apiService.GetWOStates()).Select(c => c.Name).ToList();
         currentUser.PersonId = UserState.PersonID ?? -1;
         currentUser.Name = UserState.UserName ?? string.Empty;
-        await LoadData();
+        await LoadData(showLoading);
         Console.WriteLine($"--- HardLoadData completed. UntakenOrders count: {UntakenOrders.Count}, Appointments count: {Appointments.Count}");
     }
 
-    private async Task LoadData()
+    private async Task HardLoadDataTick()
+    {
+        var oldCount = Appointments.Count;
+        await HardLoadData(false);
+        var newCount = Appointments.Count;
+        if (newCount != oldCount)
+        {
+        }
+    }
+
+    private async Task LoadData(bool showLoading = true)
     {
         Console.WriteLine("--- LoadData started.");
-        isLoading = true;
-        StateHasChanged();
-        //Persons = (await apiService.GetAllPersons()).Select(c => c.Name).ToList();
-        // ListDicts = (await apiService.GetWODictionaries(1));
+        if (showLoading) isLoading = true;
+        if (showLoading) StateHasChanged();
         _allOrders = await apiService.GetWorkOrdersCachedAsync();
         _allAppointments = await ApptService.GetTakenAppointments(_allOrders);
         statuses = GetStatuses(_allAppointments);
@@ -534,22 +555,29 @@
         WO_AssetNo.AddRange(_allOrders.Where(d => !string.IsNullOrWhiteSpace(d.AssetNo ?? "")).Select(x => x.AssetNo ?? "").Distinct().ToList());
         DisplayAppointments();
         DisplayOrders();
-        isLoading = false;
+        if (showLoading) isLoading = false;
         StateHasChanged();
         Console.WriteLine($"--- LoadData completed. UntakenOrders count: {UntakenOrders.Count}, Appointments count: {Appointments.Count}");
     }
 
-    /// <summary>
-    /// Displays the appointments in the scheduler, filtering by selected assigned persons and department.
-    /// </summary>
+    private void OnTimerIntervalChanged()
+    {
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
+        _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
+        _ = autoReloadTimer?.RestartAsync();
+    }
+
+    private void OnTimerClick()
+    {
+        timerSetVisibility = string.IsNullOrEmpty(timerSetVisibility) ? "none" : string.Empty;
+    }
+
     private void DisplayAppointments()
     {
         var appointments = FilterAppointments();
         Appointments = appointments;
-
-        // PersonResources should always contain all possible persons for grouping, including "Not assigned".
-        // Filtering by selectedAssignedPersons is handled in FilterAppointments().
-        if (selectedAssignedPersons.Count == 0) //show all persons
+        if (selectedAssignedPersons.Count == 0)
         {
             PersonResources = new List<Person>(allPersons);
         }
@@ -558,16 +586,14 @@
             PersonResources = allPersons.Where(p => selectedAssignedPersons.Contains(p.Name)).ToList();
         }
 
-        if ((selectedAssignedPersons.Contains(Person.NotAssigned.Name) || selectedAssignedPersons.Count ==0) && !PersonResources.Any(p => p.Name == Person.NotAssigned.Name))
+        if ((selectedAssignedPersons.Contains(Person.NotAssigned.Name) || selectedAssignedPersons.Count == 0) && !PersonResources.Any(p => p.Name == Person.NotAssigned.Name))
         {
             PersonResources.Insert(0, Person.NotAssigned);
         }       
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
 
-    /// <summary>
-    /// Displays the work orders in the grid, filtering by selected category and state.
-    /// </summary>
     private void DisplayOrders()
     {
         var orders = FilterOrders();
@@ -575,7 +601,6 @@
         cellStyles = RenderStatesStyle(orders);
     }
 
-    // ==== DragAndDrop from Grid to Scheduler ====
     private async Task GridRowDrop(GridRowDropEventArgs<WorkOrder> args)
     {
         if (!UserState.HasPermission(PermissionType.WO_Edit)) return;
@@ -584,11 +609,11 @@
         {
             var slot = SchedulerRef.GetTimeSlotFromDropIndex(args.DestinationIndex);
             bool isTimelineView = CurrentView == SchedulerView.Timeline;
-            object resourceValue = Person.NotAssigned.Name; // Default to "Not assigned"
+            object resourceValue = Person.NotAssigned.Name; 
             if (isTimelineView)
             {
                 var resourceKvp = slot.Resources.FirstOrDefault(kvp => kvp.Key == "AssignedPerson");
-                if (resourceKvp.Key != null) // Check if a resource was found
+                if (resourceKvp.Key != null) 
                 {
                     resourceValue = resourceKvp.Value;
                 }
@@ -651,23 +676,18 @@
         var filteredAppointments = new List<SchedulerAppointment>(_allAppointments);
         if (selectedDepartments.Any())
         {
-            // Filter appointments based on the selected department
             filteredAppointments = filteredAppointments.Where(a => selectedDepartments.Contains(a.DepName)).ToList();
         }
         if (!string.IsNullOrEmpty(selectedAssetNo) && selectedAssetNo != "All")
         {
-            // Filter appointments based on the selected asset number
             filteredAppointments = filteredAppointments.Where(a => a.AssetNo == selectedAssetNo).ToList();
         }
         if (selectedAssignedPersons.Count > 0)
         {
             bool isNotAssignedSelected = selectedAssignedPersons.Contains(Person.NotAssigned.Name);
-            // Filter appointments based on the selected assigned persons
             filteredAppointments = filteredAppointments.Where(a => selectedAssignedPersons.Contains(a.AssignedPerson) ||
             (isNotAssignedSelected && string.IsNullOrEmpty(a.AssignedPerson))).ToList();
         }
-
-
         return filteredAppointments;
     }
 
@@ -677,6 +697,7 @@
         _viewSettings.SetCustomFilter("selectedDeviceCategory", selectedAssetNo);
         _viewSettings.SetCustomFilter("selectedDepartments", selectedDepartments);
         _viewSettings.SetCustomFilter("CurrentView", CurrentView);
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);       
     }
 
@@ -686,17 +707,13 @@
         selectedAssetNo = _viewSettings.GetCustomFilter("selectedAssetNo", "All");
         selectedDepartments = _viewSettings.GetCustomFilter("selectedDepartments", new List<string>());
         CurrentView = _viewSettings.GetCustomFilter("CurrentView", SchedulerView.Month);
-
     }
 
     private List<WorkOrder> FilterOrders()
     {
-
         return _allOrders.Where(x =>
-            // string.IsNullOrEmpty(x.AssignedPerson) &&
             (selectedCategory == "All" || x.DeviceCategory == selectedCategory) &&
             (isCBAllOrdersSelected || x.CloseDate == null) &&
-            // ((x.StartDate == null) || (string.IsNullOrEmpty(x.DepName)))
             (x.StartDate == null)
         ).ToList();
     }
@@ -704,7 +721,6 @@
     #endregion
 
     #region Scheduler
-    // ==== Scheduler CUD handlers ====
     private async Task OnCreateAppointment(SchedulerCreateEventArgs args)
     {
 
@@ -732,7 +748,6 @@
             var result = await ApptService.UpdateAppointment(updAppt);
             if (result.IsValid && result.Data != null)
             {
-                // Find and update the item in the local collections
                 var index = Appointments.FindIndex(a => a.AppointmentId == result.Data.WorkOrderID);
                 if (index >= 0) Appointments[index] = new SchedulerAppointment(result.Data);
 
@@ -743,7 +758,6 @@
             else
             {
                 Console.WriteLine($"Failed to update appointment: {string.Join(", ", result.Errors)}");
-                // Optional: revert changes in the UI or show a notification
             }
             SchedulerRef?.Rebind();
         }
@@ -761,23 +775,13 @@
                 popupMessage = errors ?? Localizer["Scheduler_FailedToCloseAppointment"];
                 PopupRef?.Show();
                 Console.WriteLine($"Failed to delete appointment: {string.Join(", ", result.Errors)}");
-                return; // Exit if deletion failed
+                return; 
             }
-            //UntakenOrders.Add(result.Data);
             _allAppointments.RemoveAll(a => a.AppointmentId == delAppt.AppointmentId);
             await LoadData();
             SchedulerRef?.Rebind();
 
         }
-    }
-
-    private void OnDateClick(int day)
-    {
-        // var currentDate = DateTime.Now;
-        // var navigateDate = new DateTime(currentDate.Year, currentDate.Month, day);
-
-        // CurrView = SchedulerView.Day;
-        // SelectedDate = navigateDate;
     }
 
     private void OnClearFilters()
@@ -788,11 +792,9 @@
         DisplayAppointments();
     }
 
-    //when order window closed
-    //On create, Update
     async Task RefreshData(SchedulerAppointment? editedAppointment)
     {
-        if (editedAppointment == null)//was removed or cancelled NEW
+        if (editedAppointment == null)
         {
             customEditFormShown = false;
             isOrderCardOpen = false;
@@ -811,20 +813,16 @@
         customEditFormShown = false;
         isOrderCardOpen = false;
         await LoadData();
-        //DisplayAppointments();
         SchedulerRef?.Rebind();
     }
 
     void EditHandler(SchedulerEditEventArgs args)
     {
-        args.IsCancelled = true;//prevent built-in edit form from showing up
+        args.IsCancelled = true;
         SchedulerAppointment item = args.Item as SchedulerAppointment;
-        if (!args.IsNew) // an edit operation, otherwise - an insert operation
+        if (!args.IsNew)
         {
-            //copying is implemented in the appointment model and it is needed because
-            //this is a reference to the data collection so modifying it directly
-            //will immediately modify the data and no cancelling will be possible
-            CurrentAppointment = item;//.ShallowCopy();
+            CurrentAppointment = item;
         }
         else
         {
@@ -866,11 +864,6 @@
 
     void OnRowRenderHandler(GridRowRenderEventArgs args)
     {
-        // var item = args.Item as WorkOrder;
-
-        // args.Class += "state-" + item?.StateColor.TrimStart('#')+
-        // " tooltip-target";
-
     }
     void OnRowClick(GridRowClickEventArgs args)
     {
@@ -928,7 +921,6 @@
     }
     public class Resource
     {
-        // these are the default field names
         public string Text { get; set; }
         public string Value { get; set; }
         public string Color { get; set; } // must be a valid CSS string
@@ -1105,8 +1097,6 @@
     private void OnAddAppointment()
     {
         Console.WriteLine($"[{currentUser}]:  Adding new appointment at {_clickedSlotContext?.Start}");
-        // Implement logic to open a form for adding a new appointment
-        // You can use _clickedSlotContext.Start and _clickedSlotContext.End to pre-fill the form
         if (_clickedSlotContext != null)
         {
             bool isStartEqualsEnd = _clickedSlotContext.Start == _clickedSlotContext.End;
@@ -1118,7 +1108,6 @@
             };
             if (_clickedSlotContext.Resources != null && _clickedSlotContext.Resources.Any())
             {
-                // get person from resources
                 var personResource = _clickedSlotContext.Resources.FirstOrDefault(r => r.Key == "AssignedPerson");
                 if (personResource.Key != null && personResource.Value is string personName)
                 {
@@ -1133,7 +1122,6 @@
     private void OnOpenAppointment()
     {
         Console.WriteLine($"[{currentUser.Name}]:  Open appointment: {_clickedAppointment?.Title}");
-        // Implement logic to open the existing appointment for editing
         if (_clickedAppointment != null)
         {
             CurrentAppointment = _clickedAppointment;
@@ -1144,7 +1132,6 @@
     private async Task OnRemoveAppointment()
     {
         Console.WriteLine($"[{currentUser.Name}]:  Remove appointment: {_clickedAppointment?.Title}");
-        // Implement logic to remove the appointment
         if (_clickedAppointment != null)
         {
             var args = new SchedulerDeleteEventArgs(_clickedAppointment);
@@ -1155,11 +1142,10 @@
     private void OnDuplicateAppointment()
     {
         Console.WriteLine($"[{currentUser.Name}]:  Duplicate appointment: {_clickedAppointment?.Title}");
-        // Implement logic to duplicate the appointment
         if (_clickedAppointment != null)
         {
             var duplicatedAppointment = _clickedAppointment.ShallowCopy();
-            duplicatedAppointment.AppointmentId = 0; // Reset ID for new appointment
+            duplicatedAppointment.AppointmentId = 0; 
             CurrentAppointment = duplicatedAppointment;
             customEditFormShown = true;
 

@@ -11,7 +11,17 @@
 .work-order-container.activities-visible {
     max-height: none;
 }
-
+.device-display-info {
+    display: flex;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    line-height: 1.4rem;
+    flex-direction: column;
+    align-content: flex-start;
+    align-items: flex-start;
+    margin-right: auto;
+    padding-left: 24px;
+}
 .main-header-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
