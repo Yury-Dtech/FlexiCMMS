@@ -57,6 +57,22 @@ namespace BlazorTool.Client.Helpers
 
             return $"rgba({r}, {g}, {b}, {alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
         }
+        public static string GetColorNameByDeviceStateID(int state)
+        {
+            return state switch
+            {
+                1 => "green",// 1 => "status-running",
+                2 => "yellow",// 2 => "status-stopped",
+                3 => "red",// 3 => "status-warning",
+                4 => "coral",// 4 => "status-error",
+                _ => "black"// _ => "status-unknown"
+            };
+        }
+        public static string GetSoftColorByDeviceStateID(int state)
+        {
+            var color = GetColorNameByDeviceStateID(state);
+            return ColorHelper.GetSoftenedColor(color, 0.4f, 1.0f);
+        }
     }
 
 }
