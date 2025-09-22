@@ -1474,6 +1474,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show active orders only.
+        /// </summary>
+        public static string Only_Active {
+            get {
+                return ResourceManager.GetString("Only_Active", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open activity.
         /// </summary>
         public static string OpenActivity {

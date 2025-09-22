@@ -83,6 +83,12 @@
                              class=@(WOEditFormShown ? "" : "popup-target")>
             </TelerikMultiSelect>
         </div>
+        <div style="display:flex; align-items: center; gap:3px;">
+            <label>@Localizer["Only_Active"]:</label>
+            <TelerikSwitch @bind-Value=@ShowActiveOnlyOrders OnChange="@OnSwitchActiveChanged">
+
+            </TelerikSwitch>
+        </div>
         <div class="ClearFilters-btn">
             <button class="ClearFilters-btn" @onclick="OnClearFilters" title="@Localizer["ClearFilters"]">
                 @Localizer["ClearFilters"]
@@ -433,6 +439,8 @@
     private bool WOEditFormShown { get; set; } = false;
     private bool ShowAddActivityForOrderForm { get; set; } = false;
     private bool ShowActivityCard { get; set; } = false;
+    private bool ShowActiveOnlyOrders = true;
+    private bool isAllOrdersLoaded = false;
     private ActivityAppointment? CurrentAppointment { get; set; } = new ActivityAppointment(); //Selected appointment for edit/view
     private NewActivityFormModel CurrentActivityFormModel = new NewActivityFormModel(); // For new activity form and Edit activity
     private List<Models.Activity> activities = new();
@@ -559,9 +567,11 @@
             selectedPersonIDs = UserState.PersonID != null ? new List<int> { UserState.PersonID.Value } : new List<int>();
         }
         _allOrders.Clear();
+        if (!ShowActiveOnlyOrders) // load all orders only when viewing all orders
+            isAllOrdersLoaded = true;
         foreach(var personId in selectedPersonIDs)
         {
-            var ordersForPerson = (await apiService.GetWorkOrdersWithPerson(personId)).Where(w => w.CloseDate == null).ToList();
+            var ordersForPerson = (await apiService.GetWorkOrdersWithPerson(personId: personId, active: ShowActiveOnlyOrders ? true : null)).ToList();
             _allOrders.AddRange(ordersForPerson.Where(x => _allOrders.All(o => o.WorkOrderID != x.WorkOrderID))); //ensure no duplicates
         }
         activities = await apiService.GetActivitiesByWO(_allOrders);
@@ -601,7 +611,7 @@
         _allOrders.Clear();
         foreach(var personId in selectedPersonIDs)
         {
-            var ordersForPerson = (await apiService.GetWorkOrdersWithPersonCachedAsync(personId)).Where(w => w.CloseDate == null).ToList();
+            var ordersForPerson = (await apiService.GetWorkOrdersWithPersonCachedAsync(personId: personId, active: ShowActiveOnlyOrders ? true : null)).ToList();
             _allOrders.AddRange(ordersForPerson.Where(x => _allOrders.All(o => o.WorkOrderID != x.WorkOrderID))); //ensure no duplicates
         }
         DeviceNames = new List<string>();
@@ -1317,6 +1327,17 @@
     private async Task OnSwithChanged()
     {
         await LoadData();
+    }
+
+    private async Task OnSwitchActiveChanged()
+    {
+        if (!ShowActiveOnlyOrders && !isAllOrdersLoaded)
+        {
+            await HardLoadData();
+        }else
+        {
+            await LoadData();
+        }
     }
 
     private List<Resource> GetStatuses(List<WorkOrder> orders)

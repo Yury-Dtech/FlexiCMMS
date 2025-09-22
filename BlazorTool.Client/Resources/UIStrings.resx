@@ -1150,4 +1150,7 @@
   <data name="OrdersPage_Minutes" xml:space="preserve">
     <value>minutes</value>
   </data>
+  <data name="Only_Active" xml:space="preserve">
+    <value>Show active orders only</value>
+  </data>
 </root>

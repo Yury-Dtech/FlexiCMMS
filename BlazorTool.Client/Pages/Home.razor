@@ -488,7 +488,7 @@
 
             if (UserState.IsAuthenticated)
             {
-                allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
+                allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID, active: true);
                 allOrders = FilterWorkOrders(allOrders);
                 var departments = await ApiClient.GetWODepartments();
                 allDepartmentNames = departments.Select(d => d.Name).ToList();
@@ -696,7 +696,7 @@
             isDataLoading = true;
             await InvokeAsync(StateHasChanged);
         }
-        allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
+        allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID, active: true);
         allOrders = FilterWorkOrders(allOrders);
         await ApiClient.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allDepartmentNames = (await ApiClient.GetWODepartments()).Select(d => d.Name).ToList();

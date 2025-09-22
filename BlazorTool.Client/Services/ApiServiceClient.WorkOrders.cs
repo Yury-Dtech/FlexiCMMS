@@ -17,7 +17,7 @@ namespace BlazorTool.Client.Services
         /// orders.</param>
         /// <returns>A list of <see cref="WorkOrder"/> objects associated with the specified device ID, or all work orders if
         /// <paramref name="deviceId"/> is <see langword="null"/>.</returns>
-        public async Task<List<WorkOrder>> GetWorkOrdersCachedAsync(int? deviceId = null)
+        public async Task<List<WorkOrder>> GetWorkOrdersCachedAsync(int? deviceId = null, bool? active = true)
         {
             if (deviceId == null)//get all WorkOrders
             {
@@ -25,9 +25,14 @@ namespace BlazorTool.Client.Services
                 {
                     Console.WriteLine($"[{_userState.UserName}] Work orders found in cache: " + _workOrdersCache.Count + "\n");
                     Debug.WriteLine($"[{_userState.UserName}] Work orders found in cache: " + _workOrdersCache.Count + "\n");
-                    return _workOrdersCache.SelectMany(x => x.Value).ToList();
+                    if (active == null)
+                        return _workOrdersCache.SelectMany(x => x.Value).ToList();
+                    else if (active == true)
+                        return _workOrdersCache.SelectMany(x => x.Value).Where(o => o.CloseDate == null).ToList();
+                    else
+                        return _workOrdersCache.SelectMany(x => x.Value).Where(o=>o.CloseDate != null).ToList();
                 }
-                var allOrders = await GetWorkOrdersAsync(lang: _userState.LangCode);
+                var allOrders = await GetWorkOrdersAsync(lang: _userState.LangCode, active: active);
                 //add to cache all work orders by deviceId
                 foreach (var order in allOrders)
                 {
@@ -45,7 +50,7 @@ namespace BlazorTool.Client.Services
                 || list == null
                 || list.Count == 0)
             {
-                var fresh = await GetWorkOrdersAsync(deviceId);
+                var fresh = await GetWorkOrdersAsync(deviceID: deviceId, active: active);
                 _workOrdersCache[(int)deviceId] = fresh;
                 return fresh;
             }
@@ -317,41 +322,45 @@ namespace BlazorTool.Client.Services
         /// <summary>
         /// Retrieves cached work orders for a person if available.
         /// </summary>
-        public async Task<List<WorkOrder>> GetWorkOrdersWithPersonCachedAsync(int? personId = null, string? langCode = null)
+        public async Task<List<WorkOrder>> GetWorkOrdersWithPersonCachedAsync(int? personId = null, string? langCode = null, bool? active = true)
         {
             var id = personId ?? _userState.PersonID ?? 0;
             if (_workOrdersWithPersonCache.TryGetValue(id, out var list) && list != null)
             {
                 Console.WriteLine($"[{_userState.UserName}] Returning cached work orders for person {id}: {list.Count}");
                 Debug.WriteLine($"[{_userState.UserName}] Returning cached work orders for person {id}: {list.Count}");
+                if (active != null)
+                    list = list.Where(wo => active == true ? wo.CloseDate == null : wo.CloseDate != null).ToList();
                 return list;
             }
             return await GetWorkOrdersWithPerson(personId, langCode);
         }
-        public async Task<List<WorkOrder>> GetWorkOrdersWithPerson(int? personId = null, string? langCode = null)
+        public async Task<List<WorkOrder>> GetWorkOrdersWithPerson(int? personId = null, string? langCode = null, bool? active = true)
         {
             var id = personId ?? _userState.PersonID ?? 0;
-            
             var url = $"wo/getlist?IsWithPerson=true&PersonID={id}&Lang={Uri.EscapeDataString(langCode ?? _userState.LangCode)}";
-            try
-            {
-                var wrapper = await _http.GetFromJsonAsync<ApiResponse<WorkOrder>>(url);
-                if (wrapper == null || !wrapper.IsValid)
+            if (active != null)
+                url += $"&Active={active}";
+                
+                try
                 {
-                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: API response is not valid.");
-                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: API response is not valid.");
+                    var wrapper = await _http.GetFromJsonAsync<ApiResponse<WorkOrder>>(url);
+                    if (wrapper == null || !wrapper.IsValid)
+                    {
+                        Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: API response is not valid.");
+                        Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: API response is not valid.");
+                        return new List<WorkOrder>();
+                    }
+                    // Cache fetched results
+                    _workOrdersWithPersonCache[id] = wrapper.Data;
+                    return wrapper.Data;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: Unexpected error during GET to {url}: {ex.Message}");
+                    Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: Unexpected error during GET to {url}: {ex.Message}");
                     return new List<WorkOrder>();
                 }
-                // Cache fetched results
-                _workOrdersWithPersonCache[id] = wrapper.Data;
-                return wrapper.Data;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: Unexpected error during GET to {url}: {ex.Message}");
-                Debug.WriteLine($"[{_userState.UserName}] ApiServiceClient.GetWorkOrdersWithPerson: Unexpected error during GET to {url}: {ex.Message}");
-                return new List<WorkOrder>();
-            }
         }
 
         public async Task<WorkOrder?> GetWorkOrderByIdAsync(int workOrderID)

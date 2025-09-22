@@ -271,7 +271,7 @@
             <div class="p-2" style="display:flex; justify-content:space-between; align-items: center;">
                 <p>@Localizer["Scheduler_OrdersWithoutStartDate"] @UntakenOrders.Count()</p>
                 <div style="display:flex; align-items:center; gap: 5px;">
-                    <TelerikCheckBox Size="lg" OnChange="@DisplayOrders" Id="OrdersCheckBox" @bind-Value="@isCBAllOrdersSelected" />
+                    <TelerikCheckBox Size="lg" OnChange="@OnCBAllOrdersChanged" Id="OrdersCheckBox" @bind-Value="@isCBAllOrdersSelected" />
                     <label for="OrdersCheckBox">@Localizer["Scheduler_ShowCompletedOrders"] </label>
                 </div>
             </div>
@@ -282,7 +282,7 @@
                          RowDraggable="true"
                          OnRowDrop="@GridRowDrop"
                          Sortable="true"
-                         Height="100%"
+                         Height="95%"
                          FilterMode="@GridFilterMode.FilterMenu"
                          OnRowDoubleClick="@OnRowClick"
                          OnStateChanged="@( (GridStateEventArgs<WorkOrder> args) => { _viewSettings.GridState = args.GridState;  SaveFilterStateToCacheAsync(); })">
@@ -369,7 +369,7 @@
         <WindowAction Name="Close" OnClick="@CancelEditing" />
     </WindowActions>
     <WindowContent>
-        <WorkOrderComponent WorkOrder="@CurrentOrder" isEditable=@UserState.HasPermission(PermissionType.WO_Edit)/>
+        <WorkOrderComponent currentUser="@currentUser" ListPersons="@PersonsNames.Where(c=>c != "All").ToList()" WorkOrder="@CurrentOrder" isEditable=@UserState.HasPermission(PermissionType.WO_Edit)/>
     </WindowContent>
 </TelerikWindow>
 
@@ -420,6 +420,7 @@
     private List<string> WOStates = new();
     private List<string> selectedDepartments = new List<string>();
     private bool isCBAllOrdersSelected = false; //show executed orders in grid
+    private bool isAllOrdersLoaded = false; //to avoid reloading orders when switching checkbox
     private List<string> DeviceCategories = new();//for Orders grid filter
     private string selectedCategory = "All";
     private List<string> WO_AssetNo = new();
@@ -518,7 +519,8 @@
         Console.WriteLine($"--- HardLoadData: allPersons loaded. Count: {allPersons.Count}");
         PersonsNames = allPersons.Select(c => c.Name).ToList();
         PersonsNames.Insert(0, Person.NotAssigned.Name);
-        _allOrders = await apiService.GetWorkOrdersAsync(); 
+        if (isCBAllOrdersSelected) isAllOrdersLoaded = true;
+        _allOrders = await apiService.GetWorkOrdersAsync(lang: UserState.LangCode, active: isCBAllOrdersSelected == true ? null : true); 
         cellStyles = RenderStatesStyle(_allOrders);
         ApptService.ClearAppointments(); 
         WOCategories = (await apiService.GetWOCategories()).Select(c => c.Name).ToList();
@@ -544,7 +546,7 @@
         Console.WriteLine("--- LoadData started.");
         if (showLoading) isLoading = true;
         if (showLoading) StateHasChanged();
-        _allOrders = await apiService.GetWorkOrdersCachedAsync();
+        _allOrders = await apiService.GetWorkOrdersCachedAsync(active: isCBAllOrdersSelected == true ? null : true);
         _allAppointments = await ApptService.GetTakenAppointments(_allOrders);
         statuses = GetStatuses(_allAppointments);
         Console.WriteLine($"--- LoadData: _allAppointments loaded. Count: {_allAppointments.Count}");
@@ -595,10 +597,18 @@
     }
 
     private void DisplayOrders()
-    {
+    {       
         var orders = FilterOrders();
         UntakenOrders = orders;
         cellStyles = RenderStatesStyle(orders);
+    }
+
+    private async Task OnCBAllOrdersChanged()
+    {
+        if (!isAllOrdersLoaded && isCBAllOrdersSelected)
+            await HardLoadData(true);
+        else
+            DisplayOrders();
     }
 
     private async Task GridRowDrop(GridRowDropEventArgs<WorkOrder> args)
@@ -871,7 +881,9 @@
         if (item != null)
         {
             CurrentOrder = item;
-            isOrderCardOpen = true;
+            CurrentAppointment = new SchedulerAppointment(item);
+            
+            customEditFormShown = true;
             StateHasChanged();
         }
     }

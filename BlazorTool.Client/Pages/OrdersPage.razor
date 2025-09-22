@@ -47,7 +47,6 @@ else
         <div style="display:flex; align-items: center; gap:3px;">
             <label>@Localizer["OrdersPage_DeviceCategory"]:</label>
             <div style="display:inline;">
-
             <TelerikComboBox Data="@deviceCategories"
                              TextField="DeviceCategory"
                              @bind-Value="@selectedDeviceCategory"
@@ -58,6 +57,12 @@ else
             </TelerikComboBox>
             </div>
         </div>
+        <div style="display:flex; align-items: center; gap:3px;">
+            <label>@Localizer["Only_Active"]:</label>
+                <TelerikSwitch @bind-Value=@ShowActiveOnlyOrders OnChange="@OnSwitchActiveChanged">
+
+                </TelerikSwitch>
+                </div>
         <div><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
       
         @* Timer *@
@@ -105,10 +110,12 @@ else
                 OnOrderChanged="@OnOrderChanged"
                 OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
                 isLoading="@isOrdersLoading" 
-                PageSize="52"
+                PageSize="54"
                 MenuItems="@MenuItems"
                 OnMenuItemClick="@HandleMenuItemClick"
-                OnRowContextMenu="@(()=>MakeContextMenu())" />
+                OnRowContextMenu="@(()=>MakeContextMenu())" 
+                UseVirtualScrollMode ="false"
+                />
 }
 
 
@@ -156,6 +163,8 @@ else
     private TelerikPopup? PopupRef { get; set; }
     private bool isOrdersLoading = false;
     private bool isDevicesLoading = false;
+    private bool ShowActiveOnlyOrders = true;
+    private bool isAllOrdersLoaded = false;
     private List<WorkOrder> OrdersForGrid = new List<WorkOrder>();
     private IEnumerable<Device> selectedDevices = new List<Device>();
     private List<int> selectedDeviceIds = new List<int>();
@@ -208,7 +217,8 @@ else
             if (!UserState.IsAuthenticated)
             {
                 Navigation.NavigateTo("/login");
-            }            
+            }
+
             await HardLoadData();
 
             await LoadData();
@@ -255,8 +265,19 @@ else
         }
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allPersons = await apiService.GetAllPersons();
+        if (!ShowActiveOnlyOrders) // load all orders only when viewing all orders
+            isAllOrdersLoaded = true;
+        if (selectedDeviceIds.Count == 0 && devices.Any())
+        {
+            selectedDeviceIds.Add(devices.First().MachineID);
+        }
 
-        OrdersForGrid = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode)).OrderByDescending(o => o.WorkOrderID).ToList();
+        OrdersForGrid.Clear();
+        foreach(var deviceId in selectedDeviceIds)
+        {
+            var loadedOrders = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode, deviceID: deviceId,  active: ShowActiveOnlyOrders ? true : null)).OrderByDescending(o => o.WorkOrderID).ToList();
+            OrdersForGrid.AddRange(loadedOrders);
+        }
 
         devices = await apiService.GetAllDevicesAsync();
         allDepartments = (await apiService.GetWODepartments()).Select(x=>x.Name).ToList();
@@ -306,35 +327,32 @@ else
 
     private IEnumerable<Device> GetFilteredDevices()
     {
+        if (devices == null || devices.Count == 0)
+        {
+            return new List<Device>();
+        }
+
+        if (selectedDeviceIds.Count == 0)
+            selectedDeviceIds.Add(devices.First().MachineID);
+
         return devices.Where(d =>
             (string.IsNullOrWhiteSpace(selectedDeviceCategory) || d.DeviceCategory == selectedDeviceCategory || selectedDeviceCategory == "All") &&
-            (string.IsNullOrWhiteSpace(selectedDeviceType) || d.Type == selectedDeviceType || selectedDeviceType == "All") &&
-            (selectedDeviceIds.Count == 0 || selectedDeviceIds.Contains(d.MachineID))
+            // (string.IsNullOrWhiteSpace(selectedDeviceType) || d.Type == selectedDeviceType || selectedDeviceType == "All") &&
+            (selectedDeviceIds.Contains(d.MachineID))
         );
     }
 
     private async Task<List<WorkOrder>> GetFilteredOrders(IEnumerable<Device> devices)
     {
         List<WorkOrder> orders = new List<WorkOrder>();
-        if (selectedDeviceIds.Count == 0 &&
-            selectedState == "All" &&
-            selectedPersons.Count == 0 &&
-            selectedDeviceCategory == "All" &&
-            selectedDeviceType == "All"
-        )
-        {
-            orders = await apiService.GetWorkOrdersCachedAsync();
-        }
-        else
-        {
-            orders = await apiService.GetWorkOrdersCachedAsync(devices);
-        }
 
-        var result = orders.Where(o =>
-            (o.WOState == selectedState || selectedState == "All" || string.IsNullOrWhiteSpace(selectedState)) &&
-            (selectedPersons.Count == 0 || selectedPersons.Contains(o.AssignedPerson))
-        ).OrderByDescending(o => o.WorkOrderID).ToList(); ;
-        return result;
+        foreach(var device in devices)
+                {
+                    var loadedOrders = (await apiService.GetWorkOrdersCachedAsync(deviceId: device.MachineID, active: ShowActiveOnlyOrders ? true : null)).ToList();
+                    orders.AddRange(loadedOrders);
+                }
+        return orders.OrderByDescending(o => o.WorkOrderID).ToList();
+        
     }
 
     private void OnOrderChanged(SchedulerAppointment? editedAppointment)
@@ -453,21 +471,21 @@ else
     }
 
     private async Task HandleActivityAdded(Models.Activity newActivity)
-	{
-		if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
-		{
-			if (selectedWorkOrder != null)
-			{
-				await apiService.RefreshWorkOrderInCacheAsync(selectedWorkOrder.WorkOrderID);
-				await LoadData();
-			}
-		}
-		else
-		{
-			Console.WriteLine("Failed to add activity.");
-		}
-			IsAddActivityWindowVisible = false;
-	}
+    {
+        if (newActivity != null) //------------------- NOWA AKTYWNOŚĆ
+        {
+            if (selectedWorkOrder != null)
+            {
+                await apiService.RefreshWorkOrderInCacheAsync(selectedWorkOrder.WorkOrderID);
+                await LoadData();
+            }
+        }
+        else
+        {
+            Console.WriteLine("Failed to add activity.");
+        }
+        IsAddActivityWindowVisible = false;
+    }
 
     private async Task OnTimerIntervalChanged()
     {        
@@ -485,6 +503,17 @@ else
             timerSetVisibility = "none";
         else
             timerSetVisibility = string.Empty;
+    }
+
+    private async Task OnSwitchActiveChanged()
+    {
+        if (!ShowActiveOnlyOrders && !isAllOrdersLoaded)
+        {
+            await HardLoadData();
+        }else
+        {
+            await LoadData();
+        }
     }
 
     private void ShowNotification(string message, NotificationTypeEnum type)
