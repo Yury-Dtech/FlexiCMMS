@@ -265,21 +265,23 @@ else
         }
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allPersons = await apiService.GetAllPersons();
+        devices = await apiService.GetAllDevicesAsync();
         if (!ShowActiveOnlyOrders) // load all orders only when viewing all orders
             isAllOrdersLoaded = true;
-        if (selectedDeviceIds.Count == 0 && devices.Any())
-        {
-            selectedDeviceIds.Add(devices.First().MachineID);
-        }
 
-        OrdersForGrid.Clear();
-        foreach(var deviceId in selectedDeviceIds)
+        if (selectedDeviceIds.Count == 0)
         {
-            var loadedOrders = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode, deviceID: deviceId,  active: ShowActiveOnlyOrders ? true : null)).OrderByDescending(o => o.WorkOrderID).ToList();
-            OrdersForGrid.AddRange(loadedOrders);
+            OrdersForGrid = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode, active: ShowActiveOnlyOrders ? true : null)).OrderByDescending(o => o.WorkOrderID).ToList();
         }
-
-        devices = await apiService.GetAllDevicesAsync();
+        else
+        {
+            OrdersForGrid = new List<WorkOrder>();
+            foreach(var deviceId in selectedDeviceIds)
+            {
+                var loadedOrders = (await apiService.GetWorkOrdersAsync(lang: UserState.LangCode, deviceID: deviceId,  active: ShowActiveOnlyOrders ? true : null)).OrderByDescending(o => o.WorkOrderID).ToList();
+                OrdersForGrid.AddRange(loadedOrders);
+            }
+        }        
         allDepartments = (await apiService.GetWODepartments()).Select(x=>x.Name).ToList();
         personNames = allPersons.Select(p => p.Name).ToList();
         currentUser.PersonId = UserState.PersonID ?? -1;
@@ -332,13 +334,13 @@ else
             return new List<Device>();
         }
 
-        if (selectedDeviceIds.Count == 0)
-            selectedDeviceIds.Add(devices.First().MachineID);
+        // if (selectedDeviceIds.Count == 0)
+        //     selectedDeviceIds.Add(devices.First().MachineID);
 
         return devices.Where(d =>
             (string.IsNullOrWhiteSpace(selectedDeviceCategory) || d.DeviceCategory == selectedDeviceCategory || selectedDeviceCategory == "All") &&
             // (string.IsNullOrWhiteSpace(selectedDeviceType) || d.Type == selectedDeviceType || selectedDeviceType == "All") &&
-            (selectedDeviceIds.Contains(d.MachineID))
+            (selectedDeviceIds.Count == 0 || selectedDeviceIds.Contains(d.MachineID))
         );
     }
 

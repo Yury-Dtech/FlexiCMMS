@@ -19,6 +19,7 @@ namespace BlazorTool.Client.Services
         /// <paramref name="deviceId"/> is <see langword="null"/>.</returns>
         public async Task<List<WorkOrder>> GetWorkOrdersCachedAsync(int? deviceId = null, bool? active = true)
         {
+            var stateNameForRemove = GetWOStatesCached().FirstOrDefault(s => s.Id == 4)?.Name ?? "Do usunęcia";
             if (deviceId == null)//get all WorkOrders
             {
                 if (_workOrdersCache.Count > 0)
@@ -28,9 +29,9 @@ namespace BlazorTool.Client.Services
                     if (active == null)
                         return _workOrdersCache.SelectMany(x => x.Value).ToList();
                     else if (active == true)
-                        return _workOrdersCache.SelectMany(x => x.Value).Where(o => o.CloseDate == null).ToList();
+                        return _workOrdersCache.SelectMany(x => x.Value).Where(o => o.CloseDate == null && o.WOState != stateNameForRemove).ToList();
                     else
-                        return _workOrdersCache.SelectMany(x => x.Value).Where(o=>o.CloseDate != null).ToList();
+                        return _workOrdersCache.SelectMany(x => x.Value).Where(o => o.CloseDate != null).ToList();
                 }
                 var allOrders = await GetWorkOrdersAsync(lang: _userState.LangCode, active: active);
                 //add to cache all work orders by deviceId
@@ -53,6 +54,17 @@ namespace BlazorTool.Client.Services
                 var fresh = await GetWorkOrdersAsync(deviceID: deviceId, active: active);
                 _workOrdersCache[(int)deviceId] = fresh;
                 return fresh;
+            }
+            if (active != null)
+            {
+                var result = list.Where(o => active == true ? (o.CloseDate == null && o.WOState != stateNameForRemove) : true).ToList();
+                if (result.Count == 0)
+                {
+                    var fresh = await GetWorkOrdersAsync(deviceID: deviceId, active: active);
+                    _workOrdersCache[(int)deviceId] = fresh;
+                    return fresh;
+                }
+                return result;
             }
             return list;
         }
@@ -137,6 +149,11 @@ namespace BlazorTool.Client.Services
                 var wrapper = await _http.GetFromJsonAsync<ApiResponse<WorkOrder>>(url);
                 Console.WriteLine($"[{_userState.UserName}] = = = = = = = API response-> WorkOrder.Count: " + wrapper?.Data.Count.ToString());
                 var result = wrapper?.Data ?? new List<WorkOrder>();
+                if (active == true)
+                {
+                    var stateNameForRemove = GetWOStatesCached().FirstOrDefault(s => s.Id == 4)?.Name ?? "Do usunęcia";
+                    result = result.Where(o => o.WOState != stateNameForRemove).ToList();
+                }
                 if (result.Count > 0)
                 {
                     UpdateWorkOrdersInCache(result);
