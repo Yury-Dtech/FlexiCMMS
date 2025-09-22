@@ -19,6 +19,7 @@
 @inject ILogger<SchedulerPage> Logger
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 @inject ViewSettingsService ViewSettingsService
+@using Microsoft.AspNetCore.Components.Routing
 
 @cellStyles
 <CheckSession apiService="@apiService" UserState="@UserState" />
@@ -442,6 +443,7 @@
     private TimeSpan HardReloadInterval { get; set; }
     private BlazorTool.Client.Components.Timer? autoReloadTimer;
     private string timerSetVisibility = "none";
+    private bool _navSubscribed; // tracking NavigationManager subscription
 
     private List<Resource> GetStatuses(List<SchedulerAppointment> appointments)
     {
@@ -475,6 +477,11 @@
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine($"[NAV] SchedulerPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
+        if (!_navSubscribed)
+        {
+            Navigation.LocationChanged += OnLocationChanged;
+            _navSubscribed = true;
+        }
         await base.OnInitializedAsync();
 
         _viewSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(SchedulerSettingsKey);
@@ -573,6 +580,28 @@
     private void OnTimerClick()
     {
         timerSetVisibility = string.IsNullOrEmpty(timerSetVisibility) ? "none" : string.Empty;
+    }
+
+    // Handle navigation away from the Scheduler page to stop the timer
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("/scheduler", StringComparison.OrdinalIgnoreCase))
+        {
+            _ = DisposeTimerAsync();
+        }
+    }
+
+    private async Task DisposeTimerAsync()
+    {
+        try
+        {
+            if (autoReloadTimer != null)
+            {
+                await autoReloadTimer.DisposeAsync();
+                autoReloadTimer = null;
+            }
+        }
+        catch { }
     }
 
     private void DisplayAppointments()
@@ -1032,6 +1061,12 @@
         {
             await _saveStateTimer.DisposeAsync();
         }
+        if (_navSubscribed)
+        {
+            Navigation.LocationChanged -= OnLocationChanged;
+            _navSubscribed = false;
+        }
+        await DisposeTimerAsync();
     }
 
     private async Task SaveAllSettingsToServer()

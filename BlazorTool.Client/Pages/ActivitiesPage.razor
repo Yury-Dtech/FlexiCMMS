@@ -18,6 +18,7 @@
 @inject ILogger<ActivitiesPage> Logger
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 @inject ViewSettingsService ViewSettingsService
+@using Microsoft.AspNetCore.Components.Routing
 
 @cellStyles
 <style>    .k-scheduler-layout-flex .k-scheduler-cell.k-side-cell:not(.k-scheduler-times-all-day) {
@@ -139,9 +140,6 @@
                     var settingsMenuClass = showSettings ? "visible" : "";
                 }
                 <div class="settings-menu-container @settingsMenuClass">
-                    @* <div class="settings-header">
-                        <h3>@Localizer["c"]</h3>
-                    </div> *@
                     <div class="settings-content">
                         @if (CurrentView == SchedulerView.Timeline)
                         {
@@ -312,6 +310,7 @@
                     </DateHeaderTemplate>
                     <ItemTemplate>
                         @{
+
                             var item = (context as ActivityAppointment) ?? new ActivityAppointment();
                         }
                         <div class="tooltip-target" style="height:100%;" title="@(item.IsWorkOrder? item.GetWorkOrder().WODesc : item.Description)" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromAppointment(e, item))">
@@ -320,6 +319,7 @@
                     </ItemTemplate>
                     <SlotTemplate>
                         @{
+
                             SchedulerSlotTemplateContext slot = context as SchedulerSlotTemplateContext;
                             <div class="context-menu-area" @oncontextmenu:preventDefault @oncontextmenu="@((MouseEventArgs e) => ShowContextMenuFromEmptySlot(e, slot))">
                             </div>
@@ -489,6 +489,7 @@
     private bool showSettings { get; set; } = false;
     private ActivityAppointment? AppointmentToUpdate { get; set; }
     private SchedulerUpdateEventArgs? UpdateEventArgs { get; set; }
+    private bool _navSubscribed;
     // Auto refresh timer fields
     private int TimerInterval { get; set; } = 5; // minutes
     private TimeSpan HardReloadInterval { get; set; }
@@ -496,6 +497,7 @@
     private string timerSetVisibility = "none";
     #endregion 
 
+   
     private int CalculateNumberOfDays(int desiredWorkDays)
     {
         int totalDays = 0;
@@ -529,6 +531,11 @@
             }
         }
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        if (!_navSubscribed)
+        {
+            Navigation.LocationChanged += OnLocationChanged;
+            _navSubscribed = true;
+        }
         var isWASM = JSRuntime is IJSInProcessRuntime;
         Console.WriteLine($"--- Initialized Activities PAGE. WASM = {isWASM}");
         Console.WriteLine($"--- OnInitializedAsync completed.");
@@ -586,23 +593,6 @@
         Console.WriteLine($"--- HardLoadData completed. Appointments count: {Appointments.Count}");
     }
 
-    private async Task HardLoadDataTick()
-    {
-        var oldCount = Appointments.Count;
-        await HardLoadData(false); // silent
-        var newCount = Appointments.Count;
-        if (newCount != oldCount)
-        {
-            NotificationReference.Show(new NotificationModel
-            {
-                Text = $"{newCount - oldCount} {Localizer["New_Orders"]}",
-                ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
-                CloseAfter = 3000,
-                Icon = SvgIcon.InfoCircle
-            });
-        }
-    }
-
     private async Task LoadData(bool showLoading = true)
     {
         Console.WriteLine("--- LoadData started.");
@@ -627,19 +617,6 @@
         DisplayAppointments();
         if (showLoading) isLoading = false;
         Console.WriteLine($"--- LoadData completed. Appointments count: {Appointments.Count}");
-    }
-
-    private void OnTimerIntervalChanged()
-    {
-        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
-        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
-        _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
-        _ = autoReloadTimer?.RestartAsync();
-    }
-
-    private void OnTimerClick()
-    {
-        timerSetVisibility = string.IsNullOrEmpty(timerSetVisibility) ? "none" : string.Empty;
     }
 
     /// <summary>
@@ -1013,6 +990,55 @@
         public string Color { get; set; } = string.Empty; // must be a valid CSS string
     }
 
+    #region Refresh data timer
+
+    private async Task HardLoadDataTick()
+    {
+        var oldCount = Appointments.Count;
+        await HardLoadData(false); // silent
+        var newCount = Appointments.Count;
+        if (newCount != oldCount)
+        {
+            NotificationReference.Show(new NotificationModel
+            {
+                Text = $"{newCount - oldCount} {Localizer["New_Orders"]}",
+                ThemeColor = ThemeConstants.Notification.ThemeColor.Info,
+                CloseAfter = 3000,
+                Icon = SvgIcon.InfoCircle
+            });
+        }
+    }
+    private void OnTimerIntervalChanged()
+    {
+        HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        _viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
+        _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
+        _ = autoReloadTimer?.RestartAsync();
+    }
+    private void OnTimerClick()
+    {
+        timerSetVisibility = string.IsNullOrEmpty(timerSetVisibility) ? "none" : string.Empty;
+    }
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("/activities", StringComparison.OrdinalIgnoreCase))
+        {
+            _ = DisposeTimerAsync();
+        }
+    }
+    private async Task DisposeTimerAsync()
+    {
+        try
+        {
+            if (autoReloadTimer != null)
+            {
+                await autoReloadTimer.DisposeAsync();
+                autoReloadTimer = null;
+            }
+        }
+        catch { }
+    }
+
     private void InitializeSaveStateTimer()
     {
         _saveStateTimer = new(async _ =>
@@ -1024,12 +1050,19 @@
 
     public async ValueTask DisposeAsync()
     {
+        if (_navSubscribed)
+        {
+            Navigation.LocationChanged -= OnLocationChanged;
+            _navSubscribed = false;
+        }
         if (_saveStateTimer is not null)
         {
             await _saveStateTimer.DisposeAsync();
         }
+        await DisposeTimerAsync();
     }
 
+    #endregion
     private async Task SaveAllSettingsToServer()
     {
         if (UserState == null || string.IsNullOrEmpty(UserState.UserName)) return;
@@ -1282,7 +1315,6 @@
     {
 
         SaveFiltersState();
-        // refresh view
         var prevView = CurrentView;
         CurrentView = SchedulerView.Day;
         await Task.Delay(10);

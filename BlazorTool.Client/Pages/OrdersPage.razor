@@ -1,4 +1,5 @@
 ﻿@page "/orders"
+@implements IAsyncDisposable
 
 @using BlazorTool.Client.Models
 @using BlazorTool.Client.Services
@@ -14,6 +15,7 @@
 @inject UserState UserState
 @inject IStringLocalizer<Resources.UIStrings> Localizer
 @inject ViewSettingsService ViewSettingsService
+@using Microsoft.AspNetCore.Components.Routing
 
 <CheckSession apiService="@apiService" UserState="@UserState" />
 
@@ -36,8 +38,7 @@ else
                               MaxAllowedTags="@MaxAllowedTags"
                               Placeholder="@Localizer["OrdersPage_SelectDevices"]"
                               AutoClose="false"
-                              OnClose="@OnMultiValueClosed"
-                              OnChange="@(async (arg) => { if (selectedDeviceIds.Count == 0) await LoadData();})"
+                              OnChange="@OnMultiValueClosed"
                               Width="500px"
                                 Filterable="true"
                                 FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
@@ -166,7 +167,6 @@ else
     private bool ShowActiveOnlyOrders = true;
     private bool isAllOrdersLoaded = false;
     private List<WorkOrder> OrdersForGrid = new List<WorkOrder>();
-    private IEnumerable<Device> selectedDevices = new List<Device>();
     private List<int> selectedDeviceIds = new List<int>();
     private string? selectedState = "All";
     private string? selectedDeviceType = "All";
@@ -195,13 +195,21 @@ else
     private TimeSpan HardReloadInterval { get; set; }
     public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
     private string timerSetVisibility = "none";
+    private bool _navSubscribed;
+    private bool ThemeConstantsInitialized = false;
+
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine($"[NAV] OrdersPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
+        if (!_navSubscribed)
+        {
+            Navigation.LocationChanged += OnLocationChanged;
+            _navSubscribed = true;
+        }
         await base.OnInitializedAsync();
     }
-
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !hasInitialized)
@@ -221,7 +229,7 @@ else
 
             await HardLoadData();
 
-            await LoadData();
+            // await LoadData();
 
             MakeContextMenu();
 
@@ -239,19 +247,22 @@ else
             return; // No devices available, exit early
         }
 
-        if (selectedDevices == null || selectedDevices.Count() == 0)
-        {
-            selectedDevices = new List<Device>();
-        }
-
-        if (selectedDeviceIds == null || selectedDeviceIds.Count == 0)
+        if (selectedDeviceIds == null)
         {
             selectedDeviceIds = new List<int>();
         }
-        Console.WriteLine($"Selected devices count: {selectedDevices.Count()}");
-        var filteredDevices = GetFilteredDevices();
-        OrdersForGrid = await GetFilteredOrders(filteredDevices);
-        HaveAnyTakenOrders = (await apiService.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
+
+        Console.WriteLine($"Selected devices count: {selectedDeviceIds.Count()}");
+        if (selectedDeviceIds.Count == 0 && selectedDeviceCategory == "All")
+        {
+            OrdersForGrid = (await apiService.GetWorkOrdersCachedAsync(active: ShowActiveOnlyOrders ? true : null)).ToList();
+        }
+        else
+        {
+            var filteredDevices = GetFilteredDevices();
+            OrdersForGrid = await GetFilteredOrders(filteredDevices);
+        }
+        
         isOrdersLoading = false;
         StateHasChanged();
     }
@@ -291,6 +302,7 @@ else
         deviceCategories?.Insert(0, "All");
         deviceTypes = devices.Select(d => d.Type).Distinct().ToList();
         deviceTypes?.Insert(0, "All");
+        HaveAnyTakenOrders = (await apiService.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
         if (showLoading)
         {
             isDevicesLoading = false;
@@ -300,16 +312,6 @@ else
                 await hardReloadTimer.RestartAsync(); // reset interval after manual reload
             }
         }
-    }
-
-    private async Task HardLoadDataTick()
-    {
-        var old_count = OrdersForGrid.Count();
-        await HardLoadData(false); // silent refresh
-        var new_count = OrdersForGrid.Count();
-        if (new_count == old_count) return; // no change, skip
-        await LoadData(); // reapply filters
-        ShowNotification($"{new_count - old_count} {Localizer["New_Orders"]}", NotificationTypeEnum.Info); 
     }
 
     private async Task SaveStateAsync()
@@ -349,12 +351,12 @@ else
         List<WorkOrder> orders = new List<WorkOrder>();
 
         foreach(var device in devices)
-                {
-                    var loadedOrders = (await apiService.GetWorkOrdersCachedAsync(deviceId: device.MachineID, active: ShowActiveOnlyOrders ? true : null)).ToList();
-                    orders.AddRange(loadedOrders);
-                }
+        {
+            var loadedOrders = (await apiService.GetWorkOrdersCachedAsync(deviceId: device.MachineID, active: ShowActiveOnlyOrders ? true : null)).ToList();
+            orders.AddRange(loadedOrders);
+        }
         return orders.OrderByDescending(o => o.WorkOrderID).ToList();
-        
+
     }
 
     private void OnOrderChanged(SchedulerAppointment? editedAppointment)
@@ -379,7 +381,6 @@ else
     #region Filter events
     private async Task OnMultiValueClosed()
     {
-        selectedDevices = devices.Where(d => selectedDeviceIds.Contains(d.MachineID)).ToList();
         await LoadData();
         await SaveStateAsync();
     }
@@ -387,7 +388,17 @@ else
     async Task OnCategoryChanged()
     {
         if (string.IsNullOrWhiteSpace(selectedDeviceCategory))
+        {
             selectedDeviceCategory = "All";
+            selectedDeviceIds.Clear();
+        }
+        else
+        {
+            selectedDeviceIds = devices
+                .Where(d => d.DeviceCategory == selectedDeviceCategory)
+                .Select(d => d.MachineID)
+                .ToList();
+        }
         await LoadData();
         await SaveStateAsync();
     }
@@ -395,7 +406,6 @@ else
     async Task selectAllDevices()
     {
         selectedDeviceIds = devices.Select(d => d.MachineID).ToList();
-        selectedDevices = devices.ToList();
         selectedDeviceCategory = "All";
         selectedDeviceType = "All";
         selectedState = "All";
@@ -489,6 +499,18 @@ else
         IsAddActivityWindowVisible = false;
     }
 
+    #region Refresh data timer
+    private async Task HardLoadDataTick()
+    {
+        var old_count = OrdersForGrid.Count();
+        await HardLoadData(false); // silent refresh
+        Console.WriteLine($"[TIMER] OrdersPage HardLoadDataTick at {DateTime.Now:HH:mm:ss}, old count: {old_count}, new count: {OrdersForGrid.Count()}");
+        var new_count = OrdersForGrid.Count();
+        if (new_count == old_count) return; // no change, skip
+        // await LoadData(); //reapply filters
+        ShowNotification($"{new_count - old_count} {Localizer["New_Orders"]}", NotificationTypeEnum.Info); 
+    }
+
     private async Task OnTimerIntervalChanged()
     {        
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
@@ -506,7 +528,39 @@ else
         else
             timerSetVisibility = string.Empty;
     }
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        // если ушли со страницы /orders – останавливаем таймер (без ожидания)
+        if (!e.Location.Contains("/orders", StringComparison.OrdinalIgnoreCase))
+        {
+            _ = DisposeTimerAsync();
+        }
+    }
 
+    private async Task DisposeTimerAsync()
+    {
+        try
+        {
+            if (hardReloadTimer != null)
+            {
+                await hardReloadTimer.DisposeAsync();
+                hardReloadTimer = null;
+            }
+        }
+        catch { }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_navSubscribed)
+        {
+            Navigation.LocationChanged -= OnLocationChanged;
+            _navSubscribed = false;
+        }
+        await DisposeTimerAsync();
+    }
+
+    #endregion timer
     private async Task OnSwitchActiveChanged()
     {
         if (!ShowActiveOnlyOrders && !isAllOrdersLoaded)

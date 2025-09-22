@@ -11,6 +11,7 @@
 @inject ApiServiceClient ApiClient
 @inject UserState UserState
 @inject ViewSettingsService ViewSettingsService
+@using Microsoft.AspNetCore.Components.Routing
 
 <BlazorTool.Client.Components.CheckSession ApiService="@ApiClient" UserState="@UserState" />
 
@@ -290,6 +291,7 @@
     private TimeSpan HardReloadInterval { get; set; }
     public TelerikNotification NotificationReference { get; set; } = new TelerikNotification();
     private string timerSetVisibility = "none";
+    private bool _navSubscribed;
     #endregion Fields
     #region Spoilers
     private void ToggleSpoiler(string pane)
@@ -514,11 +516,16 @@
         {
             return;
         }
+        if (!_navSubscribed)
+        {
+            NavigationManager.LocationChanged += HandleLocationChanged;
+            _navSubscribed = true;
+        }
         Console.WriteLine($"Home.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
         await base.OnInitializedAsync();
     }
-
+    
     private async Task LoadGridSettings()
     {
         _assignedGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(AssignedGridSettingsKey);
@@ -734,17 +741,6 @@
         }
     }
 
-    //for sync saving page settings to LocalStorage
-    private void InitializeSaveStateTimer()
-    {
-        _saveStateTimer = new(async _ =>
-        {
-            await SaveSectionStatesToChacheAsync();
-            await SaveAllSettingsToServer();
-
-        }, null, Timeout.Infinite, Timeout.Infinite);
-    }
-
     private async Task SaveAllSettingsToServer()
     {
         if (UserState == null || string.IsNullOrEmpty(UserState.UserName)) return;
@@ -754,14 +750,8 @@
             await ApiClient.SaveViewSettingsAsync(UserState.UserName, key, viewSettings);
         }
     }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_saveStateTimer is not null)
-        {
-            await _saveStateTimer.DisposeAsync();
-        }
-    }
+    
+    #region Refresh data Timer
 
     private async Task HardLoadDataTick()
     {
@@ -770,6 +760,31 @@
         var new_count = myAssignedOrders.Count();
         if (new_count == old_count) return; // no change, skip
         ShowNotification($"{new_count - old_count} {Localizer["New_Orders"]}", NotificationTypeEnum.Info); 
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_navSubscribed)
+        {
+            NavigationManager.LocationChanged -= HandleLocationChanged;
+            _navSubscribed = false;
+        }
+        if (_saveStateTimer is not null)
+        {
+            await _saveStateTimer.DisposeAsync();
+        }
+        await DisposeTimerAsync();
+    }
+
+    //for sync saving page settings to LocalStorage
+    private void InitializeSaveStateTimer()
+    {
+        _saveStateTimer = new(async _ =>
+        {
+            await SaveSectionStatesToChacheAsync();
+            await SaveAllSettingsToServer();
+
+        }, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     private async Task OnTimerIntervalChanged()
@@ -783,6 +798,27 @@
         }
     }
 
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("/", StringComparison.OrdinalIgnoreCase) || e.Location.Contains("/login", StringComparison.OrdinalIgnoreCase))
+        {
+            _ = DisposeTimerAsync();
+        }
+    }
+
+    private async Task DisposeTimerAsync()
+    {
+        try
+        {
+            if (hardReloadTimer != null)
+            {
+                await hardReloadTimer.DisposeAsync();
+                hardReloadTimer = null;
+            }
+        }
+        catch { }
+    }
+
     private void OnTimerClick()
     {
         if (string.IsNullOrEmpty(timerSetVisibility))
@@ -790,7 +826,7 @@
         else
             timerSetVisibility = string.Empty;
     }
-
+    #endregion
     private void ShowNotification(string message, NotificationTypeEnum type)
     {
         switch (type)

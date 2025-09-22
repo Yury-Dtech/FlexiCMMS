@@ -13,6 +13,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\OrdersPage.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Pages\OrdersPage.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
         <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
         <PackageReference Include="Markdig" Version="0.41.3" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0" />

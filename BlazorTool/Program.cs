@@ -127,7 +127,7 @@ static string getLocalServerAddress(WebApplicationBuilder builder)
     }
     else //prodaction or other environment
     {
-        internalApiBaseUrl = "http://localhost/api/v1/"; //TODO: set your production URL here
+        internalApiBaseUrl = "http://localhost/api/v1/";
         //internalApiBaseUrl = builder.Configuration["HostAddress"] ?? throw new InvalidOperationException("HostAddress not configured for non-development environment.");
     }
     //builder.Configuration["InternalApiBaseUrl"] = internalApiBaseUrl; // Store for later use if needed

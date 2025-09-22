@@ -160,8 +160,8 @@
         {
             if (ActivityModel.ActDate != null)
             {
-                var duration = value - ActivityModel.ActDate.Value;
-                ActivityModel.WorkLoad = (decimal)duration.TotalHours;
+                var duration = (value - ActivityModel.ActDate.Value).TotalHours;
+                ActivityModel.WorkLoad = (decimal) duration > 24m ? 24m : (decimal) duration;
                 StateHasChanged();
             }
         }
@@ -231,7 +231,7 @@
         var hours = (DateTime.Now - takeDate.Value).TotalHours;
 
         if (hours < 0.25) return 0.25m;
-        if (hours > 24) return 24m;
+        if (hours > 24) return 24.0m;
         return (decimal)hours;
     }
 
