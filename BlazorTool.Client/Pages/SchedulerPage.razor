@@ -343,6 +343,23 @@
     </WindowContent>
 </TelerikWindow>
 
+<TelerikWindow Modal="false" MinWidth="1200px" MaxHeight="95vh" Visible="@customCycleEditFormShown" ThemeColor="@ThemeConstants.Window.ThemeColor.Dark">
+    <WindowTitle>Cycle</WindowTitle>
+    <WindowActions>
+        <WindowAction Name="Close" OnClick="@CancelEditing" />
+    </WindowActions>
+    <WindowContent>
+        <AppointmentEditor Appointment="@CurrentAppointment"
+                           isEditable=@(UserState.HasPermission(PermissionType.WO_Edit) || (CurrentAppointment.AppointmentId ==0 && UserState.HasPermission(PermissionType.WO_Add)))
+                           ListPersons="@PersonsNames.Where(c=>c != "All").ToList()"
+                           currentUser="@currentUser"
+                           OnComponentClosing="@RefreshData"
+                           cycle="true"
+                           isScheduler="true" />
+    </WindowContent>
+</TelerikWindow>
+
+
 <TelerikPopup @ref="@PopupRef"
               AnchorSelector=".popup-target"
               AnchorHorizontalAlign="@PopupAnchorHorizontalAlign.Center"
@@ -376,6 +393,7 @@
     private List<WorkOrder> _allOrders = new();
     private bool isLoading { get; set; } = true;
     private bool customEditFormShown { get; set; } = false;
+    private bool customCycleEditFormShown { get; set; } = false;
     private bool isOrderCardOpen = false;
     private SchedulerAppointment CurrentAppointment { get; set; } = new SchedulerAppointment();
     private WorkOrder CurrentOrder { get; set; }
@@ -769,6 +787,8 @@
         if (editedAppointment == null)//was removed or cancelled NEW
         {
             customEditFormShown = false;
+
+            customCycleEditFormShown = false;
             isOrderCardOpen = false;
             return;
         }
@@ -783,6 +803,7 @@
                 _allAppointments.Add(editedAppointment);
         }
         customEditFormShown = false;
+        customCycleEditFormShown = false;
         isOrderCardOpen = false;
         await LoadData();
         //DisplayAppointments();
@@ -815,6 +836,8 @@
     void CancelEditing()
     {
         customEditFormShown = false;
+
+        customCycleEditFormShown = false;
         isOrderCardOpen = false;
     }
 
@@ -1027,6 +1050,7 @@
         if (UserState.HasPermission(PermissionType.WO_Add))
         {
             MenuItems.Add(new ContextMenuItem { Text = @Localizer["Scheduler_AddNew"], Value = "Add", Icon = SvgIcon.Plus });
+            MenuItems.Add(new ContextMenuItem { Text = "Nowe zlecenie cykliczne", Value = "Add cycle", Icon = SvgIcon.Plus });
         }
         else
         {
@@ -1064,6 +1088,9 @@
             case "Add":
                 OnAddAppointment();
                 break;
+            case "Add cycle":
+                OnAddCycleAppointment();
+                break;
             case "Open":
                 OnOpenAppointment();
                 break;
@@ -1100,6 +1127,34 @@
                 }
             }
             customEditFormShown = true;
+            StateHasChanged();
+        }
+    }
+
+    private void OnAddCycleAppointment()
+    {
+        Console.WriteLine($"[{currentUser}]:  Adding new appointment at {_clickedSlotContext?.Start}");
+        // Implement logic to open a form for adding a new appointment
+        // You can use _clickedSlotContext.Start and _clickedSlotContext.End to pre-fill the form
+        if (_clickedSlotContext != null)
+        {
+            bool isStartEqualsEnd = _clickedSlotContext.Start == _clickedSlotContext.End;
+            CurrentAppointment = new SchedulerAppointment()
+            {
+                Start = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(5) : _clickedSlotContext.Start,
+                End = isStartEqualsEnd ? _clickedSlotContext.Start.AddHours(10) : _clickedSlotContext.End,
+                IsAllDay = true
+            };
+            if (_clickedSlotContext.Resources != null && _clickedSlotContext.Resources.Any())
+            {
+                // get person from resources
+                var personResource = _clickedSlotContext.Resources.FirstOrDefault(r => r.Key == "AssignedPerson");
+                if (personResource.Key != null && personResource.Value is string personName)
+                {
+                    CurrentAppointment.AssignedPerson = personName;
+                }
+            }
+            customCycleEditFormShown = true;
             StateHasChanged();
         }
     }

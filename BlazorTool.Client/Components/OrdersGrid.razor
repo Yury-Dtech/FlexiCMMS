@@ -39,6 +39,7 @@
             @if(UserState.HasPermission(PermissionType.WO_Add))
             {
                 <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrderWindow">@Localizer["Scheduler_AddNew"]</TelerikButton>
+                <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewCycleOrderWindow">Nowe zlecenie cykliczne</TelerikButton>
             }
         }
     </GridToolBarTemplate>
@@ -188,6 +189,38 @@
     </WindowContent>
 </TelerikWindow>
 
+<TelerikWindow @bind-Visible="@isCycleOrderCardOpen"
+               CloseOnOverlayClick="true"
+               Modal="true"
+               Width="1280px"
+               MaxHeight="95vh"
+               ThemeColor="@ThemeConstants.Window.ThemeColor.Dark">
+    <WindowTitle>
+        <strong>
+            Cykliczne
+            @if(selectedOrder.WorkOrderID == 0) {
+                @Localizer["NewOrder"]  
+            }else{
+                @Localizer["WorkOrder_OrderNo"] @selectedOrder.WorkOrderID 
+            }
+       </strong >
+
+    </WindowTitle>
+    <WindowActions>
+        <WindowAction Name="Close" OnClick="@CancelEditing" />
+    </WindowActions>
+    <WindowContent>
+        <AppointmentEditor Appointment="@selectedAppointment" 
+                          isEditable=@UserState.HasPermission(PermissionType.WO_Edit) 
+                          ListPersons="@personNames.Where(c=>c != "All").ToList()"
+                          currentUser="@currentUser"
+                          OnComponentClosing="@OnCloseWorkOrderWindow"
+                          OnRefreshData="@((app) => OnRefreshData(app))"
+                          cycle="true"
+                          isScheduler="false" />
+    </WindowContent>
+</TelerikWindow>
+
 @code {
     [Parameter] public List<WorkOrder> OrdersForGrid { get; set; } = new List<WorkOrder>();
     [Parameter] public EventCallback<SchedulerAppointment> OnOrderChanged { get; set; }
@@ -209,6 +242,7 @@
     private List<string> personNames { get; set; } = new List<string>();
     private List<WODict> dicts { get; set; } = new List<WODict>();
     private bool isOrderCardOpen = false;
+    private bool isCycleOrderCardOpen = false;
     private WorkOrder _selectedOrder;
     private WorkOrder selectedOrder
     {
@@ -272,12 +306,14 @@
         if (editedAppointment == null)
         {
             isOrderCardOpen = false;
+            isCycleOrderCardOpen = false;
             return;
         }
         if (editedAppointment.AssignedPerson == Person.NotAssigned.Name)
             editedAppointment.AssignedPerson = string.Empty;
         selectedAppointment = editedAppointment;
         await OnOrderChanged.InvokeAsync(editedAppointment);
+        isCycleOrderCardOpen = false;
         isOrderCardOpen = false;
     }
 
@@ -415,6 +451,20 @@
         };
         selectedAppointment = new SchedulerAppointment(selectedOrder);
         isOrderCardOpen = true;
+    }
+
+    public void AddNewCycleOrderWindow()
+    {
+        selectedOrder = new WorkOrder
+        {
+            WorkOrderID = 0,
+            AddDate = DateTime.Now,
+            StartDate = DateTime.Now,
+            EndDate = DateTime.Now.AddDays(1),
+            AssignedPerson = Person.NotAssigned.Name,
+        };
+        selectedAppointment = new SchedulerAppointment(selectedOrder);
+        isCycleOrderCardOpen = true;
     }
 
     public void OpenWorkOrderWindow(WorkOrder WO)

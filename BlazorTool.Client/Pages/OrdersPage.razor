@@ -130,6 +130,7 @@ else
 <div class="popup-dep-target" style="position:fixed; left:@MenuPositionX; top:@MenuPositionY; z-index: 9999; "></div>
 
 @code {
+
     private string ViewSettingsKey = ViewSettingsService.SettingsKeys["OrdersPage"];
     private ViewSettings<WorkOrder> _viewSettings;
     private TelerikPopup? PopupRef { get; set; }
@@ -184,7 +185,7 @@ else
                 Navigation.NavigateTo("/login");
             }            
             await HardLoadData();
-            
+
             await LoadData();
 
             MakeContextMenu();
@@ -225,7 +226,7 @@ else
     private async Task HardLoadData()
     {
         isDevicesLoading = true;
-            StateHasChanged();
+        StateHasChanged();
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allPersons = await apiService.GetAllPersons();
 
@@ -299,8 +300,13 @@ else
         if (editedAppointment == null) return;
 
         var index = OrdersForGrid.FindIndex(x => x.WorkOrderID == editedAppointment.AppointmentId);
-        OrdersForGrid.RemoveAt(index);
-        OrdersForGrid.Insert(index, editedAppointment);
+
+        try
+        {
+            OrdersForGrid.RemoveAt(index);
+            OrdersForGrid.Insert(index, editedAppointment);
+        }
+        catch(ArgumentOutOfRangeException){ Console.WriteLine($"Index {index} out of range"); }
         ordersGrid.RefreshGrid();
         StateHasChanged();
     }

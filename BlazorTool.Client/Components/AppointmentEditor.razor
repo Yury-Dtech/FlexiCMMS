@@ -47,6 +47,7 @@
                 isEditable=@isEditable
                 currentUser="@currentUser"
                 isScheduler = "@isScheduler"
+                cycle = "@cycle"
                 OnStateChanged="@((isValid) => {isValidData = isValid; StateHasChanged();})"
                 NeedReloadModel="@((wo) => ReloadModel(wo.WorkOrderID))"
 >
@@ -77,6 +78,7 @@
     [Parameter] public bool isEditable { get; set; } = false;
     [Parameter] public Person currentUser { get; set; }
     [Parameter] public bool isScheduler { get; set; } = false; // Indicates if this component is used in the scheduler context
+    [Parameter] public bool cycle { get; set; } = false;
     // [Parameter] public List<Dict>? ListDicts { get; set; }
     private bool isNewAppointment = false;
     private string titleAlarm = string.Empty;
@@ -129,8 +131,57 @@
             PopupRef?.Show();
             return;
         }
+        var result = new SingleResponse<WorkOrder>();
+        if (!cycle)
+        {
+            result = await ApptService.UpdateAppointment(Appointment);    
+        }
+        else
+        {
+            var startDate = Appointment.DateStart == default ? DateOnly.FromDateTime(DateTime.Today) : Appointment.DateStart;
+            var endDate = Appointment.DateEnd == default ? startDate : Appointment.DateEnd;
+            var startTime = Appointment.StartTime;
+            var endTime = Appointment.EndTime;
 
-        var result = await ApptService.UpdateAppointment(Appointment);
+            var cycleDays = new List<DateOnly>();
+            if (Appointment.Daily)
+            {
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                    cycleDays.Add(date);
+            }
+            else if (Appointment.Weekly && Appointment.DaysOfWeek != null)
+            {
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                    if (Appointment.DaysOfWeek.Contains(date.DayOfWeek))
+                        cycleDays.Add(date);
+            }
+            else if (Appointment.Monthly && Appointment.DaysOfMonth != null)
+            {
+                for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                    if (Appointment.DaysOfMonth.Contains(date.Day))
+                        cycleDays.Add(date);
+            }
+
+            SingleResponse<WorkOrder>? lastValidResult = null;
+            foreach (var day in cycleDays)
+            {
+                var appt = Appointment.ShallowCopy();
+                appt.Start = day.ToDateTime(startTime);
+                appt.End = day.ToDateTime(endTime);
+                appt.IsAllDay = false;
+                var saveResult = await ApptService.UpdateAppointment(appt);
+                if (!saveResult.IsValid)
+                {
+                    string errors = string.Join(Environment.NewLine, saveResult.Errors);
+                    popupMessage = errors ?? Localizer["AppointmentEditor_FailedToSave"];
+                    PopupRef?.Show();
+                    return;
+                }
+                lastValidResult = saveResult;
+            }
+            result = lastValidResult ?? new SingleResponse<WorkOrder> { IsValid = true, Data = null, Errors = new List<string>() };
+        }
+
         if (!result.IsValid)
         {
             string errors = string.Join(Environment.NewLine, result.Errors);

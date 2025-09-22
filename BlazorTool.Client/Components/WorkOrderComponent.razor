@@ -179,6 +179,7 @@
             </TelerikCard>
         </div>
 
+
         <!-- Dates -->
         <div class="col ">
             <TelerikCard Class="h-100">
@@ -187,54 +188,198 @@
                 </CardHeader>
                 <CardBody Class="p-2">
                     <div class="dates-grid">
-                        <div class="date-item">
+                        @if (!cycle)
+                        {
+                            <div class="date-item">
                                 <label class="@DatesAlarm">@Localizer[nameof(WorkOrder.StartDate)]:</label>
                                 <TelerikDateTimePicker @bind-Value="@WorkOrder.StartDate"
-                                                       OnChange="@(OnDateChanged)"
-                                                       Width="100%"
-                                                       Size="@cb_size"
-                                                       ReadOnly=@(isEditable == false)
-                                                       Class="@DatesAlarm"
-                                                       Format="@dateTimeFormat"
-                                                       >
-                                    <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="5"/>
-                                                       </TelerikDateTimePicker>
-                        </div>
-                        <div class="date-item">
-                                <label>@Localizer[nameof(WorkOrder.EndDate)]:</label>
-                                <TelerikDateTimePicker @bind-Value="@WorkOrder.EndDate"
-                                                       OnChange="@(OnDateChanged)"
-                                                       Width="100%"
-                                                       Size="@cb_size"
-                                                       ReadOnly=@(isEditable == false)
-                                                       Class="@DatesAlarm"
-                                                       Format="@dateTimeFormat"
-                                                       >
-                                    <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="5" />
+                                                    OnChange="@(OnDateChanged)"
+                                                    Width="100%"
+                                                    Size="@cb_size"
+                                                    ReadOnly=@(isEditable == false)
+                                                    Class="@DatesAlarm"
+                                                    Format="@dateTimeFormat"
+                                                    >
+                                <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="5"/>
                                 </TelerikDateTimePicker>
-                        </div>
-                        <div class="date-item">
-                            <label>@Localizer[nameof(WorkOrder.AddDate)]:</label>
-                            <div class="date-value">@FormatDateTime(WorkOrder.AddDate)</div>
-                        </div>
-                        <div class="date-item">
-                                <label>@Localizer[nameof(WorkOrder.TakeDate)]:</label>
-                            <div class="date-value">@FormatDateTime(WorkOrder.TakeDate)</div>
-                        </div>
-                        <div class="date-item">
-                                <label>@Localizer[nameof(WorkOrder.CloseDate)]:</label>
-                            <div class="date-value">@FormatDateTime(WorkOrder.CloseDate)</div>
-                        </div>
-                        <div class="date-item">
-                                <label>@Localizer[nameof(WorkOrder.PersonTakeDate)]:</label>
-                            <div class="date-value">@FormatDateTime(WorkOrder.PersonTakeDate)</div>
-                        </div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.EndDate)]:</label>
+                                    <TelerikDateTimePicker @bind-Value="@WorkOrder.EndDate"
+                                                            OnChange="@(OnDateChanged)"
+                                                            Width="100%"
+                                                            Size="@cb_size"
+                                                            ReadOnly=@(isEditable == false)
+                                                            Class="@DatesAlarm"
+                                                            Format="@dateTimeFormat"
+                                                            >
+                                        <DateTimePickerSteps Year="1" Month="1" Day="1" Hour="1" Minute="5" />
+                                    </TelerikDateTimePicker>
+                            </div>
+                            <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.AddDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.AddDate)</div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.TakeDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.TakeDate)</div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.CloseDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.CloseDate)</div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.PersonTakeDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.PersonTakeDate)</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.StartDate)]:</label>
+                                <TelerikTimePicker @bind-Value="WorkOrder.StartTime"  
+                                                   OnChange="@(OnStartTimeChanged)"
+                                                   Width="100%"
+                                                   Size="@cb_size"
+                                                   Class="@DatesAlarm"
+                                                   Format="@timeFormat">
+                                    <TimePickerSteps Hour="1" Minute="5"/>
+                                </TelerikTimePicker>
+                            </div>
+                            <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.EndDate)]:</label>
+                                <TelerikTimePicker @bind-Value="@WorkOrder.EndTime"
+                                                   OnChange="@(OnEndTimeChanged)"
+                                                   Width="100%"
+                                                   Size="@cb_size"
+                                                   Format="@timeFormat">
+                                    <TimePickerSteps Hour="1" Minute="5" />
+                                </TelerikTimePicker>
+                            </div>
+                            <div class="date-item">
+                                <label>Długość:</label>
+                                <TelerikTimePicker @bind-Value="@WorkOrder.TotalTime"
+                                                   OnChange="@(OnTotalTimeChanged)"
+                                                   Width="100%"
+                                                   Size="@cb_size"
+                                                   Format="@timeFormat">
+                                    <TimePickerSteps Hour="1" Minute="5" />
+                                </TelerikTimePicker>
+                            </div>
+                            <div class="date-item">
+                                <label>Podział:</label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                    <div>
+                                        <TelerikCheckBox @bind-Value="@WorkOrder.Daily"
+                                                OnChange="@(() => SetIntervalType("Daily"))"
+                                                Size="@cb_size"
+                                                Id="IntervalTypeDaily" />
+                                        <label for="IntervalTypeDaily" style="margin-left: 0.5rem;">Dziennie</label>
+                                    </div>
+                                    <div>
+                                        <TelerikCheckBox @bind-Value="@WorkOrder.Weekly"
+                                                OnChange="@(() => SetIntervalType("Weekly"))"
+                                                Size="@cb_size"
+                                                Id="IntervalTypeWeekly" />
+                                        <label for="IntervalTypeWeekly" style="margin-left: 0.5rem;">Tygodniowo</label>
+                                    </div>
+                                    <div>
+                                        <TelerikCheckBox @bind-Value="@WorkOrder.Monthly"
+                                                OnChange="@(() => SetIntervalType("Monthly"))"
+                                                Size="@cb_size"
+                                                Id="IntervalTypeMonthly" />
+                                        <label for="IntervalTypeMonthly" style="margin-left: 0.5rem;">Miesięcznie</label>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (WorkOrder.Weekly)
+                            {
+                                <div class="date-item">
+                                    <label>Dni tygodnia:</label>
+                                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                        @foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+                                        {
+                                            <div>
+                                                <TelerikCheckBox
+                                                    Value="@(WorkOrder.DaysOfWeek?.Contains(day) ?? false)"
+                                                    ValueChanged="@((bool isChecked) => OnDayOfWeekChanged(day, isChecked))"
+                                                    Size="@cb_size"
+                                                    Id=@($"DayOfWeek_{day}") />
+                                                <label for="DayOfWeek_@day" style="margin-left: 0.5rem;">@Localizer[day.ToString()]</label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else if (WorkOrder.Monthly)
+                            {
+                                <div class="date-item">
+                                    <label>Dni miesiąca:</label>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                        @for (int day = 1; day <= 31; day++)
+                                        {
+                                            var currentDay = day;
+                                            <div>
+                                                <TelerikCheckBox
+                                                    Value="@(WorkOrder.DaysOfMonth?.Contains(currentDay) ?? false)"
+                                                    ValueChanged="@((bool isChecked) => OnDayOfMonthChanged(currentDay, isChecked))"
+                                                    Size="@cb_size"
+                                                    Id=@($"DayOfMonth_{currentDay}") />
+                                                <label for=@($"DayOfMonth_{currentDay}") style="margin-left: 0.3rem;">@currentDay</label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div class="date-item">
+                                <label>Od:</label>
+                                <TelerikDatePicker @bind-Value="@WorkOrder.DateStart"
+                                                        OnChange="@(OnDateChanged)"
+                                                        Width="100%"
+                                                        Size="@cb_size"
+                                                        ReadOnly=@(isEditable == false)
+                                                        Class="@DatesAlarm"
+                                                        Format="@dateFormat"
+                                                        >
+                                    <DatePickerSteps Year="1" Month="1" Day="1" />
+                                </TelerikDatePicker>
+                            </div>
+                            <div class="date-item">
+                                    <label>Do:</label>
+                                    <TelerikDatePicker @bind-Value="@WorkOrder.DateEnd"
+                                                            OnChange="@(OnDateChanged)"
+                                                            Width="100%"
+                                                            Size="@cb_size"
+                                                            ReadOnly=@(isEditable == false)
+                                                            Class="@DatesAlarm"
+                                                            Format="@dateFormat"
+                                                            >
+                                        <DatePickerSteps Year="1" Month="1" Day="1" />
+                                    </TelerikDatePicker>
+                            </div>
+                            <div class="date-item">
+                                <label>@Localizer[nameof(WorkOrder.AddDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.AddDate)</div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.TakeDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.TakeDate)</div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.CloseDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.CloseDate)</div>
+                            </div>
+                            <div class="date-item">
+                                    <label>@Localizer[nameof(WorkOrder.PersonTakeDate)]:</label>
+                                <div class="date-value">@FormatDateTime(WorkOrder.PersonTakeDate)</div>
+                            </div>
+                        } 
                     </div>
                 </CardBody>
             </TelerikCard>
         </div>
-       
-    </div>
+    </div>   
+        
 
     <!-- Statistics -->
     <TelerikCard Class="stats-card">
@@ -348,6 +493,7 @@
     [Parameter] public EventCallback<WorkOrder> NeedReloadModel { get; set; }
     [Parameter] public Person? currentUser { get; set; }
     [Parameter] public bool isScheduler { get; set; } = false; // Indicates if this component is used in the scheduler context
+    [Parameter] public bool cycle { get; set; } = false;
     private ActivityList? activityListComponent;
     // private int listTypeForCategory = 1;
     // private int listTypeForLevel = 2;
@@ -357,6 +503,8 @@
     private string notAssigned = "Not assigned";
     private string notSpecified = "Not specified";
     private string dateTimeFormat = "dd.MM.yyyy HH:mm";
+    private string dateFormat = "dd.MM.yyyy";
+    private string timeFormat = "HH:mm";
     private string CategoryAlarm = string.Empty;
     private string DeviceAlarm = string.Empty;
     private string DescriptionAlarm = string.Empty;
@@ -407,7 +555,7 @@
             ListReasons = await apiService.GetWOReasons();
             ListCategories =  await apiService.GetWOCategories();
         }
-        
+
         if (ListPersons == null )
         {
             ListPersons = new List<string>();
@@ -627,17 +775,30 @@
 
     private void OnDateChanged()
     {
-        if (!isValidDates())
+        if (WorkOrder == null) return;
+
+        if (cycle)
         {
-            DatesAlarm = "bg-warning";
+            if (WorkOrder.DateEnd < WorkOrder.DateStart)
+            {
+                WorkOrder.DateEnd = WorkOrder.DateStart;
+            }
         }
         else
         {
-            DatesAlarm = string.Empty;
+            if (!isValidDates())
+            {
+                DatesAlarm = "bg-warning";
+            }
+            else
+            {
+                DatesAlarm = string.Empty;
+            }
         }
+
         isValidWorkOrder();
     }
-        
+
     #endregion Event Handlers
 
     private string FormatDateTime(DateTime? dateTime)
@@ -650,14 +811,25 @@
 
     private bool isValidDates()
     {
-        var v1 = !isScheduler || WorkOrder?.StartDate != null ;
-        var v2 = !isScheduler || WorkOrder?.StartDate != DateTime.MinValue;
-        var v3 = !isScheduler || WorkOrder?.EndDate != null;
-        var v4 = !isScheduler || WorkOrder?.EndDate != DateTime.MinValue;
-        var v5 = (!isScheduler && (WorkOrder?.StartDate == null || WorkOrder?.EndDate == null)) 
-        || WorkOrder?.StartDate <= WorkOrder?.EndDate;
-        return isEditable && v1 && v2 && v3 && v4 && v5;
-              
+        if (WorkOrder == null) return false;
+
+        if (!cycle)
+        {
+            var v1 = !isScheduler || WorkOrder.StartDate != null;
+            var v2 = !isScheduler || WorkOrder.StartDate != DateTime.MinValue;
+            var v3 = !isScheduler || WorkOrder.EndDate != null;
+            var v4 = !isScheduler || WorkOrder.EndDate != DateTime.MinValue;
+            var v5 = (!isScheduler && (WorkOrder.StartDate == null || WorkOrder.EndDate == null)) 
+                     || WorkOrder.StartDate <= WorkOrder.EndDate;
+            return isEditable && v1 && v2 && v3 && v4 && v5;
+        }
+        else
+        {
+            bool validDates = WorkOrder.DateStart == null || WorkOrder.DateEnd == null || WorkOrder.DateStart <= WorkOrder.DateEnd;
+            bool validTimes = WorkOrder.StartTime < WorkOrder.EndTime;
+
+            return isEditable && validDates && validTimes;
+        }
     }
 
     private bool isValidWorkOrder()
@@ -669,8 +841,83 @@
                string.IsNullOrEmpty(LevelAlarm) &&
                string.IsNullOrEmpty(ReasonAlarm) &&
                isValidDates();
-               if (isValid) OnStateChanged.InvokeAsync(isValid);
+        if (isValid) OnStateChanged.InvokeAsync(isValid);
         return isValid;
+    }
+
+    private void SetIntervalType(string type)
+    {
+        if (WorkOrder == null) return;
+        WorkOrder.Daily = type == "Daily";
+        WorkOrder.Weekly = type == "Weekly";
+        WorkOrder.Monthly = type == "Monthly";
+    }
+
+    private void OnDayOfWeekChanged(DayOfWeek day, bool isChecked)
+    {
+        if (WorkOrder.DaysOfWeek == null)
+            WorkOrder.DaysOfWeek = new List<DayOfWeek>();
+
+        if (isChecked)
+        {
+            if (!WorkOrder.DaysOfWeek.Contains(day))
+                WorkOrder.DaysOfWeek.Add(day);
+        }
+        else
+        {
+            if (WorkOrder.DaysOfWeek.Contains(day))
+                WorkOrder.DaysOfWeek.Remove(day);
+        }
+        isValidWorkOrder();
+    }
+
+    private void OnDayOfMonthChanged(int day, bool isChecked)
+    {
+        if (WorkOrder.DaysOfMonth == null)
+            WorkOrder.DaysOfMonth = new List<int>();
+
+        if (isChecked)
+        {
+            if (!WorkOrder.DaysOfMonth.Contains(day))
+                WorkOrder.DaysOfMonth.Add(day);
+        }
+        else
+        {
+            if (WorkOrder.DaysOfMonth.Contains(day))
+                WorkOrder.DaysOfMonth.Remove(day);
+        }
+        isValidWorkOrder();
+    }
+
+    private void OnStartTimeChanged()
+    {
+        if (WorkOrder == null) return;
+
+        if (WorkOrder.EndTime <= WorkOrder.StartTime)
+        {
+            WorkOrder.EndTime = WorkOrder.StartTime.AddMinutes(5);
+        }
+        WorkOrder.TotalTime = TimeOnly.FromTimeSpan(WorkOrder.EndTime.ToTimeSpan() - WorkOrder.StartTime.ToTimeSpan());
+        StateHasChanged();
+    }
+
+    private void OnEndTimeChanged()
+    {
+        if (WorkOrder == null) return;
+
+        if (WorkOrder.EndTime <= WorkOrder.StartTime)
+        {
+            WorkOrder.StartTime = WorkOrder.EndTime.AddMinutes(-5);
+        }
+        WorkOrder.TotalTime = TimeOnly.FromTimeSpan(WorkOrder.EndTime.ToTimeSpan() - WorkOrder.StartTime.ToTimeSpan());
+        StateHasChanged();
+    }
+
+    private void OnTotalTimeChanged()
+    {
+        if (WorkOrder == null) return;
+        WorkOrder.EndTime = WorkOrder.StartTime.Add(new TimeSpan(WorkOrder.TotalTime.Hour, WorkOrder.TotalTime.Minute, 0));
+        StateHasChanged();
     }
 }
 

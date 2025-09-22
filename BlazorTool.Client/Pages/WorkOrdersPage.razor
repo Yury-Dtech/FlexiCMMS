@@ -1,0 +1,299 @@
+﻿@page "/filterOrders"
+
+@using System.Linq
+@using BlazorTool.Client.Models
+@using BlazorTool.Client.Services
+@using BlazorTool.Client.Components
+@using System.Text
+@using System.Diagnostics
+@using Telerik.Blazor.Components
+@using Telerik.Blazor.Components.Scheduler
+@using Telerik.DataSource.Extensions
+@inject IJSRuntime JSRuntime
+@inject ApiServiceClient apiService
+@inject AppointmentService ApptService
+@inject NavigationManager Navigation
+@inject UserState UserState
+@inject AppStateService AppState
+@inject ILogger<SchedulerPage> Logger
+@inject IStringLocalizer<Resources.UIStrings> Localizer
+@inject ViewSettingsService ViewSettingsService
+@inject ApiServiceClient ApiClient
+
+<div class="filter-controls-row">
+    <div style="flex-basis: 66%; flex-shrink:1; flex-grow:0; border-right: outset; display: flex; align-items: top; gap: 1rem;">
+        <div>
+            <label>@Localizer["Scheduler_AssignedPersons"] </label>
+            <TelerikMultiSelect Data="@PersonsNames"
+                                @bind-Value="@person"
+                                Placeholder="@Localizer["Scheduler_SelectAssignedPersons"]"
+                                AutoClose="false"
+                                TagMode="@TagMode"
+                                MaxAllowedTags="@MaxAllowedTags"
+                                Filterable="true"
+                                Width="250px"
+                                FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                OnChange="@ApplyFilters"
+                                ShowClearButton="true"
+                                Size="sm">
+            </TelerikMultiSelect>
+        </div>
+        <div>
+            <label>@Localizer["Scheduler_Department"] </label>
+            <TelerikMultiSelect Data="@Departments" TextField="Department"
+                                Placeholder="@Localizer["Scheduler_SelectDepartment"]"
+                                @bind-Value="@department"
+                                AutoClose="false"
+                                TagMode="@TagMode"
+                                MaxAllowedTags="@MaxAllowedTags"
+                                OnChange="@ApplyFilters"
+                                Filterable="true"
+                                Width="250px"
+                                FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                ShowClearButton="true"
+                                Size="sm">
+            </TelerikMultiSelect>
+        </div>
+        <div>
+            <label>@Localizer["OrdersPage_Devices"]</label>
+            <TelerikMultiSelect Data="@devices"
+                                @bind-Value="@selectedDeviceIds"
+                                ValueField="@nameof(Device.MachineID)"
+                                TextField="@nameof(Device.AssetNo)"
+                                Placeholder="@Localizer["OrdersPage_SelectDevices"]"
+                                AutoClose="false"
+                                TagMode="@TagMode"
+                                MaxAllowedTags="@MaxAllowedTags"
+                                Width="300px"
+                                OnChange="@ApplyFilters"
+                                Filterable="true"
+                                FilterOperator="@Telerik.Blazor.StringFilterOperator.Contains"
+                                ShowClearButton="true">
+            </TelerikMultiSelect>
+        </div>
+        <div>
+            <label>Data od </label>
+            <TelerikDatePicker @bind-Value="@startDate"
+                               OnChange="@ApplyFilters"
+                               Width="150px"
+                               Format="@dateFormat">
+                <DateTimePickerSteps Year="1" Month="1" Day="1" />
+            </TelerikDatePicker>
+        </div>
+        <div>
+            <label>Data do </label>
+            <TelerikDatePicker @bind-Value="@endDate"
+                               OnChange="@ApplyFilters"
+                               Width="150px"
+                               Format="@dateFormat">
+                <DateTimePickerSteps Year="1" Month="1" Day="1" />
+            </TelerikDatePicker>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+            <TelerikButton OnClick="@(() => SetQuickDateRange("today"))" Size="sm">Today</TelerikButton>
+            <TelerikButton OnClick="@(() => SetQuickDateRange("week"))" Size="sm">Week</TelerikButton>
+            <TelerikButton OnClick="@(() => SetQuickDateRange("month"))" Size="sm">Month</TelerikButton>
+        </div>
+
+    </div>
+</div>
+
+<div class="filter-columns">
+    <div class="filter-column open-column">
+        <div class="column-header">
+            <span>Nie rozpoczęte</span>
+            <span>@OpenOrders.Count / @FormatWorkLoad(@OpenOrders.Sum(o => o.workLoad))</span>
+        </div>
+        <div class="column-content">
+            @foreach (var order in OpenOrders)
+            {
+                <div class="workorder-card">
+                    <p>ID: @order.WorkOrderID</p>
+                    <p>Device: @order.WODevice</p>
+                    <p>Description: @order.WODesc</p>
+                    <p>Department: @order.DepName</p>
+                    <p>Assigned Person: @order.AssignedPerson</p>
+                    <p>Total Time: @FormatWorkLoad(@order.workLoad)</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="filter-column inprogress-column">
+        <div class="column-header">
+            <span>W trakcie realizacji</span>
+            <span>@InProgressOrders.Count / @FormatWorkLoad(@InProgressOrders.Sum(o => o.workLoad))</span>
+        </div>
+        <div class="column-content">
+            @foreach (var order in InProgressOrders)
+            {
+                <div class="workorder-card">
+                    <p>ID: @order.WorkOrderID</p>
+                    <p>Device: @order.WODevice</p>
+                    <p>Description: @order.WODesc</p>
+                    <p>Department: @order.DepName</p>
+                    <p>Assigned Person: @order.AssignedPerson</p>
+                    <p>Total Time: @FormatWorkLoad(@order.workLoad)</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="filter-column closed-column">
+        <div class="column-header">
+            <span>Zakończony</span>
+            <span>@ClosedOrders.Count / @FormatWorkLoad(@ClosedOrders.Sum(o => o.workLoad))</span>
+        </div>
+        <div class="column-content">
+            @foreach (var order in ClosedOrders)
+            {
+                <div class="workorder-card">
+                    <p>ID: @order.WorkOrderID</p>
+                    <p>Device: @order.WODevice</p>
+                    <p>Description: @order.WODesc</p>
+                    <p>Department: @order.DepName</p>
+                    <p>Assigned Person: @order.AssignedPerson</p>
+                    <p>Total Time: @FormatWorkLoad(@order.workLoad)</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<WorkOrder> OpenOrders = new();
+    private List<WorkOrder> InProgressOrders = new();
+    private List<WorkOrder> ClosedOrders = new();
+    private List<WorkOrder> workOrders = new List<WorkOrder>();
+    private List<Person> allPersons = new();
+    private List<Device> devices = new List<Device>();
+    private List<string> workOrderStates = new List<string>();
+    private List<string> Departments = new();
+    private List<string> PersonsNames = new();
+    private List<string> person = new();
+    private List<string> department = new();
+    private List<int> selectedDeviceIds = new List<int>();
+    private MultiSelectTagMode TagMode { get; set; } = MultiSelectTagMode.Single;
+    private DateOnly startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-7));
+    private DateOnly endDate = DateOnly.FromDateTime(DateTime.Today);
+    private bool isDataLoading = true;
+    private bool hasInitialized = false;
+    private int? MaxAllowedTags { get; set; }
+    private string dateFormat = "dd.MM.yyyy";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (UserState == null || !UserState.IsAuthenticated)
+        {
+            return;
+        }
+        if (firstRender && !hasInitialized)
+        {
+            hasInitialized = true;
+            isDataLoading = true;
+            await InvokeAsync(StateHasChanged);
+
+            if (UserState.IsAuthenticated)
+            {
+                workOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID);
+                workOrders = FilterWorkOrders(workOrders);
+                workOrderStates = workOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
+                Departments = (await apiService.GetWODepartments()).Select(c => c.Name).Distinct().ToList();
+                allPersons = apiService.GetAllPersonsCached();
+                if (allPersons == null || allPersons.Count == 0)
+                    allPersons = await apiService.GetAllPersons();
+                PersonsNames = allPersons.Select(c => c.Name).ToList();
+                PersonsNames.Insert(0, Person.NotAssigned.Name);
+                devices = await apiService.GetAllDevicesAsync();
+                await TakeListsOrders();
+            }
+            isDataLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task TakeListsOrders()
+    {
+        workOrders = await ApiClient.GetWorkOrdersWithPerson();
+        foreach(WorkOrder order in workOrders)
+        {
+            order.WODevice = devices.FirstOrDefault(d => d.MachineID == order.MachineID)?.AssetNo ?? string.Empty;
+            foreach (Models.Activity activity in await ApiClient.GetActivitiesByWO(order.WorkOrderID))
+            {
+                order.workLoad += activity.WorkLoad;
+            }
+        }
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private string FormatWorkLoad(decimal workLoad)
+    {
+        int hours = (int)workLoad;
+        int minutes = (int)((workLoad - hours) * 60);
+        return $"{hours:D2}:{minutes:D2} h";
+    }
+
+    private List<WorkOrder> FilterWorkOrders(List<WorkOrder> orders)
+    {
+        return new List<WorkOrder>(orders
+            .Where(o => o.CloseDate == null)
+            .OrderByDescending(o => o.AddDate)
+            .ToList());
+    }
+
+    private void ApplyFilters()
+    {
+        var filtered = workOrders
+            .Where(o =>
+                (
+                    !person.Any() ||
+                    person.Any(p =>
+                        (p == "Not assigned" && string.IsNullOrEmpty(o.AssignedPerson)) ||
+                        (p != "Not assigned" && string.Equals(o.AssignedPerson, p, StringComparison.OrdinalIgnoreCase))
+                    )
+                ) &&
+                (
+                    !department.Any() ||
+                    department.Contains(o.DepName ?? "")
+                ) &&
+                (
+                    !selectedDeviceIds.Any() ||
+                    selectedDeviceIds.Contains(o.MachineID)
+                ) &&
+                (o.AddDate >= startDate.ToDateTime(TimeOnly.MinValue)) &&
+                (o.AddDate <= endDate.ToDateTime(TimeOnly.MaxValue))
+            )
+            .OrderByDescending(o => o.ModDate)
+            .ToList();
+
+        OpenOrders = filtered.Where(o => (o.WOState ?? "") == "Nie rozpoczęte").ToList();
+        InProgressOrders = filtered.Where(o => (o.WOState ?? "") == "W trakcie realizacji").ToList();
+        ClosedOrders = filtered.Where(o => (o.WOState ?? "") == "Zakończony").ToList();
+
+        StateHasChanged();
+    }
+
+    private void SetQuickDateRange(string range)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        switch (range)
+        {
+            case "today":
+                startDate = today;
+                endDate = today;
+                break;
+            case "week":
+                startDate = today.AddDays(-7);
+                endDate = today;
+                break;
+            case "month":
+                startDate = today.AddDays(-30);
+                endDate = today;
+                break;
+        }
+
+        ApplyFilters();
+    }
+}

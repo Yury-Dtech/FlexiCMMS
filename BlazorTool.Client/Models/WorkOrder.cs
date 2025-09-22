@@ -104,6 +104,19 @@ namespace BlazorTool.Client.Models
         [JsonPropertyName("deviceCategoryID")]
         public int? DeviceCategoryID { get; set; }
 
+        public TimeOnly StartTime { get; set; } = new TimeOnly(8, 0);
+        public TimeOnly EndTime { get; set; } = new TimeOnly(16, 0);
+        public TimeOnly TotalTime { get; set; } = new TimeOnly(8, 0);
+        public DateOnly DateStart { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public DateOnly DateEnd { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(7));
+        public List<DayOfWeek>? DaysOfWeek { get; set; }
+        public List<int>? DaysOfMonth { get; set; }
+        public decimal workLoad { get; set; }
+        public string? WODevice { get; set; }
+        public bool Daily { get; set; } = true;
+        public bool Weekly { get; set; } = false;
+        public bool Monthly { get; set; } = false;
+
         public WorkOrder ShallowCopy()
         {
             return (WorkOrder)this.MemberwiseClone();
