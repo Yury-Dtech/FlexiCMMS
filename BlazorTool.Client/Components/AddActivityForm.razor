@@ -185,7 +185,7 @@
             ActivityModel.ActDate = ((MinActDate < DateTime.Now) && (MaxActDate > DateTime.Now)) ? DateTime.Now : MinActDate;
         }
 
-        var takePersonsIDs = WO.TakePersons?.Split('#');
+        var takePersonsIDs = WO?.TakePersons?.Split('#');
         bool isMyOrder = takePersonsIDs?.Any(x => x == UserState.PersonID.ToString()) ?? false;
         ActivityModel.WorkLoad = isMyOrder ? CalculateDecimalHours(WO?.PersonTakeDate ?? WO?.TakeDate) : 0.25m;
         if (RecommendedEnd != null && RecommendedEnd >= MinActDate && RecommendedEnd <= MaxActDate)

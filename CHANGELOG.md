@@ -1,3 +1,18 @@
+## 2025-09-22
+
+### Features
+- **Active Orders Filtering**: Added a "Show active orders only" switch to the Activities, Home, and Orders pages for better filtering of work orders.
+- **Improved Work Order Filtering**: Enhanced filtering logic for devices and categories on the Orders page.
+
+### Fixed / Improvements
+- **Dynamic Order Counts**: Order counts on the Home and Orders pages now dynamically update to reflect filtered results.
+- **Robust Timer Management**: Implemented improved timer management for auto-reloading data across Activities, Home, and Scheduler pages, ensuring timers stop when navigating away.
+- **Null-Safe Cost Display**: Enhanced activity cost display to gracefully handle null values.
+- **Workload Calculation Cap**: Workload calculation for activities is now capped at 24 hours.
+- **Work Order Caching**: Improved caching and data loading for work orders based on their active status.
+- **Localization**: Added localization for "Show active orders only".
+- **API Client Enhancements**: Modified `ApiServiceClient.WorkOrders.cs` to include an `active` parameter for work order retrieval and caching, and to filter out "Do usunięcia" (to be deleted) states.
+
 ## 2025-09-19
 
 ### Features

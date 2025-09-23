@@ -1,3 +1,17 @@
+## 2025-09-22
+
+### Nowe Funkcje
+- **Filtrowanie Aktywnych Zleceń**: Dodano przełącznik "Pokaż tylko aktywne zlecenia" na stronach Aktywności, Główna i Zlecenia dla lepszego filtrowania zleceń pracy.
+- **Ulepszone Filtrowanie Zleceń Pracy**: Udoskonalono logikę filtrowania urządzeń i kategorii na stronie Zlecenia.
+
+### Naprawiono / Ulepszenia
+- **Dynamiczne Liczniki Zleceń**: Liczniki zleceń na stronach Główna i Zlecenia dynamicznie aktualizują się, odzwierciedlając przefiltrowane wyniki.
+- **Solidne Zarządzanie Timerem**: Zaimplementowano ulepszone zarządzanie timerem do automatycznego odświeżania danych na stronach Aktywności, Główna i Harmonogram, zapewniając zatrzymywanie timerów po opuszczeniu strony.
+- **Bezpieczne Wyświetlanie Kosztów**: Ulepszono wyświetlanie kosztów aktywności, aby elegancko obsługiwać wartości null.
+- **Limit Obciążenia Pracy**: Obliczenia obciążenia pracy dla aktywności są teraz ograniczone do 24 godzin.
+- **Buforowanie Zleceń Pracy**: Ulepszono buforowanie i ładowanie danych dla zleceń pracy w oparciu o ich aktywny status.
+- **Ulepszenia Klienta API**: Zmodyfikowano `ApiServiceClient.WorkOrders.cs`, aby uwzględnić parametr `active` dla pobierania i buforowania zleceń pracy oraz filtrować stany "Do usunięcia".
+
 ## 2025-09-19
 
 ### Nowe Funkcje
