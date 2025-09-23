@@ -52,7 +52,7 @@
 
                         @* Timer *@
         <div class="refresh-timer">
-             <div style="display:flex; line-height: 1rem; align-items: center; gap: 3px; padding-right: 0.5rem; display: @timerSetVisibility">
+             <div class="input--timer-interval" style="display: @timerSetVisibility">
                 <label style="text-align: end; padding-right:5px;">@Localizer["OrdersPage_RefreshInterval"]:</label>
                 <TelerikNumericTextBox @bind-Value="@TimerInterval"
                                        Min="1"
@@ -89,7 +89,7 @@
                                                    UseVirtualScrollMode="true"
                                                    ShowSearchBar = "false"
                                                    OnOrderChanged="@((app) => OnOrderChanged(app))"
-                                                   OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _assignedGridSettings.GridState = args.GridState; await SaveStateAsync(AssignedGridSettingsKey, _assignedGridSettings); })"
+                                                   OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _assignedGridSettings.GridState = args.GridState;  SaveGridStateAsync(); })"
                                                    MenuItems="@myAssignedOrdersMenuItems"
                                                    OnMenuItemClick="@HandleMenuItemClick"
                                                    OnRowContextMenu="@OnRowContextMenuClick"
@@ -122,7 +122,7 @@
                                                            UseVirtualScrollMode="false"
                                                            ShowSearchBar = "false"      
                                                            OnOrderChanged="@((app) => OnOrderChanged(app))"
-                                                           OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _takenGridSettings.GridState = args.GridState; await SaveStateAsync(TakenGridSettingsKey, _takenGridSettings); })"
+                                                           OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _takenGridSettings.GridState = args.GridState; SaveGridStateAsync(); })"
                                                            MenuItems="@myTakenWorkOrdersMenuItems"
                                                            OnMenuItemClick="@HandleMenuItemClick"
                                                            OnRowContextMenu="@OnRowContextMenuClick"
@@ -163,7 +163,7 @@
                                 UseVirtualScrollMode="false"
                                 isLoading="@isDataLoading"
                                 OnOrderChanged="@((app) => OnOrderChanged(app))"
-                                OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _departmentGridSettings.GridState = args.GridState; await SaveStateAsync(DepartmentGridSettingsKey, _departmentGridSettings); })"
+                                OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _departmentGridSettings.GridState = args.GridState; SaveGridStateAsync(); })"
                                 MenuItems="@myDepartmentOrdersMenuItems"
                                 OnMenuItemClick="@HandleMenuItemClick"
                                 OnRowContextMenu="@OnRowContextMenuClick"
@@ -200,7 +200,7 @@
                                         MenuItems="@myDepartmentOrdersMenuItems"
                                         OnMenuItemClick="@HandleMenuItemClick"
                                         OnRowContextMenu="@OnRowContextMenuClick"
-                                        OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _workOrdersWithPersonGridSettings.GridState = args.GridState; await SaveStateAsync(WithPersonGridSettingsKey, _workOrdersWithPersonGridSettings); })" />
+                                        OnStateChanged="@(async (GridStateEventArgs<WorkOrder> args) => { _workOrdersWithPersonGridSettings.GridState = args.GridState; SaveGridStateAsync(); })" />
                 </div>
                         </div>
         </SplitterPane>
@@ -440,7 +440,6 @@
     {
         var viewSettings = new ViewSettings<object>();
         viewSettings.SetCustomFilter("sectionStates", _sectionStates);
-        viewSettings.SetCustomFilter("TimerInterval", TimerInterval);
         await ViewSettingsService.SaveSettingsAsync(SectionStatesKey, viewSettings);
     }
 
@@ -477,6 +476,7 @@
         }
         if (firstRender && !hasInitialized)
         {
+            Console.WriteLine($"Home.razor: OnAfterRenderAsync at {DateTime.Now:HH:mm:ss}");
             hasInitialized = true;
             isDataLoading = true;
             await InvokeAsync(StateHasChanged);
@@ -485,26 +485,14 @@
             var sectionStateSettings = await ViewSettingsService.LoadSettingsAsync<object>(SectionStatesKey);
             _sectionStates = sectionStateSettings.GetCustomFilter<object, SectionCollapseStates>("sectionStates") ?? new SectionCollapseStates();
             RestoreSectionStates(); // Restore section states (collapsed or not) and sizes
+            await LoadGridSettings(); //Grid Settings and States
             TimerInterval = _assignedGridSettings.GetCustomFilter("TimerInterval", 5);
             HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
 
-            if (UserState.IsAuthenticated)
-            {
-                allOrders = await ApiClient.GetWorkOrdersAsync(personID: UserState.PersonID, active: true);
-                allOrders = FilterWorkOrders(allOrders);
-                var departments = await ApiClient.GetWODepartments();
-                allDepartmentNames = departments.Select(d => d.Name).ToList();
-                var defaultDepartment = departments.Find(x => x.Id == UserState?.DepartmentID)?.Name ?? string.Empty;
-                selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", defaultDepartment);
-                workOrderStates = allOrders.Select(o => o.WOState ?? string.Empty).Distinct().ToList();
-                MakeContextMenu();
-                await TakeListsOrders();
-                HaveAnyTakenOrders = (await ApiClient.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
-            }
-            await LoadGridSettings(); //Grid Settings and States
-            isDataLoading = false;
-            await InvokeAsync(StateHasChanged);
-
+            await HardReloadDataAsync(true);
+            
+            var defaultDepartment = (await ApiClient.GetWODepartments()).Find(x => x.Id == UserState?.DepartmentID)?.Name ?? string.Empty;
+            selectedDepartment = _departmentGridSettings.GetCustomFilter("selectedDepartment", defaultDepartment);
             // Apply the state after the data is loaded and the grids are rendered
             await ApplyDataGridSettings();
         }
@@ -525,7 +513,7 @@
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
         await base.OnInitializedAsync();
     }
-    
+
     private async Task LoadGridSettings()
     {
         _assignedGridSettings = await ViewSettingsService.LoadSettingsAsync<WorkOrder>(AssignedGridSettingsKey);
@@ -549,7 +537,7 @@
         MenuPositionX = (args.MenuItem?.CursorX ?? 0).ToString() + "px";
         MenuPositionY = (args.MenuItem?.CursorY - 70 ?? 0).ToString() + "px";
         loaderText = Localizer["Wait_a_moment"];
-        
+
         if (workOrder == null || string.IsNullOrEmpty(command))
         {
             LoaderVisible = false;
@@ -583,14 +571,13 @@
         LoaderVisible = false;
     }
 
-    private async Task SaveStateAsync(string key, ViewSettings<WorkOrder> settings)
+    //Save ViewSettings to LocalStorage and to Server
+    private async Task SaveGridStateAsync()
     {
-        if (key == DepartmentGridSettingsKey)
-        {
-            settings.SetCustomFilter("selectedDepartment", selectedDepartment);
-        }
-        await ViewSettingsService.SaveSettingsAsync(key, settings);
-        //save Pane states
+        await ViewSettingsService.SaveSettingsAsync(AssignedGridSettingsKey, _assignedGridSettings);
+        await ViewSettingsService.SaveSettingsAsync(TakenGridSettingsKey, _takenGridSettings);
+        await ViewSettingsService.SaveSettingsAsync(DepartmentGridSettingsKey, _departmentGridSettings);
+        await ViewSettingsService.SaveSettingsAsync(WithPersonGridSettingsKey, _workOrdersWithPersonGridSettings);
         _saveStateTimer?.Change(SaveStateDelay, Timeout.Infinite);
     }
 
@@ -598,7 +585,8 @@
     {
         selectedDepartment = department;
         myDepartmentOrders = allOrders.Where(o => o.DepName == selectedDepartment).ToList();
-        await SaveStateAsync(DepartmentGridSettingsKey, _departmentGridSettings);
+        _departmentGridSettings.SetCustomFilter("selectedDepartment", selectedDepartment);
+        await SaveGridStateAsync();
         StateHasChanged();
     }
 
@@ -756,6 +744,7 @@
     private async Task HardLoadDataTick()
     {
         var old_count = myAssignedOrders.Count();
+        Console.WriteLine($"[TIMER] Home page ==> HardLoadDataTick at {DateTime.Now:HH:mm:ss}");
         await HardReloadDataAsync(false); // silent refresh
         var new_count = myAssignedOrders.Count();
         if (new_count == old_count) return; // no change, skip
@@ -791,7 +780,7 @@
     {
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
         _assignedGridSettings.SetCustomFilter("TimerInterval", TimerInterval);
-        await SaveSectionStatesToChacheAsync();
+        await SaveGridStateAsync();
         if (hardReloadTimer != null)
         {
             await hardReloadTimer.RestartAsync();

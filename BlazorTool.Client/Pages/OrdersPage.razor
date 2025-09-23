@@ -19,17 +19,18 @@
 
 <CheckSession apiService="@apiService" UserState="@UserState" />
 
-@if (isDevicesLoading)
-{
-    <TelerikLoaderContainer Visible="@isDevicesLoading" Text="@Localizer["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
-}
-else
-{
-    <TelerikNotification @ref="@NotificationReference" Class="my-telerik-notification"
+<TelerikNotification @ref="@NotificationReference" Class="my-telerik-notification"
                          HorizontalPosition="@NotificationHorizontalPosition.Center"
                          VerticalPosition="@NotificationVerticalPosition.Top" />
     <div class="filter-controls-row">
-        <div>
+@if (isDevicesLoading)
+{
+        @Localizer["OrdersPage_LoadingDevicesList"]
+    <TelerikLoader Visible="@isDevicesLoading"/>
+}
+else
+{
+        <div class="devices">
             <label>@Localizer["OrdersPage_Devices"]</label>
             <TelerikMultiSelect Data="@devices"
                               @bind-Value="@selectedDeviceIds"
@@ -45,7 +46,7 @@ else
                               ShowClearButton="true">
             </TelerikMultiSelect>
         </div>
-        <div style="display:flex; align-items: center; gap:3px;">
+        <div class="device-category" style="display:flex; align-items: center; gap:3px;">
             <label>@Localizer["OrdersPage_DeviceCategory"]:</label>
             <div style="display:inline;">
             <TelerikComboBox Data="@deviceCategories"
@@ -58,17 +59,18 @@ else
             </TelerikComboBox>
             </div>
         </div>
-        <div style="display:flex; align-items: center; gap:3px;">
+}
+        <div class="active-only-switch" style="display:flex; align-items: center; gap:3px;">
             <label>@Localizer["Only_Active"]:</label>
                 <TelerikSwitch @bind-Value=@ShowActiveOnlyOrders OnChange="@OnSwitchActiveChanged">
 
                 </TelerikSwitch>
                 </div>
-        <div><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+        <div class="reload-data-button"><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
       
         @* Timer *@
         <div class="refresh-timer">
-            <div style="display:flex; line-height: 1rem; align-items: center; gap: 3px; padding-right: 0.5rem; display: @timerSetVisibility">
+            <div class="input--timer-interval" style="display: @timerSetVisibility">
                 <label>@Localizer["OrdersPage_RefreshInterval"]:</label>
                 <TelerikNumericTextBox @bind-Value="@TimerInterval"
                                        Min="1"
@@ -95,9 +97,8 @@ else
             </Timer>
         </div>
     </div>
-}
 
-<h3>@Localizer["OrdersPage_Orders"] (@ordersGrid.FilteredRowsCount)</h3>
+<h3>@Localizer["OrdersPage_Orders"] (@ordersGrid?.FilteredRowsCount)</h3>
 <div style="height:80vh">
 @if (isOrdersLoading)
 {
@@ -159,7 +160,10 @@ else
 <div class="popup-dep-target" style="position:fixed; left:@MenuPositionX; top:@MenuPositionY; z-index: 9999; "></div>
 
 @code {
-    private string ViewSettingsKey = ViewSettingsService.SettingsKeys["OrdersPage"];
+
+
+
+    private string ViewSettingsKey = ViewSettingsService.SettingsKeys["OrdersPage"]; 
     private ViewSettings<WorkOrder> _viewSettings = new();
     private TelerikPopup? PopupRef { get; set; }
     private bool isOrdersLoading = false;
@@ -209,7 +213,7 @@ else
         }
         await base.OnInitializedAsync();
     }
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !hasInitialized)
@@ -227,7 +231,7 @@ else
                 Navigation.NavigateTo("/login");
             }
 
-            await HardLoadData();
+            await HardLoadData(showLoading:true, isLoadDevices: true);
 
             // await LoadData();
 
@@ -253,7 +257,7 @@ else
         }
 
         Console.WriteLine($"Selected devices count: {selectedDeviceIds.Count()}");
-        if (selectedDeviceIds.Count == 0 && selectedDeviceCategory == "All")
+        if (selectedDeviceIds.Count == 0)
         {
             OrdersForGrid = (await apiService.GetWorkOrdersCachedAsync(active: ShowActiveOnlyOrders ? true : null)).ToList();
         }
@@ -262,21 +266,26 @@ else
             var filteredDevices = GetFilteredDevices();
             OrdersForGrid = await GetFilteredOrders(filteredDevices);
         }
-        
         isOrdersLoading = false;
         StateHasChanged();
+
     }
 
-    private async Task HardLoadData(bool showLoading = true)
+    private async Task HardLoadData(bool showLoading = true, bool? isLoadDevices = false)
     {
         if (showLoading)
         {
-            isDevicesLoading = true;
+            isDevicesLoading = isLoadDevices ?? true;
+            isOrdersLoading = true;
             StateHasChanged();
         }
         dicts = await apiService.GetWODictionaries(UserState.PersonID, UserState.LangCode);
         allPersons = await apiService.GetAllPersons();
-        devices = await apiService.GetAllDevicesAsync();
+        if (isLoadDevices == true)
+        {
+            devices = await apiService.GetAllDevicesAsync();
+            if (showLoading) isDevicesLoading = false;
+        }
         if (!ShowActiveOnlyOrders) // load all orders only when viewing all orders
             isAllOrdersLoaded = true;
 
@@ -303,9 +312,13 @@ else
         deviceTypes = devices.Select(d => d.Type).Distinct().ToList();
         deviceTypes?.Insert(0, "All");
         HaveAnyTakenOrders = (await apiService.GetWOTakenbyPerson(UserState.PersonID ?? 0)).Any();
+
+        // Немедленный пересчет количества строк
+        ordersGrid?.RefreshRowsCount(OrdersForGrid);
+
         if (showLoading)
-        {
-            isDevicesLoading = false;
+        {            
+            isOrdersLoading = false;
             StateHasChanged();
             if (hardReloadTimer != null)
             {
@@ -565,11 +578,12 @@ else
     {
         if (!ShowActiveOnlyOrders && !isAllOrdersLoaded)
         {
-            await HardLoadData();
+            await HardLoadData(showLoading: true, isLoadDevices: false);
         }else
         {
             await LoadData();
         }
+        ordersGrid.RefreshRowsCount(OrdersForGrid);
     }
 
     private void ShowNotification(string message, NotificationTypeEnum type)

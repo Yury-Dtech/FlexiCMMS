@@ -204,6 +204,13 @@
     transition: all 0.2s ease-out!important;
 }
 
+.total-workload {
+    padding-block: 2px;
+    background-color: #e0fab9;
+    border-radius: 8px;
+    padding-inline: 10px;
+}
+
 .btn-inset:hover {
     filter: brightness(1.1);
 }

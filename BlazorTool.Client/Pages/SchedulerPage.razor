@@ -25,7 +25,6 @@
 <CheckSession apiService="@apiService" UserState="@UserState" />
 
 <div class="filter-controls-row">
-    <div style="flex-basis: 66%; flex-shrink:1; flex-grow:0; border-right: outset; display: flex; align-items: top; gap: 1rem;">
         <div style="max-width: 400px;">
             <label>@Localizer["Scheduler_AssignedPersons"] </label>
             <TelerikMultiSelect Data="@PersonsNames"
@@ -41,7 +40,7 @@
 
             </TelerikMultiSelect>
         </div>
-        <div>
+        <div class="departments">
             <label>@Localizer["Scheduler_Department"] </label>
             <TelerikMultiSelect
                             Data="@Departments" TextField="Department"
@@ -56,7 +55,7 @@
                              Size="sm">
             </TelerikMultiSelect>
         </div>
-        <div>
+        <div class="devices">
             <label>@Localizer["Scheduler_Device"] </label>
             <TelerikComboBox Data="@WO_AssetNo"
                              Placeholder="@Localizer["Scheduler_SelectAsset"]"
@@ -75,9 +74,10 @@
             </button>
         </div>
         <div class="refresh-timer" style="display:flex; align-items:center; gap:6px;">
-            <div style="display:@timerSetVisibility; align-items:center; gap:4px;">
+            <div class="input--timer-interval" style="display: @timerSetVisibility;">
                 <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
                 <TelerikNumericTextBox @bind-Value="@TimerInterval"
+                                       @key="TimerInterval"
                                         Min="1" Max="60" Width="70px" Size="sm"
                                         OnChange="@OnTimerIntervalChanged" />
                 <span>@Localizer["OrdersPage_Minutes"]</span>
@@ -98,8 +98,6 @@
                 </ChildContent>
             </Timer>
         </div>
-
-    </div>
 </div>
 <div class="scheduler-page-container">
     <div class="scheduler-container">
@@ -289,9 +287,9 @@
                          OnStateChanged="@( (GridStateEventArgs<WorkOrder> args) => { _viewSettings.GridState = args.GridState;  SaveFilterStateToCacheAsync(); })">
 
                 <RowTemplate Context="order">
-                    <td class="tooltip-target" title="@order.WODesc">@order?.AssetNo</td>
-                    <td class="tooltip-target" title="@order.WODesc">@order?.WOCategory</td>
-                    <td class="tooltip-target" title="@order.AddDate">@order?.AddDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td class="tooltip-target" title="@order?.WODesc">@order?.AssetNo</td>
+                    <td class="tooltip-target" title="@order?.WODesc">@order?.WOCategory</td>
+                    <td class="tooltip-target" title="@order?.AddDate">@order?.AddDate?.ToString("dd/MM/yyyy HH:mm")</td>
                     <td class="state-@order?.StateColor?.TrimStart('#') tooltip-target" title="@order?.WOState">@order?.WOState</td>
                 </RowTemplate>
 
@@ -439,7 +437,7 @@
     private System.Threading.Timer _saveStateTimer;
     private const int SaveStateDelay = 500; // ms
     // Auto refresh timer
-    private int TimerInterval { get; set; } = 5; // minutes
+    private int TimerInterval { get; set; } = 4; // minutes
     private TimeSpan HardReloadInterval { get; set; }
     private BlazorTool.Client.Components.Timer? autoReloadTimer;
     private string timerSetVisibility = "none";
@@ -488,7 +486,6 @@
         if (_viewSettings != null)
         {
             RestoreCustomFilterState();
-            TimerInterval = _viewSettings.GetCustomFilter("TimerInterval", 5);
         }
         HardReloadInterval = TimeSpan.FromMinutes(TimerInterval);
 
@@ -541,6 +538,7 @@
     private async Task HardLoadDataTick()
     {
         var oldCount = Appointments.Count;
+        Console.WriteLine($"[TIMER] SchedulerPage HardLoadDataTick at {DateTime.Now:HH:mm:ss}");
         await HardLoadData(false);
         var newCount = Appointments.Count;
         if (newCount != oldCount)
@@ -580,6 +578,7 @@
     private void OnTimerClick()
     {
         timerSetVisibility = string.IsNullOrEmpty(timerSetVisibility) ? "none" : string.Empty;
+        StateHasChanged();
     }
 
     // Handle navigation away from the Scheduler page to stop the timer
@@ -746,6 +745,7 @@
         selectedAssetNo = _viewSettings.GetCustomFilter("selectedAssetNo", "All");
         selectedDepartments = _viewSettings.GetCustomFilter("selectedDepartments", new List<string>());
         CurrentView = _viewSettings.GetCustomFilter("CurrentView", SchedulerView.Month);
+        TimerInterval = _viewSettings.GetCustomFilter("TimerInterval", 6);
     }
 
     private List<WorkOrder> FilterOrders()
