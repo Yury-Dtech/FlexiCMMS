@@ -2644,7 +2644,7 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Work day start.
+        ///   Looks up a localized string similar to Work day end.
         /// </summary>
         public static string WorkDayEnd {
             get {
@@ -2653,7 +2653,7 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Work day end.
+        ///   Looks up a localized string similar to Work day start.
         /// </summary>
         public static string WorkDayStart {
             get {

@@ -1133,10 +1133,10 @@
     <value>Interface language</value>
   </data>
   <data name="WorkDayStart" xml:space="preserve">
-    <value>Work day end</value>
+    <value>Work day start</value>
   </data>
   <data name="WorkDayEnd" xml:space="preserve">
-    <value>Work day start</value>
+    <value>Work day end</value>
   </data>
   <data name="My_Page" xml:space="preserve">
     <value>My page</value>

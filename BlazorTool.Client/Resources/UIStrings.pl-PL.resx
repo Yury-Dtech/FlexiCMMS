@@ -1122,10 +1122,10 @@
     <value>Język interfejsu</value>
   </data>
   <data name="WorkDayStart" xml:space="preserve">
-    <value>Koniec dnia pracy</value>
+    <value>Początek dnia pracy</value>
   </data>
   <data name="WorkDayEnd" xml:space="preserve">
-    <value>Początek dnia pracy</value>
+    <value>Koniec dnia pracy</value>
   </data>
   <data name="My_Page" xml:space="preserve">
     <value>Moja strona</value>
@@ -1139,10 +1139,10 @@
   <data name="OrdersPage_Minutes" xml:space="preserve">
     <value>minut</value>
   </data>
-  <data name="ConfirmUpdate" xml:space="preserve">
-    <value>Potwierdź aktualizację</value>
-  </data>
   <data name="Only_Active" xml:space="preserve">
     <value>Pokaż tylko aktywne zlecenia</value>
+  </data>
+  <data name="ConfirmUpdate" xml:space="preserve">
+    <value>Potwierdź aktualizację</value>
   </data>
 </root>
