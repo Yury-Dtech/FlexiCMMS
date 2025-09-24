@@ -1,3 +1,12 @@
+## 2025-09-24
+
+  - Nowe Przyciski Dodawania i Odświeżania
+  - Ulepszenia Strony Urządzeń: Ulepszona logika ładowania danych ze wskaźnikiem ładowania dla lepszego doświadczenia użytkownika. Dodano przycisk "Przeładuj wszystkie urządzenia".
+  - Przeprojektowanie Strony Logowania: Przycisk logowania został zaktualizowany do bardziej minimalistycznego stylu.
+  - Wyświetlanie Całkowitego Obciążenia Pracy: Strona Aktywności wyświetla teraz całkowite obciążenie pracą w godzinach dla wybranego okresu.
+  - Ulepszone Filtrowanie i Zarządzanie Stanem: Ulepszona logika zapisywania i przywracania stanów filtrów oraz ustawień siatki na stronach Zlecenia, Główna i Harmonogram.
+  - Ogólne Style: Dodano nowe style do app.css, aby wspierać nowe przyciski i poprawić ogólny wygląd wizualny.
+
 ## 2025-09-22
 
 ### Nowe Funkcje

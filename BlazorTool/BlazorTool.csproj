@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\BlazorTool.Client\Components\Component.razor" Link="Component.razor" />
     <None Include="appsettings.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>

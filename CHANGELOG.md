@@ -1,3 +1,12 @@
+## 2025-09-24
+
+  - New Add and Refresh Buttons
+  - Devices Page Enhancements: Improved data loading logic with a loading indicator for a better user experience. Added a "Reload all devices" button.
+  - Login Page Redesign: The login button has been updated to a more minimalist style.
+  - Total Workload Display: The Activities page now displays the total workload in hours for the selected period.
+  - Improved Filtering and State Management: Enhanced logic for saving and restoring filter states and grid settings on  the Orders, Home, and Scheduler pages.
+  - General Styling: New styles added to app.css to support the new buttons and improve the overall visual design.
+  
 ## 2025-09-22
 
 ### Features
