@@ -1,4 +1,12 @@
-﻿html, body {
+﻿
+:root {
+    --refresh-button-background: var(--kendo-color-base, #5798be);
+    --button-border-radius: 8px;
+    --refresh-button-color: blue;
+}
+
+
+html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -72,6 +80,163 @@ h1:focus {
     align-items: center;
     gap: 4px;
     padding-right: 0.7rem;
+}
+
+.add-new-button {
+    background: #6bac61;
+    color: white;
+    padding: 3px 8px;
+    border: none;
+    border-radius: var(--button-border-radius);
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    display: flex;
+    gap: 7px;
+}
+
+    .add-new-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .add-new-button:active {
+        transform: translateY(2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+/*.reload-data-button button {
+    background-color: var(--refresh-button-background);
+    border-radius: var(--button-border-radius);
+    color: var(--refresh-button-color);
+    border-color: blue;
+    border-style: solid;
+}*/
+
+/* Button 3: Minimalist Outline */
+.btn-minimal {
+    background: var(--refresh-button-background);
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+    .btn-minimal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        transition: width 0.3s ease;
+    }
+
+    .btn-minimal:hover::before {
+        width: 100%;
+    }
+
+    .btn-minimal:hover {
+/*        background: rgba(255, 255, 255, 0.1);*/
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-minimal:active {
+        transform: translateY(0);
+    }
+
+/* Button 1: Glassmorphism */
+.btn-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 10px 32px;
+    border-radius: var(--button-border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-glass:active {
+        transform: translateY(0);
+    }
+
+/* Button 4: 3D Press Effect */
+.reload-data-button {
+    background: var(--kendo-color-base, #5798be);
+    color: white;
+    padding: 3px 8px;
+    border: none;
+    border-radius: var(--button-border-radius);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    display: flex;
+    gap: 7px;
+}
+
+    .reload-data-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .reload-data-button:active {
+        transform: translateY(2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+/* Icons */
+.icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: currentColor;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+/*    margin-inline-end: 5px;*/
+}
+
+.refresh-icon {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3Cpath d='M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16'/%3E%3Cpath d='M16 16h5v5'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'/%3E%3Cpath d='M3 3v5h5'/%3E%3Cpath d='M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16'/%3E%3Cpath d='M16 16h5v5'/%3E%3C/svg%3E");
+}
+
+.add-icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;    
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E") no-repeat center;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E") no-repeat center;
 }
 .clickable-timer {
     /* Стили по умолчанию (не обязательны, если они уже заданы инлайново) */

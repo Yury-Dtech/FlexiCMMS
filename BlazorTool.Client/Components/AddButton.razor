@@ -1,0 +1,9 @@
+﻿<button onclick="@onclick" class="add-new-button">
+    <span class="icon add-icon"></span>
+    <span> @ChildContent </span>
+</button>
+
+@code {
+    [Parameter] public EventCallback onclick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

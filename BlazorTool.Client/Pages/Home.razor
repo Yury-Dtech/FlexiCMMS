@@ -44,10 +44,10 @@
                         <span class="order-title">@Localizer["Home_MyAssignedOrders"]: @AssignedGrid?.FilteredRowsCount</span>
                         <div class="buttons-row"> 
                 @if (UserState.HasPermission(PermissionType.WO_Add)) {
-                        <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrder">@Localizer["Scheduler_AddNew"]</TelerikButton>
-                        }
-                            <TelerikButton Title="@Localizer["Scheduler_ReloadAllData"]" OnClick="@(async()=> await HardReloadDataAsync(true))">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
 
+                        <AddButton  onclick="@AddNewOrder"> @Localizer["Scheduler_AddNew"] </AddButton>
+                        }
+                        <RefreshButton onclick="@(async()=> await HardReloadDataAsync(true))"> @Localizer["Scheduler_ReloadAllData"] </RefreshButton>
                         </div>
 
                         @* Timer *@

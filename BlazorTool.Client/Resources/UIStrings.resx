@@ -352,6 +352,9 @@
   <data name="Scheduler_ReloadAllData" xml:space="preserve">
     <value>Reload all data</value>
   </data>
+  <data name="ReloadDevices" xml:space="preserve">
+    <value>Reload all devices</value>
+  </data>
   <data name="Scheduler_ColumnWidth" xml:space="preserve">
     <value>Column Width:</value>
   </data>

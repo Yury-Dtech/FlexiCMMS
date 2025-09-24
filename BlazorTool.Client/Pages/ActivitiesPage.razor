@@ -89,11 +89,7 @@
 
             </TelerikSwitch>
         </div>
-        <div class="ClearFilters-btn">
-            <button class="ClearFilters-btn" @onclick="OnClearFilters" title="@Localizer["ClearFilters"]">
-                @Localizer["ClearFilters"]
-            </button>
-        </div>
+        <RefreshButton onclick="OnClearFilters">@Localizer["ClearFilters"]</RefreshButton>
         <div class="refresh-timer" >
         <div class="input--timer-interval" style="display: @timerSetVisibility;">
                 <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
@@ -125,7 +121,7 @@
         <div class="scheduler-toolbar">
             <div class="toolbar-left" style="display:flex; gap:10px; align-items:center;">
                 <span>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</span>
-                <TelerikButton OnClick="@(async ()=> await HardLoadData())" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Light">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton>
+                <RefreshButton onclick="@(async () => await HardLoadData())">@Localizer["Scheduler_ReloadAllData"]</RefreshButton>
             </div>
             <div class="toolbar-left total-workload" style="display:flex; gap:10px; align-items:center;">
                 <span>@Localizer["ActivityList_TotalWorkload"] @TotalWorkloadHours h</span>
@@ -139,7 +135,7 @@
                 @{
                     var settingsMenuClass = showSettings ? "visible" : "";
                 }
-                <div class="settings-menu-container @settingsMenuClass">
+                <div tabindex="0" onfocusout="@((FocusEventArgs e) => showSettings = false)" class="settings-menu-container @settingsMenuClass">
                     <div class="settings-content">
                         @if (CurrentView == SchedulerView.Timeline)
                         {
@@ -532,6 +528,7 @@
         InitializeSaveStateTimer();
 
         await HardLoadData();
+        RecalculateWorkLoad(SchedulerRef?.Date ?? DateTime.Now);
         await InvokeAsync(StateHasChanged);
     }
 

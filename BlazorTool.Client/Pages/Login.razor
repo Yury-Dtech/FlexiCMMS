@@ -31,10 +31,10 @@
         {
             <div class="error-message">@ErrorMessage</div>
         }
-        <button type="submit" class="btn-login" disabled="@isLoading">
+        <button type="submit" class="btn-minimal" disabled="@isLoading">
             @if (isLoading)
             {
-                <TelerikLoaderContainer Size="@Telerik.Blazor.ThemeConstants.Loader.Size.Small" Text="@Localizer["Login_Checking"]" />
+                <span>@Localizer["Login_Checking"]</span>
             }
             else
             {

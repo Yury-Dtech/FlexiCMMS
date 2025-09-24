@@ -1879,6 +1879,15 @@ namespace BlazorTool.Client.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reload all devices.
+        /// </summary>
+        public static string ReloadDevices {
+            get {
+                return ResourceManager.GetString("ReloadDevices", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New order.
         /// </summary>
         public static string Scheduler_AddNew {

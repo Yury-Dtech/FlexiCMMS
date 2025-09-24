@@ -13,13 +13,9 @@
 <BlazorTool.Client.Components.CheckSession ApiService="@ApiService" UserState="@UserState" />
 @_dynamicStyles
 <h4>@Loc["DevicesPage_Title"] (@_devices?.Count())</h4>
+<RefreshButton onclick="@ReloadDevicesList">@Loc["ReloadDevices"]</RefreshButton>
+    <TelerikLoaderContainer Visible="@isDataLoading" Text="@Loc["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
 
-@if (_devices == null)
-{
-    <TelerikLoaderContainer Visible="true" Text="@Loc["OrdersPage_LoadingDevicesList"]"></TelerikLoaderContainer>
-}
-else
-{
     <TelerikGrid Data="@fullDeviceInfos"
                  Pageable="true"
                  PageSize="25"
@@ -27,6 +23,7 @@ else
                  FilterMode="@GridFilterMode.FilterMenu"
                  Resizable="true"
                  Height="calc(100vh - 120px)"
+                 EnableLoaderContainer="true"
                  OnRowDoubleClick="@OnRowClickHandler"
                  OnStateChanged="@(async (GridStateEventArgs<FullDeviceInfo> args) => { _viewSettings.GridState = args.GridState; await SaveStateAsync(); })"
                  OnRowRender="@OnRowRenderHandler"
@@ -107,7 +104,7 @@ else
             </GridColumn>
         </GridColumns>
     </TelerikGrid>
-}
+
 
 <TelerikWindow @bind-Visible="@_showDeviceWindow"
                Modal="true"
@@ -149,16 +146,12 @@ else
     private List<string?> _allStates = new List<string>();
     private List<string?> _allCategories;
     private List<string?> _allTypes;
-
+    private bool isDataLoading = true;
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine($"[NAV] DevicesPage.razor: OnInitializedAsync at {DateTime.Now:HH:mm:ss}");
-        _devices = await ApiService.GetAllDevicesAsync();
-        fullDeviceInfos = await ApiService.GetListDeviceInfoForGrid(_devices);
-        _allStates = fullDeviceInfos?.Select(x=>x?.StateName).Distinct().ToList() ?? new List<string?>();
-        _allCategories = _devices.Select(x=>x.DeviceCategory).Distinct().ToList();
-        _allTypes = _devices.Select(x => x.Type).Distinct().ToList();
-        GenerateDynamicStyles();
+        await ReloadDevicesList();
+        isDataLoading = false;
     }
 
     private void GenerateDynamicStyles()
@@ -202,6 +195,16 @@ else
     private async Task SaveStateAsync()
     {
         await ViewSettingsService.SaveSettingsAsync(ViewSettingsKey, _viewSettings);
+    }
+
+    private async Task ReloadDevicesList()
+    {
+        _devices = await ApiService.GetAllDevicesAsync();
+        fullDeviceInfos = await ApiService.GetListDeviceInfoForGrid(_devices);
+        _allStates = fullDeviceInfos?.Select(x=>x?.StateName).Distinct().ToList() ?? new List<string?>();
+        _allCategories = _devices.Select(x=>x.DeviceCategory).Distinct().ToList();
+        _allTypes = _devices.Select(x => x.Type).Distinct().ToList();
+        GenerateDynamicStyles();
     }
 
     private void OnRowClickHandler(GridRowClickEventArgs args)

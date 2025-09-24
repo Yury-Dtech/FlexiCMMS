@@ -66,7 +66,7 @@ else
 
                 </TelerikSwitch>
                 </div>
-        <div class="reload-data-button"><TelerikButton OnClick="@(()=>HardLoadData())" Size="md" ThemeColor="@ThemeConstants.Button.ThemeColor.Info">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+                <RefreshButton onclick="@(()=>HardLoadData())">@Localizer["Scheduler_ReloadAllData"]</RefreshButton>
       
         @* Timer *@
         <div class="refresh-timer">

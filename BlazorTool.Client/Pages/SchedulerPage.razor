@@ -68,11 +68,7 @@
                              class=@(customEditFormShown ? "" : "popup-target")>
             </TelerikComboBox>
         </div>
-        <div class="ClearFilters-btn">
-            <button class="ClearFilters-btn" @onclick="OnClearFilters" title="@Localizer["ClearFilters"]">
-                @Localizer["ClearFilters"]
-            </button>
-        </div>
+        <RefreshButton onclick="OnClearFilters">@Localizer["ClearFilters"]</RefreshButton>
         <div class="refresh-timer" style="display:flex; align-items:center; gap:6px;">
             <div class="input--timer-interval" style="display: @timerSetVisibility;">
                 <label style="padding-right:4px;">@Localizer["OrdersPage_RefreshInterval"]</label>
@@ -101,9 +97,10 @@
 </div>
 <div class="scheduler-page-container">
     <div class="scheduler-container">
-        <div style="display:flex; flex-direction: row; gap:16px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction: row; gap:16px; align-items:baseline; flex-wrap:wrap;">
             <div><p>@Localizer["Scheduler_ScheduledOrders"] @Appointments.Count()</p></div>
-            <div><TelerikButton OnClick="@(async ()=> await HardLoadData())" Size="Small" ThemeColor="@ThemeConstants.Button.ThemeColor.Tertiary">@IconHtmlHelper.Refresh(20) @Localizer["Scheduler_ReloadAllData"]</TelerikButton></div>
+            <RefreshButton onclick="@(async () => await HardLoadData())">@Localizer["Scheduler_ReloadAllData"]</RefreshButton>
+            
             @if (CurrentView == SchedulerView.Timeline)
             {
                 <div class="timeline-options">

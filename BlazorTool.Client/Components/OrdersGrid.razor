@@ -38,7 +38,7 @@
             <GridSearchBox Width="200px" DebounceDelay="500"/>
             @if(UserState.HasPermission(PermissionType.WO_Add))
             {
-                <TelerikButton Icon="@SvgIcon.Plus" Rounded="lg" Size="lg" ThemeColor="primary" OnClick="@AddNewOrderWindow">@Localizer["Scheduler_AddNew"]</TelerikButton>
+                <AddButton onclick="@AddNewOrderWindow">@Localizer["Scheduler_AddNew"]</AddButton>
             }
         }
     </GridToolBarTemplate>
