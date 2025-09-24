@@ -268,28 +268,25 @@
                             </div>
                             <div class="date-item">
                                 <label>Podział:</label>
-                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                                    <div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
                                         <TelerikCheckBox @bind-Value="@WorkOrder.Daily"
-                                                OnChange="@(() => SetIntervalType("Daily"))"
-                                                Size="@cb_size"
-                                                Id="IntervalTypeDaily" />
-                                        <label for="IntervalTypeDaily" style="margin-left: 0.5rem;">Dziennie</label>
-                                    </div>
-                                    <div>
+                                                         OnChange="@(() => SetIntervalType("Daily"))"
+                                                         Size="@cb_size" />
+                                        Dziennie
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
                                         <TelerikCheckBox @bind-Value="@WorkOrder.Weekly"
-                                                OnChange="@(() => SetIntervalType("Weekly"))"
-                                                Size="@cb_size"
-                                                Id="IntervalTypeWeekly" />
-                                        <label for="IntervalTypeWeekly" style="margin-left: 0.5rem;">Tygodniowo</label>
-                                    </div>
-                                    <div>
+                                                         OnChange="@(() => SetIntervalType("Weekly"))"
+                                                         Size="@cb_size" />
+                                        Tygodniowo
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
                                         <TelerikCheckBox @bind-Value="@WorkOrder.Monthly"
-                                                OnChange="@(() => SetIntervalType("Monthly"))"
-                                                Size="@cb_size"
-                                                Id="IntervalTypeMonthly" />
-                                        <label for="IntervalTypeMonthly" style="margin-left: 0.5rem;">Miesięcznie</label>
-                                    </div>
+                                                         OnChange="@(() => SetIntervalType("Monthly"))"
+                                                         Size="@cb_size" />
+                                        Miesięcznie
+                                    </label>
                                 </div>
                             </div>
                             @if (WorkOrder.Weekly)
@@ -299,14 +296,13 @@
                                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                                         @foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
                                         {
-                                            <div>
+                                            <label style="display: flex; align-items: center; gap: 0.5rem;">
                                                 <TelerikCheckBox
                                                     Value="@(WorkOrder.DaysOfWeek?.Contains(day) ?? false)"
                                                     ValueChanged="@((bool isChecked) => OnDayOfWeekChanged(day, isChecked))"
-                                                    Size="@cb_size"
-                                                    Id=@($"DayOfWeek_{day}") />
-                                                <label for="DayOfWeek_@day" style="margin-left: 0.5rem;">@Localizer[day.ToString()]</label>
-                                            </div>
+                                                    Size="@cb_size" />
+                                                @Localizer[day.ToString()]
+                                            </label>
                                         }
                                     </div>
                                 </div>
@@ -356,6 +352,10 @@
                                                             >
                                         <DatePickerSteps Year="1" Month="1" Day="1" />
                                     </TelerikDatePicker>
+                            </div>
+                            <div class="date-item">
+                                <label>Łącznie utworzonych:</label>
+                                <div class="date-value">@CountOrders()</div>
                             </div>
                             <div class="date-item">
                                 <label>@Localizer[nameof(WorkOrder.AddDate)]:</label>
@@ -918,6 +918,41 @@
         if (WorkOrder == null) return;
         WorkOrder.EndTime = WorkOrder.StartTime.Add(new TimeSpan(WorkOrder.TotalTime.Hour, WorkOrder.TotalTime.Minute, 0));
         StateHasChanged();
+    }
+
+    private int CountOrders()
+    {
+        int count = 0;
+
+        var startDate = WorkOrder.DateStart == default ? DateOnly.FromDateTime(DateTime.Today) : WorkOrder.DateStart;
+        var endDate = WorkOrder.DateEnd == default ? startDate : WorkOrder.DateEnd;
+        var startTime = WorkOrder.StartTime;
+        var endTime = WorkOrder.EndTime;
+
+        var cycleDays = new List<DateOnly>();
+        if (WorkOrder.Daily)
+        {
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                cycleDays.Add(date);
+        }
+        else if (WorkOrder.Weekly && WorkOrder.DaysOfWeek != null)
+        {
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                if (WorkOrder.DaysOfWeek.Contains(date.DayOfWeek))
+                    cycleDays.Add(date);
+        }
+        else if (WorkOrder.Monthly && WorkOrder.DaysOfMonth != null)
+        {
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+                if (WorkOrder.DaysOfMonth.Contains(date.Day))
+                    cycleDays.Add(date);
+        }
+
+        foreach (var day in cycleDays)
+        {
+            count++;
+        }
+        return count;
     }
 }
 
